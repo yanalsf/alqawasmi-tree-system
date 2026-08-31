@@ -97,6 +97,7 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
         transition={{ type: "spring", damping: 25, stiffness: 300 }}
         onClick={(e) => e.stopPropagation()}
         className="w-full max-w-lg bg-[#fffdf8] rounded-2xl shadow-2xl overflow-hidden border border-[#d6b877] flex flex-col max-h-[90vh]"
+        
       >
         {/* الترويسة */}
         <div className="p-4 bg-gradient-to-b from-[#f3ede1] to-[#fffdf8] border-b border-[#d6b877]/50 flex items-center justify-between">
@@ -208,7 +209,7 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
           <div className="pt-2">
             <div className="flex justify-between items-center mb-4">
               <h4 className="font-bold text-[#8a5f2e] text-lg flex items-center gap-2">
-                <span className="bg-[#d6b877]/20 p-2 rounded-lg text-lg">👶</span> بيانات الأبناء
+                <span className="bg-[#d6b877]/20 p-2 rounded-lg text-lg">👤</span> بيانات الأبناء
               </h4>
               <motion.button
                 whileHover={{ scale: 1.05 }}

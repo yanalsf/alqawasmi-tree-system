@@ -3,6 +3,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import * as d3 from "d3";
 import type { FamilyNode } from "@/lib/constants";
 import { jsPDF } from "jspdf";
@@ -26,8 +27,12 @@ export default function VisualTreeModal({ isOpen, rootNode, onClose }: VisualTre
 
   const [mounted, setMounted] = useState(false);
   const [printMarkup, setPrintMarkup] = useState<string | null>(null);
+  const [cachedRootNode, setCachedRootNode] = useState<FamilyNode | null>(null);
 
   useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    if (rootNode) setCachedRootNode(rootNode);
+  }, [rootNode]);
 
   useEffect(() => {
     if (!isOpen || !rootNode || !hostRef.current) return;
@@ -364,62 +369,85 @@ const handleExportSVG = () => {
     }, 250);
   }
 
-  if (!isOpen || !rootNode) return null;
+  const displayNode = rootNode ?? cachedRootNode;
 
   const modalContent = (
-    <div
-      className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/70 font-cairo p-4 backdrop-blur-sm print:hidden"
-      onClick={onClose}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="flex flex-col w-[94vw] h-[90vh] bg-[#fbfaf8] rounded-3xl shadow-2xl overflow-hidden border border-gold/20"
-      >
-        <div className="p-5 bg-gradient-to-b from-panel to-white border-b border-gold/10 flex items-center justify-between">
-          <div>
-            <h3 className="m-0 text-[20px] font-extrabold text-gold-deep font-ruqaa">
-              الشجرة الرقمية: {rootNode.name.replace("فخذ ", "")}
-            </h3>
-            <p className="m-0 text-[12px] text-ink-soft">
-              مرر واسحب للتنقل، استخدم عجلة الفأرة للتكبير — عند الطباعة تُعاد صياغة الشجرة تلقائياً لتملأ الصفحة بالكامل
-            </p>
-          </div>
-          <div className="flex gap-2">
-            {/* تمت إضافة id="pdf-btn" للزر */}
-            <button
-              id="pdf-btn"
-              type="button"
-              onClick={handleExportSVG}
-              className="rounded-xl bg-gradient-to-b from-[#4c7a3f] to-[#3a5c30] px-5 py-2 font-bold text-white text-[13.5px] hover:scale-105 transition-transform shadow-md border border-[#2d4a25]"
-            >
-              🖨️ طباعة / حفظ SVG
-            </button>
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-xl bg-[#f8f9fa] border border-gold-deep/30 px-5 py-2 font-bold text-[#7c6c53] text-[13.5px] hover:bg-gray-100 transition-colors"
-            >
-              ✕ إغلاق
-            </button>
-          </div>
-        </div>
-
-        <div className="relative flex-1 overflow-hidden bg-[#8a5f2e] p-2 m-4 rounded-xl shadow-inner">
-          <div className="relative h-full w-full overflow-hidden rounded-lg border-2 border-[#f3ede1]/80 p-[4px]">
-            {/* تمت إضافة id="tree-capture-area" هنا */}
-            <div id="tree-capture-area" className="relative h-full w-full overflow-hidden rounded-md border-[1.5px] border-[#d6b877] bg-[#fffdf8]">
-              <div ref={hostRef} className="h-full w-full touch-none select-none outline-none" />
-
-              <div className="absolute bottom-4 left-4 overflow-hidden rounded-xl border-2 border-[#8a5f2e]/60 bg-white shadow-lg z-10">
-                <div className="bg-[#8a5f2e] px-3 py-1.5 text-[12px] font-bold text-white text-center">خريطة الشجرة</div>
-                <div ref={miniMapRef} className="cursor-pointer bg-[#fffdf8]" />
+    <AnimatePresence>
+      {isOpen && displayNode && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.25 }}
+          className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/70 font-cairo p-4 backdrop-blur-sm print:hidden"
+          onClick={onClose}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.94, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: 12 }}
+            transition={{ type: "spring", damping: 28, stiffness: 320 }}
+            onClick={(e) => e.stopPropagation()}
+            className="flex flex-col w-[94vw] h-[90vh] bg-[#fbfaf8] rounded-3xl shadow-2xl overflow-hidden border border-gold/20"
+          >
+            <div className="p-5 bg-gradient-to-b from-panel to-white border-b border-gold/10 flex items-center justify-between">
+              <div>
+                <h3 className="m-0 text-[20px] font-extrabold text-gold-deep font-ruqaa">
+                  الشجرة الرقمية: {displayNode.name.replace("فخذ ", "")}
+                </h3>
+                <p className="m-0 text-[12px] text-ink-soft">
+                  مرر واسحب للتنقل، استخدم عجلة الفأرة للتكبير — عند الطباعة تُعاد صياغة الشجرة تلقائياً لتملأ الصفحة بالكامل
+                </p>
+              </div>
+              <div className="flex gap-2">
+                {/* تمت إضافة id="pdf-btn" للزر */}
+                <motion.button
+                  id="pdf-btn"
+                  type="button"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.96 }}
+                  onClick={handleExportSVG}
+                  className="rounded-xl bg-gradient-to-b from-[#4c7a3f] to-[#3a5c30] px-5 py-2 font-bold text-white text-[13.5px] shadow-md border border-[#2d4a25]"
+                >
+                  🖨️ طباعة / حفظ SVG
+                </motion.button>
+                <motion.button
+                  type="button"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.96 }}
+                  onClick={onClose}
+                  className="rounded-xl bg-[#f8f9fa] border border-gold-deep/30 px-5 py-2 font-bold text-[#7c6c53] text-[13.5px] hover:bg-gray-100 transition-colors"
+                >
+                  ✕ إغلاق
+                </motion.button>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.1, duration: 0.35 }}
+              className="relative flex-1 overflow-hidden bg-[#8a5f2e] p-2 m-4 rounded-xl shadow-inner"
+            >
+              <div className="relative h-full w-full overflow-hidden rounded-lg border-2 border-[#f3ede1]/80 p-[4px]">
+                {/* تمت إضافة id="tree-capture-area" هنا */}
+                <div id="tree-capture-area" className="relative h-full w-full overflow-hidden rounded-md border-[1.5px] border-[#d6b877] bg-[#fffdf8]">
+                  <div ref={hostRef} className="h-full w-full touch-none select-none outline-none" />
+
+                  <div className="absolute bottom-4 left-4 overflow-hidden rounded-xl border-2 border-[#8a5f2e]/60 bg-white shadow-lg z-10">
+                    <div className="bg-[#8a5f2e] px-3 py-1.5 text-[12px] font-bold text-white text-center">خريطة الشجرة</div>
+                    <div ref={miniMapRef} className="cursor-pointer bg-[#fffdf8]" />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
+
+
 
   const printArea = (
     <div className="print-visual-tree hidden print:flex flex-col w-full h-screen bg-white p-4">
@@ -449,7 +477,7 @@ const handleExportSVG = () => {
             
             <div className="mb-2 text-center flex-none">
               <h1 className="font-ruqaa text-[34px] text-[#8a5f2e] font-extrabold m-0 drop-shadow-sm">الشجرة الرقمية</h1>
-              <h2 className="text-[#7c6c53] text-[18px] font-bold m-0 mt-1">فرع: {rootNode.name.replace("فخذ ", "")}</h2>
+              <h2 className="text-[#7c6c53] text-[18px] font-bold m-0 mt-1">فرع: {displayNode?.name.replace("فخذ ", "")}</h2>
             </div>
 
             {printMarkup && (
@@ -465,7 +493,7 @@ const handleExportSVG = () => {
   return (
     <>
       {modalContent}
-      {mounted && typeof document !== "undefined" ? createPortal(printArea, document.body) : null}
+      {mounted && displayNode && typeof document !== "undefined" ? createPortal(printArea, document.body) : null}
     </>
   );
 }
