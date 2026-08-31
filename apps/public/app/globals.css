@@ -1,0 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Tailwind's preflight reset is intentionally NOT applied to the ported legacy
+   page (see LegacyTreeApp.tsx, which scopes legacy.css to #legacy-root) so the
+   original site's exact box model and typography are preserved. */

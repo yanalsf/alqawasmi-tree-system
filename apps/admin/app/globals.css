@@ -1,0 +1,131 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============ Lineage certificate print styles ============
+   Ported from the legacy app's @media print block. Only the element with
+   id="lineagePrintArea" is visible when printing — everything else
+   (the tree view, modals, etc.) is hidden via the `.no-print` class,
+   which LineageCertificateModal applies to a wrapper around the rest
+   of the page while it's open. */
+.lineage-print-area { display: none; }
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0 !important;
+  }
+
+  body { background: #fff !important; margin: 0; padding: 0; }
+  .no-print { display: none !important; }
+
+  .lineage-print-area {
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    width: 100% !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
+    box-sizing: border-box;
+    padding: 5mm 0 15mm 0 !important;
+    background: #fff;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  .lineage-print-title {
+    font-family: 'Aref Ruqaa', serif;
+    color: #8a5f2e !important;
+    text-align: center;
+    font-size: min(28px, 3.5vh);
+    margin: 0 auto 1vh auto !important;
+    border-bottom: 2px solid #c9974f !important;
+    padding-bottom: 5px;
+    width: 80%;
+    flex-shrink: 0;
+  }
+
+  .lineage-stem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    flex: 1;
+    position: relative;
+    margin: 0 auto;
+  }
+
+  .lineage-stem::before {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0; left: 0; right: 0;
+    margin: 0 auto;
+    width: 3px;
+    background: #6b8e5c !important;
+    z-index: 1;
+  }
+
+  .lineage-leaf {
+    background: #e6f2e6 !important;
+    border: 2px solid #3a5c30 !important;
+    padding: 0.5vh 20px;
+    font-family: 'Cairo', sans-serif;
+    font-size: min(17px, 2.3vh);
+    font-weight: 800;
+    color: #1f3d1f !important;
+    min-width: 180px;
+    text-align: center;
+    position: relative;
+    z-index: 2;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08) !important;
+    margin: 0.4vh auto !important;
+    flex-shrink: 1;
+  }
+
+  .lineage-leaf:nth-of-type(odd) { border-radius: 40px 0 40px 0 !important; }
+  .lineage-leaf:nth-of-type(even) { border-radius: 0 40px 0 40px !important; }
+
+  .lineage-leaf.lineage-focus {
+    background: linear-gradient(160deg,#d3a765,#8a5f2e) !important;
+    color: #fff !important;
+    border-color: #8a5f2e !important;
+    transform: scale(1.03);
+  }
+
+  .lineage-leaf.lineage-root {
+    background: #c5e0c5 !important;
+    border-color: #2d4a25 !important;
+  }
+
+  .lineage-ben-label {
+    background: #fff !important;
+    color: #6b8e5c !important;
+    font-size: min(12px, 1.8vh);
+    font-weight: 700;
+    width: min(24px, 3.5vh);
+    height: min(24px, 3.5vh);
+    border-radius: 50%;
+    border: 2px solid #6b8e5c !important;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 2;
+    margin: 0 auto !important;
+    flex-shrink: 1;
+  }
+
+  .lineage-print-footer {
+    position: absolute !important;
+    bottom: 8mm !important;
+    left: 0; right: 0;
+    margin: 0 auto;
+    width: 90%;
+    font-size: min(11px, 1.6vh);
+    color: #7c6c53 !important;
+    border-top: 1px dashed #c9974f !important;
+    padding-top: 5px;
+    text-align: center;
+    background: #fff;
+    z-index: 5;
+  }
+}

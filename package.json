@@ -1,0 +1,18 @@
+{
+  "name": "family-tree-monorepo",
+  "private": true,
+  "scripts": {
+    "admin:dev": "pnpm --filter family-tree-admin dev",
+    "admin:build": "pnpm --filter family-tree-admin build",
+    "public:dev": "pnpm --filter family-tree-public dev",
+    "public:build": "pnpm --filter family-tree-public build"
+  },
+  "dependencies": {
+    "d3": "^7.9.0",
+    "framer-motion": "^13.1.1",
+    "jspdf": "^4.2.1"
+  },
+  "devDependencies": {
+    "@types/d3": "^7.4.3"
+  }
+}
