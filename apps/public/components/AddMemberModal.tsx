@@ -8,6 +8,8 @@ interface AddMemberModalProps {
 }
 
 export default function AddMemberModal({ onClose }: AddMemberModalProps) {
+  const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
+  const [errorMsg, setErrorMsg] = useState("");
   const [parentName, setParentName] = useState("");
   const [birthYear, setBirthYear] = useState("");
   const [deathYear, setDeathYear] = useState("");
@@ -51,7 +53,7 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
     setChildrenList(updated);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const parentError = validatePersonData(parentName, birthYear, deathYear);
     if (parentError) {
       alert("خطأ في بيانات الأب: " + parentError);
@@ -75,8 +77,34 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
       }
     }
 
-    alert("البيانات مطابقة للشروط 100%! جاري إرسالها للتدقيق...");
-    onClose();
+    setStatus("submitting");
+    setErrorMsg("");
+
+    const payload = new URLSearchParams({
+      "form-name": "add-member-form",
+      parent_name: parentName,
+      branch,
+      location,
+      birth_year: birthYear,
+      death_year: deathYear,
+      children_data: JSON.stringify(childrenList),
+    }).toString();
+
+    try {
+      await fetch("/", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: payload,
+      });
+      setStatus("success");
+      alert("تم إرسال البيانات بنجاح! سيتم مراجعتها من قبل إدارة الشجرة.");
+      onClose();
+    } catch (error) {
+      console.error(error);
+      setStatus("error");
+      setErrorMsg("حدث خطأ أثناء الإرسال، يرجى المحاولة لاحقاً.");
+      alert("حدث خطأ أثناء الإرسال، يرجى المحاولة لاحقاً.");
+    }
   };
 
   const inputStyles = "w-full p-3 rounded-xl border border-[#d6b877]/60 bg-white focus:outline-none focus:ring-2 focus:ring-[#8a5f2e]/20 focus:border-[#8a5f2e] text-sm transition-all shadow-sm";
@@ -278,9 +306,10 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleSubmit}
-            className="bg-gradient-to-r from-[#4c7a3f] to-[#3a5c30] text-white font-bold py-3 px-8 rounded-xl text-sm w-full shadow-lg border border-[#2d4a25] flex items-center justify-center gap-2"
+            disabled={status === "submitting"}
+            className="bg-gradient-to-r from-[#4c7a3f] to-[#3a5c30] text-white font-bold py-3 px-8 rounded-xl text-sm w-full shadow-lg border border-[#2d4a25] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <span>🚀</span> إرسال البيانات للتدقيق
+            <span>🚀</span> {status === "submitting" ? "جاري الإرسال..." : "إرسال البيانات للتدقيق"}
           </motion.button>
         </div>
       </motion.div>
