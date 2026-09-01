@@ -70,7 +70,7 @@ const pageVariants = {
   animate: { opacity: 1, y: 0 },
   exit: { opacity: 0, y: -16 },
 };
-const pageTransition = { duration: 0.35, ease: [0.25, 1, 0.5, 1] };
+const pageTransition = { duration: 0.35, ease: [0.25, 1, 0.5, 1] as const };
  
 const gridContainerVariants = {
   hidden: {},
@@ -779,4 +779,3 @@ export default function PublicTreeView() {
     </div>
   );
 }
-
