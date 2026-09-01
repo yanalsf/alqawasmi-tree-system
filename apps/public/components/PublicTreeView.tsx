@@ -10,6 +10,12 @@ import Sidebar from "./Sidebar";
 import VisualTreeModal from "./VisualTreeModal";
 import LineageCertificateModal from "./LineageCertificateModal";
 import AddMemberModal from "@/components/AddMemberModal"; 
+import FeaturesMenuModal from './FeaturesMenuModal';
+import KinshipModal from './KinshipModal';
+import StatisticsModal from './StatisticsModal';
+import FamilyAboutModal from './FamilyAboutModal';
+import ComplaintsModal from './ComplaintsModal';
+import EditRequestModal from './EditRequestModal';
 
 const VIRTUAL_ROOT_ID = 941;
 const tree = treeDataRaw as unknown as FamilyNode;
@@ -115,7 +121,14 @@ export default function PublicTreeView() {
   const [visualTreeRoot, setVisualTreeRoot] = useState<FamilyNode | null>(null);
   const [isLegendOpen, setLegendOpen] = useState(false);
   const [isHelpOpen, setHelpOpen] = useState(false);
+  const [isFeaturesMenuOpen, setIsFeaturesMenuOpen] = useState(false);
+  const [isKinshipOpen, setIsKinshipOpen] = useState(false);
+  const [isStatsOpen, setIsStatsOpen] = useState(false);
+  const [isAboutOpen, setIsAboutOpen] = useState(false);
+  const [isComplaintsOpen, setIsComplaintsOpen] = useState(false);
+  const [isEditRequestOpen, setIsEditRequestOpen] = useState(false);
 
+  
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme === "dark") setIsDarkMode(true);
@@ -356,6 +369,7 @@ export default function PublicTreeView() {
         isSidebarOpen={isSidebarOpen}
         isDarkMode={isDarkMode}
         onToggleDarkMode={() => setIsDarkMode(!isDarkMode)}
+        onOpenFeatures={() => setIsFeaturesMenuOpen(true)}
       />
 
      <div className="app-shell flex w-full">
@@ -560,6 +574,9 @@ export default function PublicTreeView() {
                         );
                       })}
                     </motion.div>
+                    
+                    
+
                   </>
                 ) : (
                   <motion.div
@@ -582,7 +599,7 @@ export default function PublicTreeView() {
               إجمالي الأفراد في الشجرة: <span className="font-bold text-gold-deep dark:text-[#d6b877]">{countAllPeople(tree)}</span> فرد
             </div>
 
-            <motion.button
+          {/* <motion.button
               onClick={() => setIsAddModalOpen(true)}
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.96 }}
@@ -590,7 +607,7 @@ export default function PublicTreeView() {
             >
               <span className="text-[14px] transition-transform duration-300 group-hover:scale-110">📝</span>
               <span>طلب إضافة فرد جديد</span>
-            </motion.button>
+            </motion.button>*/}
 
             <div className="my-0.5 h-[1px] w-1/4 max-w-[80px] bg-gradient-to-r from-transparent via-gold-deep/20 to-transparent dark:via-[#d6b877]/30" />
 
@@ -692,6 +709,68 @@ export default function PublicTreeView() {
       <LineageCertificateModal isOpen={lineagePath !== null} ancestorPath={lineagePath} totalCount={countAllPeople(tree)} onClose={() => setLineagePath(null)} />
       <VisualTreeModal isOpen={visualTreeRoot !== null} rootNode={visualTreeRoot} onClose={() => setVisualTreeRoot(null)} />
 
+
+
+
+     <LineageCertificateModal isOpen={lineagePath !== null} ancestorPath={lineagePath} totalCount={countAllPeople(tree)} onClose={() => setLineagePath(null)} />
+      <VisualTreeModal isOpen={visualTreeRoot !== null} rootNode={visualTreeRoot} onClose={() => setVisualTreeRoot(null)} />
+
+      {/* 👇 ضفنا المودال هون مع باقي النوافذ عشان يشتغل صح */}
+      <FeaturesMenuModal 
+     isOpen={isFeaturesMenuOpen} 
+     onClose={() => setIsFeaturesMenuOpen(false)} 
+     onOpenKinship={() => {
+       setIsFeaturesMenuOpen(false);
+       setTimeout(() => setIsKinshipOpen(true), 150);
+     }}
+     onOpenAddMember={() => {
+       setIsFeaturesMenuOpen(false);
+       setTimeout(() => setIsAddModalOpen(true), 150);
+     }}
+     // 👇 ضفنا أمر الإحصائيات هون
+     onOpenStats={() => {
+       setIsFeaturesMenuOpen(false);
+       setTimeout(() => setIsStatsOpen(true), 150);
+     }}
+     onOpenAbout={() => {
+       setIsFeaturesMenuOpen(false);
+       setTimeout(() => setIsAboutOpen(true), 150);
+     }}
+     onOpenComplaints={() => {
+     setIsFeaturesMenuOpen(false);
+     setTimeout(() => setIsComplaintsOpen(true), 150); 
+    }}
+    onOpenEditRequest={() => {
+    setIsFeaturesMenuOpen(false);
+    setTimeout(() => setIsEditRequestOpen(true), 150);
+  }}
+   />
+
+      {/* 2. نافذة كاشف القرابة (لازم تكون موجودة هون) */}
+      <KinshipModal 
+        isOpen={isKinshipOpen} 
+        onClose={() => setIsKinshipOpen(false)} 
+        people={flatPeople} 
+      />
+
+      <StatisticsModal 
+     isOpen={isStatsOpen} 
+     onClose={() => setIsStatsOpen(false)} 
+   />
+
+   <FamilyAboutModal 
+     isOpen={isAboutOpen} 
+     onClose={() => setIsAboutOpen(false)} 
+   />
+   <ComplaintsModal isOpen={isComplaintsOpen}
+    onClose={() => setIsComplaintsOpen(false)} 
+    />
+    <EditRequestModal 
+  isOpen={isEditRequestOpen} 
+  onClose={() => setIsEditRequestOpen(false)} 
+/>
+
+      {/* 3. نافذة إضافة الفرد */}
       <AnimatePresence>
         {isAddModalOpen && (
           <AddMemberModal key="add-member" onClose={() => setIsAddModalOpen(false)} />

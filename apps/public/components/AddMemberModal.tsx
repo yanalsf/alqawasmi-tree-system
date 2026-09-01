@@ -126,7 +126,7 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
                 type="text" 
                 value={parentName}
                 onChange={(e) => setParentName(e.target.value)}
-                placeholder="مثال: ينال سفيان ربحي عبد الله القواسمي" 
+                placeholder="مثال: ينال سفيان ربحي عبدالعفو القواسمي" 
                 className={inputStyles} 
               />
             </div>
@@ -250,7 +250,7 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
                     <div className="flex flex-col gap-4">
                       <div className="flex flex-col">
                         <label className="font-bold text-[#7c6c53] text-xs mb-1.5">الاسم الخماسي للابن:</label>
-                        <input type="text" value={child.name} onChange={(e) => updateChild(index, "name", e.target.value)} placeholder="مثال: محمد ينال القواسمي" className={inputStyles} />
+                        <input type="text" value={child.name} onChange={(e) => updateChild(index, "name", e.target.value)} placeholder="مثال: ينال سفيان ربحي عبدالعفو القواسمي" className={inputStyles} />
                       </div>
                       
                       <div className="grid grid-cols-2 gap-4">

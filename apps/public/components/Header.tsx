@@ -18,6 +18,8 @@ interface HeaderProps {
   isSidebarOpen?: boolean; 
   isDarkMode: boolean;
   onToggleDarkMode: () => void;
+  // أضفنا الدالة الخاصة بفتح قائمة المزايا هنا
+  onOpenFeatures: () => void; 
 }
 
 export default function Header({
@@ -29,6 +31,7 @@ export default function Header({
   isSidebarOpen = false,
   isDarkMode,
   onToggleDarkMode,
+  onOpenFeatures, // استلمنا الدالة هنا
 }: HeaderProps) {
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const [isSettingsOpen, setSettingsOpen] = useState(false);
@@ -46,7 +49,7 @@ export default function Header({
 
   return (
     <>
-      {/* العنوان وزر الإعدادات في أعلى اليسار */}
+      {/* العنوان وزر الإعدادات وزر المزايا في أعلى اليسار */}
      <div ref={wrapRef} className="fixed top-[18px] left-[18px] z-[12] flex items-center gap-2">
         <motion.span
           role="button"
@@ -72,7 +75,18 @@ export default function Header({
           ⚙️
         </motion.button>
 
-        {/* القائمة المنسدلة الفخمة (تم تعديلها بالكامل لحذف المربعات والحدود) */}
+        {/* زر "المزيد" الجديد الذي يفتح قائمة المزايا */}
+        <motion.button
+          type="button"
+          onClick={onOpenFeatures}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="flex h-9 items-center gap-1.5 rounded-full border border-gold-deep/30 bg-[rgba(255,253,248,0.85)] px-3 text-[13px] font-bold text-gold-deep shadow-card transition-colors hover:bg-gold-deep/10 dark:bg-[#1c1915]/90 dark:border-[#d6b877]/30 dark:text-[#d6b877] dark:hover:bg-[#d6b877]/10"
+        >
+          ✨ المزيد
+        </motion.button>
+
+        {/* القائمة المنسدلة الفخمة */}
         <AnimatePresence>
           {isDropdownOpen && (
             <motion.div
