@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
 
 interface PersonObj {
   id: number;
@@ -19,7 +19,7 @@ interface SidebarProps {
 }
 
 // 1. إعدادات حركة الحاوية (عشان تخلي الأبناء يظهروا ورا بعض)
-const listVariants = {
+const listVariants: Variants = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
@@ -30,7 +30,7 @@ const listVariants = {
 };
 
 // 2. إعدادات حركة الاسم الواحد (دخول ناعم من اليمين)
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { opacity: 0, x: 20 },
   show: { 
     opacity: 1, 
