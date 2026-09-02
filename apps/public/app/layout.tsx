@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import "./globals.css";
 import "./legacy.css"; // the original site's stylesheet, verbatim
-
+import HiddenNetlifyForms from "../components/HiddenNetlifyForms";
+ 
 export const metadata: Metadata = {
   title: "شجرة العائلة",
 };
-
+ 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ar" dir="rtl">
@@ -18,6 +19,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
+        {/* نسخة ثابتة مخفية من كل الفورمات — عشان Netlify يكتشفها وقت الـ build
+            حتى لو الـ modals الحقيقية مقفولة بالحالة الافتراضية */}
+        <HiddenNetlifyForms />
+ 
         {/* Same three third-party libraries the original page loaded, loaded in the
             same order, before the legacy script runs (see LegacyTreeApp.tsx). */}
         <Script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" strategy="beforeInteractive" />
