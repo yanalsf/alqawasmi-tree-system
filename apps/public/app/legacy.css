@@ -25,7 +25,7 @@
     --green-2: #436d37;
     --shadow: 0 8px 24px rgba(0,0,0,0.5); /* تعميق الظل */
   }
- 
+
 body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #3b733b) !important; color: #fff; }
   body.dark-mode .child-card.has-children { background: var(--theme-has-kids-dark, #254a25) !important; color: #eaeaea; }
   body.dark-mode .empty-state { border-color: rgba(201,151,79,0.15); }
@@ -44,9 +44,9 @@ body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #
     min-height:100vh;
   }
   button{font-family:'Cairo', sans-serif;}
- 
+
   .app-shell{ display:flex; min-height:100vh; }
- 
+
   /* ============ SIDEBAR ============ */
   .sidebar{
     width:280px; flex:0 0 280px;
@@ -100,13 +100,13 @@ body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #
     padding:10px 16px; border-radius:22px; font-size:13px; font-weight:700;
     box-shadow:var(--shadow); cursor:pointer;
   }
- 
+
   /* ============ MAIN ============ */
   .main{ flex:1; min-width:0; padding:30px 34px 60px; }
   .top-header{ text-align:center; margin-bottom:14px; }
   h1{ font-family:'Aref Ruqaa', serif; font-size:clamp(28px,4vw,42px); color:var(--gold-deep); margin:4px 0 4px; }
   .subtitle{ font-size:13px; color:var(--ink-soft); margin-bottom:14px; }
- 
+
   .toolbar{ display:flex; flex-wrap:wrap; gap:10px; justify-content:center; align-items:center; margin-bottom:14px; }
   .btn{
     padding:10px 20px; border-radius:20px; border:1.5px solid var(--gold);
@@ -121,7 +121,7 @@ body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #
   .btn.ghost{ background:transparent; border-color:rgba(138,95,46,0.4); }
   .btn.small{ padding:6px 14px; font-size:11.5px; border-radius:14px; }
   .btn.icon-only{ padding:9px 13px; }
- 
+
   /* ============ BREADCRUMB ============ */
   .breadcrumb{
     display:flex; align-items:center; gap:6px;
@@ -143,15 +143,15 @@ body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #
   .breadcrumb button.current{ color:var(--gold-deep); font-weight:800; cursor:default; }
   .breadcrumb button.current:hover{ background:none; }
   .breadcrumb .sep{ color:var(--ink-soft); opacity:.5; flex:0 0 auto; }
- 
+
   /* ============ PAGE CONTENT ============ */
-  .page-wrap{ max-width:900px; margin:0 auto; position:relative; }
+  .page-wrap{ max-width:900px; margin:0 auto; }
   .page{ animation: fadeSlide .28s ease; }
   @keyframes fadeSlide{
     from{ opacity:0; transform:translateY(8px); }
     to{ opacity:1; transform:translateY(0); }
   }
- 
+
   .focus-card{
     position:relative;
     display:flex; flex-direction:column; align-items:center; gap:10px;
@@ -169,7 +169,7 @@ body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #
   .focus-card .focus-actions{ display:flex; gap:8px; margin-top:6px; flex-wrap:wrap; justify-content:center; }
   .focus-card .focus-actions .btn{ background:rgba(255,253,248,0.15); border-color:rgba(255,253,248,0.5); color:#fff9ee; }
   .focus-card .focus-actions .btn:hover{ background:rgba(255,253,248,0.28); }
- 
+
   .section-title{
     font-size:14px; font-weight:700; color:var(--ink-soft);
     margin:0 0 12px 4px; display:flex; align-items:center; gap:8px;
@@ -178,7 +178,7 @@ body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #
     background: var(--theme-has-kids, #4c7a3f); color:#fff; border-radius:10px;
     padding:1px 8px; font-size:11px; font-weight:700;
   }
- 
+
   .children-grid{
     display:grid;
     grid-template-columns:repeat(auto-fill, minmax(190px,1fr));
@@ -197,13 +197,13 @@ body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #
     transition:transform .15s ease, box-shadow .15s ease;
   }
   .child-card:hover{ transform:translateY(-3px); box-shadow:0 10px 20px rgba(58,92,48,0.4); }
- 
+
 /* Color coding by children status (child cards only — focus/"father" card stays gold) */
   .child-card.no-children{ background: var(--theme-no-kids, #61b461) !important; color:#ffffff; }
   .child-card.has-children{ background: var(--theme-has-kids, #397639) !important; color:#fafafa; }
   .child-card.no-children .edit-pencil,
   .child-card.has-children .edit-pencil{ background:rgba(0,0,0,0.15); color:#1f3d1f; }
- 
+
   .child-card .leaf-icon{ position:absolute; top:-8px; left:-8px; width:16px; height:16px; opacity:.85; }
   .child-card .name{ font-weight:700; font-size:14.5px; }
   .child-card .sub{ font-size:11px; opacity:.85; }
@@ -222,7 +222,7 @@ body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #
   }
   .child-card:hover .edit-pencil{ opacity:1; }
   .child-card .arrow{ font-size:16px; opacity:.75; }
- 
+
   .empty-state{
     text-align:center; padding:36px 20px;
     background:var(--panel);
@@ -232,10 +232,10 @@ body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #
     font-size:14px;
   }
   .empty-state .btn{ margin-top:14px; }
- 
+
   .stats-line{ text-align:center; font-size:11.5px; color:var(--ink-soft); margin-top:24px; }
   footer{ text-align:center; font-size:11px; color:#a99b81; margin-top:20px; }
- 
+
   /* ============ RESPONSIVE ============ */
 /* تنسيق أيقونة زر الرجوع لتتوسط الزر تماماً */
 #backBtn {
@@ -244,7 +244,7 @@ body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #
 #backBtn svg {
   flex-shrink: 0; /* منع انضغاط الأيقونة */
 }
- 
+
   @media (max-width:900px){
     .sidebar{
       position:fixed; right:0; top:0; height:100vh; z-index:45;
@@ -262,7 +262,7 @@ body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #
     .children-grid{ grid-template-columns:1fr 1fr; gap:10px; }
     .child-card{ padding:14px 10px 12px; }
     .toolbar .btn span.label{ display:none; }
- 
+
     /* تكبير زر الرجوع خصيصاً واجه الهاتف */
   #backBtn.btn.icon-only {
     padding: 12px 20px; /* زيادة التبطين ليكون أسهل للضغط */
@@ -275,7 +275,7 @@ body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #
   @media (max-width:380px){
     .children-grid{ grid-template-columns:1fr; }
   }
- 
+
   /* ============ SPLASH SCREEN ============ */
   #splash{
     position:fixed; inset:0; z-index:200;
@@ -324,12 +324,12 @@ body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #
     animation:splashIn .8s ease .2s both;
   }
   .btn-enter:hover{ transform:translateY(-2px); box-shadow:0 12px 26px rgba(138,95,46,0.45); }
- 
+
   /* ============ APP SHELL VISIBILITY ============ */
   #app{ opacity:0; display:none; }
   #app.app-visible{ opacity:1; display:block; animation:fadeIn .8s ease; }
   @keyframes fadeIn{ from{ opacity:0; } to{ opacity:1; } }
- 
+
   /* ============ BRANCH SELECTION / PLACEHOLDER SCREENS ============ */
   .screen{
     display:none;
@@ -388,7 +388,7 @@ body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #
     direction:ltr;
   }
   .branch-note{ font-size:12px; color:var(--ink-soft); max-width:520px; margin:10px auto 0; line-height:1.8; }
- 
+
   /* ============ LANDING BRAND LABEL (left side) ============ */
   .header-left{
     position:fixed;
@@ -446,7 +446,7 @@ body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #
     .header-label{ font-size:16px; padding:6px 14px; }
     .header-left{ top:12px; left:12px; }
   }
- 
+
   /* ============ SETTINGS ICON + PANEL ============ */
   .settings-icon-btn{
     display:flex; align-items:center; justify-content:center;
@@ -466,7 +466,7 @@ body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #
     outline:none;
   }
   .settings-icon-btn:active{ transform:rotate(25deg); }
- 
+
   .settings-overlay{
     display:none;
     position:fixed; inset:0;
@@ -474,7 +474,7 @@ body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #
     z-index:60;
   }
   .settings-overlay.active{ display:block; }
- 
+
   .settings-panel{
     position:fixed; top:0; left:0; height:100vh; width:300px; max-width:85vw;
     background:var(--panel);
@@ -506,7 +506,7 @@ body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #
     display:flex; align-items:center; gap:8px;
     font-size:13.5px; font-weight:600; color:var(--ink);
   }
- 
+
   /* مفتاح التبديل بين الوضع النهاري والليلي */
   .theme-switch{ position:relative; display:inline-block; width:46px; height:24px; cursor:pointer; flex:0 0 auto; }
   .theme-switch input{ position:absolute; opacity:0; width:0; height:0; }
@@ -527,7 +527,7 @@ body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #
   .theme-switch input:checked + .theme-switch-track{ background:var(--gold-deep); }
   .theme-switch input:checked + .theme-switch-track .theme-switch-thumb{ transform:translateX(-22px); }
   .theme-switch input:focus-visible + .theme-switch-track{ outline:2px solid var(--maroon); outline-offset:2px; }
- 
+
   /* ============ FATHER NAME TAG ============ */
   .father-tag{
     font-size:0.72em;
@@ -537,7 +537,7 @@ body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #
   }
   .focus-card .father-tag{ display:block; font-size:13px; margin:2px 0 0; opacity:.85; }
   .child-card .father-tag{ display:block; font-size:10.5px; opacity:.8; margin-top:1px; }
- 
+
   /* ============ SCROLL-REVEAL ANIMATION ============ */
   .reveal{
     opacity:0;
@@ -548,7 +548,7 @@ body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #
     opacity:1;
     transform:translateY(0) scale(1);
   }
- 
+
   /* ============ COLOR LEGEND MODAL (نافذة دليل الألوان) ============ */
   .legend-modal-overlay {
     position: fixed;
@@ -612,7 +612,7 @@ body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #
     margin-top: 18px;
     justify-content: center;
   }
- 
+
   /* ============ أنيميشن زر دليل الألوان والصندوق ============ */
   
   /* 1. حركة الزر عند الضغط */
@@ -624,7 +624,7 @@ body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #
     50% { transform: scale(0.90); } /* يصغر الزر بنسبة 10% */
     100% { transform: scale(1); }
   }
- 
+
   /* 2. حركة الارتداد الناعمة لصندوق الألوان عند ظهوره */
   .legend-modal-overlay.active .legend-modal-content {
     animation: modalBounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
@@ -639,22 +639,22 @@ body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #
       opacity: 1; 
     }
   }
- 
+
 /* ============ تصميم ورقة إثبات النسب (إجبار صفحة واحدة متكيفة) ============ */
   .print-area { display: none; }
- 
+
   @media print {
     /* 1. إخفاء الترويسات الافتراضية للمتصفح (التاريخ، الرابط، رقم الصفحة) */
     @page {
       size: A4 portrait;
       margin: 0 !important; 
     }
- 
+
     body { background: #fff !important; margin: 0; padding: 0; }
     #splash, #branchSelect, #branchPlaceholder, #app, .toolbar, .sidebar, .legend-modal-overlay { 
       display: none !important; 
     }
- 
+
     
     /* 2. حاوية الطباعة: إجبارها على أن تكون صفحة واحدة تماماً (100vh) */
     .print-area {
@@ -671,7 +671,7 @@ body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #
       margin: 0 auto;
       position: relative; /* لتثبيت التذييل في الأسفل */
     }
- 
+
     .print-title {
       font-family: 'Aref Ruqaa', serif;
       color: #8a5f2e !important;
@@ -683,7 +683,7 @@ body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #
       width: 80%;
       flex-shrink: 0;
     }
- 
+
     /* 3. العرق الرئيسي للشجرة */
     .lineage-stem {
       display: flex;
@@ -695,7 +695,7 @@ body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #
       position: relative;
       margin: 0 auto;
     }
- 
+
     .lineage-stem::before {
       content: '';
       position: absolute;
@@ -705,7 +705,7 @@ body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #
       background: #6b8e5c !important;
       z-index: 1;
     }
- 
+
     /* 4. أوراق الشجر (تنضغط تلقائياً لتتسع بالصفحة) */
     .leaf-item {
       background: #e6f2e6 !important;
@@ -723,22 +723,22 @@ body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #
       margin: 0.4vh auto !important; 
       flex-shrink: 1; /* يسمح للأسماء بالانضغاط لتبقى بصفحة واحدة */
     }
- 
+
     .leaf-item:nth-of-type(odd) { border-radius: 40px 0 40px 0 !important; }
     .leaf-item:nth-of-type(even) { border-radius: 0 40px 0 40px !important; }
- 
+
     .leaf-item.focus-leaf {
       background: linear-gradient(160deg,#d3a765,#8a5f2e) !important;
       color: #fff !important;
       border-color: #8a5f2e !important;
       transform: scale(1.03); /* تكبير خفيف جداً لتوفير المساحة */
     }
- 
+
     .leaf-item.root-leaf {
       background: #c5e0c5 !important;
       border-color: #2d4a25 !important;
     }
- 
+
     /* 5. كلمة "بن" */
     .ben-label {
       background: #fff !important;
@@ -754,7 +754,7 @@ body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #
       margin: 0 auto !important;
       flex-shrink: 1;
     }
- 
+
     /* 6. التذييل الثابت في أسفل الصفحة */
     .print-footer {
       position: absolute !important;
@@ -770,14 +770,14 @@ body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #
       background: #fff; 
       z-index: 5;
     }
- 
+
     * {
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
     }
   }
- 
- 
+
+
 /* ============ DYNAMIC VISUAL TREE MODAL ============ */
   .visual-tree-overlay {
     position: fixed; inset: 0; background: var(--paper); z-index: 300;
@@ -803,7 +803,7 @@ body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #
   }
   
   .visual-tree-container:active { cursor: grabbing; }
- 
+
  /* الإطار الجمالي الذي يظهر على الشاشة وفوق الشجرة */
   .visual-tree-container::after {
     content: "";
@@ -814,7 +814,7 @@ body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #
     outline-offset: -8px;
     pointer-events: none; /* يسمح لك بالسحب والنقر من خلال الإطار بحرية */
     z-index: 100;
- 
+
     /* 🌟 التعديل السحري هنا 🌟 */
     box-shadow: 
       0 0 0 80px #fffdf8,       /* جدار صلب يخفي الشجرة إذا خرجت نحو حافة الشاشة */
@@ -824,7 +824,7 @@ body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #
   /* SVG Elements Styling (Inlined later for export, but fallback here) */
   .link-vine { fill: none; stroke: var(--green-1); stroke-width: 3px; stroke-linecap: round; }
   .node-text { font-family: 'Cairo', sans-serif; font-weight: 800; text-anchor: middle; }
- 
+
   /* ============ MINI-MAP (خريطة الشجرة المصغّرة) ============ */
   .minimap-wrap{
     position:absolute;
@@ -868,8 +868,8 @@ body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #
     .minimap-wrap{ width:132px; height:98px; bottom:14px; left:14px; border-radius:10px; }
     .minimap-label{ display:none; }
   }
- 
- 
+
+
 /* ============ تصميم نافذة عرض الصور (Lightbox) ============ */
   .fullscreen-modal {
     position: fixed;
@@ -882,12 +882,12 @@ body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #
     visibility: hidden;
     transition: opacity 0.3s ease, visibility 0.3s ease;
   }
- 
+
   .fullscreen-modal.active {
     opacity: 1;
     visibility: visible;
   }
- 
+
   .modal-toolbar {
     display: flex;
     justify-content: space-between;
@@ -900,7 +900,7 @@ body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #
     right: 0;
     z-index: 10;
   }
- 
+
   .btn-primary {
     background-color: var(--gold-deep);
     color: #fff;
@@ -915,7 +915,7 @@ body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #
     transform: translateY(-2px);
     box-shadow: 0 4px 10px rgba(201,151,79,0.35);
   }
- 
+
   .btn-icon {
     background: none;
     border: none;
@@ -923,7 +923,7 @@ body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #
     font-size: 24px;
     cursor: pointer;
   }
- 
+
   .modal-content-wrapper {
     flex: 1;
     display: flex;
@@ -933,18 +933,18 @@ body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #
     margin-top: 60px; /* لترك مساحة للشريط العلوي */
     overflow: auto;
   }
- 
+
   #modalImage {
     max-width: 100%;
     max-height: 100%;
     object-fit: contain; /* يمنع قص الصورة */
     user-select: none;
   }
- 
+
   /* ========================================================================== */
   /* ================ تسلسل الأفخاذ الكامل (Sequence / Lineage) ================ */
   /* ========================================================================== */
- 
+
   /* زر فتح التسلسل — بارز أعلى شاشة اختيار الفخذ */
   .sequence-open-btn{
     display:inline-flex; align-items:center; gap:8px;
@@ -955,7 +955,7 @@ body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #
     box-shadow:0 8px 20px rgba(138,95,46,0.3);
   }
   .sequence-open-btn:hover{ box-shadow:0 12px 26px rgba(138,95,46,0.4); }
- 
+
   /* النافذة المنبثقة */
   .sequence-modal-overlay{
     position:fixed; inset:0; z-index:120;
@@ -998,7 +998,7 @@ body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #
     flex:1; overflow:auto; padding:26px 20px 34px;
     -webkit-overflow-scrolling:touch;
   }
- 
+
   /* ---- عرض المخطط (Diagram / org-chart) — الأنسب للشاشات الكبيرة ---- */
   .org-tree, .org-tree ul{
     list-style:none; margin:0; padding:0;
@@ -1051,7 +1051,7 @@ body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #
   .org-tree .seq-leaf:hover, .org-tree .seq-leaf:focus-visible{
     transform:translateY(-3px); box-shadow:0 8px 18px rgba(0,0,0,0.3); outline:none;
   }
- 
+
   /* ---- غلاف تصغير المخطط تلقائياً ليظهر التسلسل كاملاً دفعة واحدة عند الفتح ---- */
   #orgTreeFitOuter{
     display:flex; justify-content:center; width:100%;
@@ -1091,10 +1091,18 @@ body.dark-mode .child-card.no-children { background: var(--theme-no-kids-dark, #
     transition:transform .15s ease;
   }
   .seq-leaf-list:hover, .seq-leaf-list:focus-visible{ transform:translateX(-3px); outline:none; }
- 
+
   @media (max-width:720px){
     .sequence-modal-panel{ max-height:92vh; border-radius:18px; }
     .sequence-modal-header h3{ font-size:14px; }
     .sequence-modal-body{ padding:18px 12px 26px; }
     .sequence-open-btn{ width:100%; justify-content:center; }
   }
+
+
+
+
+
+
+  
+
