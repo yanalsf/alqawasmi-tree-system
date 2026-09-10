@@ -331,7 +331,7 @@
                                 {
                                   "id": 44,
                                   "name": "راتب",
-                                  "birth_date": null,
+                                  "birth_date": 1989,
                                   "death_date": null,
                                   "children": [
                                     {
