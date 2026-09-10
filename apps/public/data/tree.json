@@ -197,7 +197,7 @@
                             {
                               "id": 30,
                               "name": "شريف",
-                              "birth_date": null,
+                              "birth_date": 1982,
                               "death_date": null,
                               "children": [
                                 {
