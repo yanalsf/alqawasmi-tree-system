@@ -143,7 +143,7 @@
                             {
                               "id": 22,
                               "name": "رائد",
-                              "birth_date": null,
+                              "birth_date": 1972,
                               "death_date": null,
                               "children": [
                                 {
