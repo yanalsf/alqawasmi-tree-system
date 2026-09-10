@@ -49,8 +49,8 @@
                         {
                           "id": 8,
                           "name": "حلمي",
-                          "birth_date": null,
-                          "death_date": null,
+                          "birth_date": 1947,
+                          "death_date": 2023,
                           "children": [
                             {
                               "id": 9,
