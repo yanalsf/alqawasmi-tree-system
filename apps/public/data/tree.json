@@ -77,7 +77,7 @@
                         {
                           "id": 12,
                           "name": "بسام",
-                          "birth_date": null,
+                          "birth_date": 1955,
                           "death_date": null,
                           "children": [
                             {
