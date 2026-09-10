@@ -55,7 +55,7 @@
                             {
                               "id": 9,
                               "name": "صفوت",
-                              "birth_date": null,
+                              "birth_date": 1981,
                               "death_date": null,
                               "children": [
                                 {
