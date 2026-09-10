@@ -122,8 +122,9 @@ export default function EditRequestModal({ isOpen, onClose }: EditRequestModalPr
     if (selectedEditType === "إضافة تاريخ ولادة أو وفاة") {
       return (
         <input 
-          type="date" 
+          type="Number" 
           name="correct_info" 
+          placeholder='مثال: 1990'
           required
           className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[14px] font-bold focus:border-[#c9974f] focus:ring-2 focus:ring-[#c9974f]/20 outline-none transition-all dark:bg-[#24201a] dark:border-gray-700 dark:text-white dark:focus:ring-[#d6b877]/20" 
         />
@@ -269,7 +270,7 @@ export default function EditRequestModal({ isOpen, onClose }: EditRequestModalPr
                     disabled={status === "submitting"}
                     className="w-full mt-2 bg-gradient-to-l from-[#8a5f2e] to-[#c9974f] text-white font-bold py-3.5 text-[15px] rounded-xl disabled:opacity-50 transition-all hover:shadow-lg hover:scale-[1.01] active:scale-[0.98] dark:from-[#1f3d1f] dark:to-[#2d4a25] dark:text-[#d6b877]"
                   >
-                    {status === "submitting" ? "جاري الإرسال..." : "إرسال الطلب 🚀"}
+                    {status === "submitting" ? "جاري الإرسال..." : "إرسال الطلب "}
                   </button>
                 </form>
               )}

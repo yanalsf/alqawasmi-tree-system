@@ -218,7 +218,21 @@ export default function KinshipModal({ isOpen, onClose, people }: KinshipModalPr
                     <>
                       <div className="relative">
                         <input type="text" value={search1} onChange={(e) => setSearch1(e.target.value)} placeholder="اكتب اسم الشخص الأول..." className="w-full bg-white border border-[#c9974f]/30 rounded-2xl px-10 py-3.5 text-[14px] font-bold focus:border-[#c9974f] focus:ring-4 focus:ring-[#c9974f]/10 outline-none transition-all shadow-sm dark:bg-[#24201a] dark:border-[#d6b877]/30 dark:text-white dark:focus:ring-[#d6b877]/10 placeholder-gray-400" />
-                        <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+                        <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400"><svg 
+  xmlns="http://www.w3.org/2000/svg" 
+  width="18" 
+  height="18" 
+  viewBox="0 0 24 24" 
+  fill="none" 
+  stroke="currentColor" 
+  strokeWidth="2.5" 
+  strokeLinecap="round" 
+  strokeLinejoin="round" 
+  className="text-gray-400 dark:text-gray-500"
+>
+  <circle cx="11" cy="11" r="8"></circle>
+  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+</svg></span>
                       </div>
                       <AnimatePresence>
                         {results1.length > 0 && (
@@ -249,7 +263,21 @@ export default function KinshipModal({ isOpen, onClose, people }: KinshipModalPr
                     <>
                       <div className="relative">
                         <input type="text" value={search2} onChange={(e) => setSearch2(e.target.value)} placeholder="اكتب اسم الشخص الثاني..." className="w-full bg-white border border-[#c9974f]/30 rounded-2xl px-10 py-3.5 text-[14px] font-bold focus:border-[#c9974f] focus:ring-4 focus:ring-[#c9974f]/10 outline-none transition-all shadow-sm dark:bg-[#24201a] dark:border-[#d6b877]/30 dark:text-white dark:focus:ring-[#d6b877]/10 placeholder-gray-400" />
-                        <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+                        <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400"><svg 
+  xmlns="http://www.w3.org/2000/svg" 
+  width="18" 
+  height="18" 
+  viewBox="0 0 24 24" 
+  fill="none" 
+  stroke="currentColor" 
+  strokeWidth="2.5" 
+  strokeLinecap="round" 
+  strokeLinejoin="round" 
+  className="text-gray-400 dark:text-gray-500"
+>
+  <circle cx="11" cy="11" r="8"></circle>
+  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+</svg></span>
                       </div>
                       <AnimatePresence>
                         {results2.length > 0 && (
@@ -267,7 +295,7 @@ export default function KinshipModal({ isOpen, onClose, people }: KinshipModalPr
                   onClick={calculateKinship}
                   className="w-full mt-6 bg-gradient-to-l from-[#8a5f2e] to-[#c9974f] text-white font-bold py-4 text-[15px] rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:shadow-[0_10px_25px_rgba(138,95,46,0.3)] hover:scale-[1.01] active:scale-[0.98] dark:from-[#1f3d1f] dark:to-[#2d4a25] dark:text-[#d6b877] dark:border dark:border-[#d6b877]/20"
                 >
-                  🔍 اكشف صلة القرابة
+                   اكشف صلة القرابة
                 </button>
               </div>
             ) : (

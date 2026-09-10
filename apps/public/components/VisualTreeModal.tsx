@@ -38,11 +38,11 @@ export default function VisualTreeModal({ isOpen, rootNode, onClose }: VisualTre
     if (miniMapRef.current) miniMapRef.current.innerHTML = "";
 
     const { root, childScale, fontChild, rootScale, fontRoot, maxNameLen, x0, x1, y0, y1 } = buildRadialLayout(rootNode, {
-      minRadius: 10000,
-      minChildScale: 4,
-      maxChildScale: 6,
-      minFontChild: 50,
-      maxFontChild: 55,
+      minRadius: 5000,
+      minChildScale: 15,
+      maxChildScale: 25,
+      minFontChild: 200,
+      maxFontChild: 250,
       fontToChildRatio: 8.75,
       rootToChildRatio: 1.375,
     });
@@ -247,6 +247,11 @@ export default function VisualTreeModal({ isOpen, rootNode, onClose }: VisualTre
           <!-- 🌟 التعديل 2: تم تغيير الخط ليكون أردني رسمي وتصغير الحجم بشكل مريح 🌟 -->
           <text font-family="'Amiri', serif" x="${dynamicWidth / 2}" y="${dynamicHeight - margin - 220 * hs}" text-anchor="middle" font-size="${50 * hs}" fill="#5c4a38" font-weight="bold">
             عدد الأفراد في هذا التسلسل: ${totalMembersCount} فرداً   |   تاريخ الإصدار: ${printDate}
+          </text>
+
+          <!-- 🌟 توقيع صانع الشجرة: سطر صغير وأنيق أسفل عدد الأفراد والتاريخ 🌟 -->
+          <text class="subtitle" x="${dynamicWidth / 2}" y="${dynamicHeight - margin - 150 * hs}" text-anchor="middle" font-size="${34 * hs}" fill="#8a5f2e" font-style="italic" opacity="0.85">
+            تم الإنشاء بواسطة ينال سفيان ربحي القواسمي
           </text>
         </svg>
       `;

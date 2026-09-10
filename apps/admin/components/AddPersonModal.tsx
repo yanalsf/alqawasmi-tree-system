@@ -4,6 +4,8 @@
 import { useState, FormEvent } from "react";
 import { VIRTUAL_ROOT_ID } from "@/lib/constants";
 import { BRANCHES } from "@/lib/branches";
+// 🌟 استدعاء أداة زر الرجوع (تأكد من مسار المجلد حسب مشروعك)
+
 
 export interface CreatedPerson {
   id: number;
@@ -15,7 +17,6 @@ export interface CreatedPerson {
 interface AddPersonModalProps {
   isOpen: boolean;
   onClose: () => void;
-  /** The person this new node will be a child of. Pass VIRTUAL_ROOT_ID (941) to add a brand-new top-level branch. */
   parentId: number;
   onCreated: (person: CreatedPerson) => void;
 }
@@ -30,6 +31,9 @@ export default function AddPersonModal({ isOpen, onClose, parentId, onCreated }:
 
   const isNewBranchRoot = parentId === VIRTUAL_ROOT_ID;
 
+  // 🌟 تشغيل أداة زر الرجوع للتلفون
+
+
   function resetAndClose() {
     setName("");
     setBranchId("");
@@ -37,6 +41,11 @@ export default function AddPersonModal({ isOpen, onClose, parentId, onCreated }:
     setDeathDate("");
     setError(null);
     onClose();
+  }
+
+  // 🌟 دالة الإغلاق الآمنة (عشان ترجع خطوة بالهستوري بدل ما تكركب المتصفح)
+  function handleClose() {
+    window.history.back();
   }
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
@@ -76,7 +85,7 @@ export default function AddPersonModal({ isOpen, onClose, parentId, onCreated }:
         return;
       }
 
-      const created = await res.json(); // { id, name }
+      const created = await res.json(); 
       onCreated({
         id: created.id,
         name: created.name,
@@ -95,7 +104,7 @@ export default function AddPersonModal({ isOpen, onClose, parentId, onCreated }:
 
   return (
     <div
-      onClick={resetAndClose}
+      onClick={handleClose}
       className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 font-cairo"
     >
       <div
@@ -131,17 +140,24 @@ export default function AddPersonModal({ isOpen, onClose, parentId, onCreated }:
             </select>
           )}
 
+          {/* 🌟 التعديل الأول: إضافة min و max لسنة الولادة */}
           <input
-            type="date"
+            type="number"
             value={birthDate}
             onChange={(e) => setBirthDate(e.target.value)}
+            min="1500"
+            max={new Date().getFullYear()}
             placeholder="سنة الولادة (مثال: 1990)"
             className="mb-3 w-full rounded-lg border border-gray-300 px-2.5 py-2.5 text-right outline-none"
           />
+          
+          {/* 🌟 التعديل الثاني: إضافة min و max لسنة الوفاة */}
           <input
-            type="date"
+            type="number"
             value={deathDate}
             onChange={(e) => setDeathDate(e.target.value)}
+            min="1500"
+            max={new Date().getFullYear()}
             placeholder="سنة الوفاة (للمتوفين فقط)"
             className="mb-5 w-full rounded-lg border border-gray-300 px-2.5 py-2.5 text-right outline-none"
           />
@@ -158,7 +174,7 @@ export default function AddPersonModal({ isOpen, onClose, parentId, onCreated }:
             </button>
             <button
               type="button"
-              onClick={resetAndClose}
+              onClick={handleClose}
               disabled={isSubmitting}
               className="flex-1 rounded-lg bg-maroon px-4 py-2.5 font-bold text-white disabled:opacity-60"
             >

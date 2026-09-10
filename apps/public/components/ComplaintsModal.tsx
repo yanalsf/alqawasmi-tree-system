@@ -162,7 +162,7 @@ export default function ComplaintsModal({ isOpen, onClose }: ComplaintsModalProp
                     disabled={status === "submitting"}
                     className="w-full mt-2 bg-gradient-to-l from-[#8a5f2e] to-[#c9974f] text-white font-bold py-3.5 text-[15px] rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:shadow-lg hover:scale-[1.01] active:scale-[0.98] dark:from-[#1f3d1f] dark:to-[#2d4a25] dark:text-[#d6b877]"
                   >
-                    {status === "submitting" ? "جاري الإرسال..." : "إرسال الرسالة 🚀"}
+                    {status === "submitting" ? "جاري الإرسال..." : "إرسال الرسالة "}
                   </button>
                 </form>
               )}

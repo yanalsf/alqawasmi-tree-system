@@ -1,7 +1,7 @@
 // apps/public/components/PublicTreeView.tsx
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import treeDataRaw from "@/data/tree.json";
 import type { FamilyNode } from "@/lib/constants";
@@ -16,7 +16,7 @@ import StatisticsModal from './StatisticsModal';
 import FamilyAboutModal from './FamilyAboutModal';
 import ComplaintsModal from './ComplaintsModal';
 import EditRequestModal from './EditRequestModal';
-import SequenceModal from './SequenceModal'; // 👈 استيراد نافذة التسلسل الجديدة
+import SequenceModal from './SequenceModal';
 
 const VIRTUAL_ROOT_ID = 941;
 const tree = treeDataRaw as unknown as FamilyNode;
@@ -89,11 +89,11 @@ const LeafIcon = () => (
   </svg>
 );
 
-function calculateAgeDisplay(birthStr?: string, deathStr?: string) {
+function calculateAgeDisplay(birthStr?: any, deathStr?: any) {
   if (!birthStr && !deathStr) return null;
 
-  const birthYear = birthStr ? parseInt(birthStr.split('-')[0]) : null;
-  const deathYear = deathStr ? parseInt(deathStr.split('-')[0]) : null;
+  const birthYear = birthStr ? parseInt(String(birthStr).split('-')[0]) : null;
+  const deathYear = deathStr ? parseInt(String(deathStr).split('-')[0]) : null;
   const currentYear = new Date().getFullYear(); 
 
   if (birthYear && deathYear) {
@@ -128,12 +128,120 @@ export default function PublicTreeView() {
   const [isComplaintsOpen, setIsComplaintsOpen] = useState(false);
   const [isEditRequestOpen, setIsEditRequestOpen] = useState(false);
   
-  const [isSequenceOpen, setIsSequenceOpen] = useState(false); // 👈 حالة فتح التسلسل الجديدة
+  const [isSequenceOpen, setIsSequenceOpen] = useState(false);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme === "dark") setIsDarkMode(true);
   }, []);
+
+  const prevDepthRef = useRef(0);
+  const suppressPopRef = useRef(false);
+  const fromPopRef = useRef(false);
+
+  const navDepth =
+    viewState === "branchSelect"
+      ? 1
+      : viewState === "tree" || viewState === "placeholder"
+      ? 2 + Math.max(0, pathIds.length - 2)
+      : 0;
+
+  const modalsDepth = [
+    isAddModalOpen,
+    isKinshipOpen,
+    isStatsOpen,
+    isAboutOpen,
+    isComplaintsOpen,
+    isEditRequestOpen,
+    isFeaturesMenuOpen,
+    isSequenceOpen,
+    isHelpOpen,
+    isLegendOpen,
+    visualTreeRoot !== null,
+    lineagePath !== null,
+    isSidebarOpen,
+  ].filter(Boolean).length;
+
+  const currentNavDepth = navDepth + modalsDepth;
+
+  useEffect(() => {
+    if (fromPopRef.current) {
+      fromPopRef.current = false;
+      prevDepthRef.current = currentNavDepth;
+      return;
+    }
+    const diff = currentNavDepth - prevDepthRef.current;
+    if (diff > 0) {
+      for (let i = 0; i < diff; i++) {
+        window.history.pushState({ __appDepth: prevDepthRef.current + i + 1 }, "");
+      }
+    } else if (diff < 0) {
+      suppressPopRef.current = true;
+      window.history.go(diff);
+    }
+    prevDepthRef.current = currentNavDepth;
+  }, [currentNavDepth]);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      if (suppressPopRef.current) {
+        suppressPopRef.current = false;
+        return;
+      }
+      fromPopRef.current = true;
+
+      if (isAddModalOpen) return setIsAddModalOpen(false);
+      if (isKinshipOpen) return setIsKinshipOpen(false);
+      if (isStatsOpen) return setIsStatsOpen(false);
+      if (isAboutOpen) return setIsAboutOpen(false);
+      if (isComplaintsOpen) return setIsComplaintsOpen(false);
+      if (isEditRequestOpen) return setIsEditRequestOpen(false);
+      if (isFeaturesMenuOpen) return setIsFeaturesMenuOpen(false);
+      if (isSequenceOpen) return setIsSequenceOpen(false);
+      if (isHelpOpen) return setHelpOpen(false);
+      if (isLegendOpen) return setLegendOpen(false);
+      if (visualTreeRoot !== null) return setVisualTreeRoot(null);
+      if (lineagePath !== null) return setLineagePath(null);
+      if (isSidebarOpen) return setSidebarOpen(false);
+
+      if (viewState === "tree" && pathIds.length > 2) {
+        setPathIds((prev) => prev.slice(0, -1));
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+      }
+      if (viewState === "tree" || viewState === "placeholder") {
+        setPathIds([]);
+        setPlaceholderName("");
+        setViewState("branchSelect");
+        return;
+      }
+      if (viewState === "branchSelect") {
+        setViewState("splash");
+        return;
+      }
+
+      fromPopRef.current = false;
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [
+    isAddModalOpen,
+    isKinshipOpen,
+    isStatsOpen,
+    isAboutOpen,
+    isComplaintsOpen,
+    isEditRequestOpen,
+    isFeaturesMenuOpen,
+    isSequenceOpen,
+    isHelpOpen,
+    isLegendOpen,
+    visualTreeRoot,
+    lineagePath,
+    isSidebarOpen,
+    viewState,
+    pathIds,
+  ]);
 
   useEffect(() => {
     if (isDarkMode) {
@@ -237,7 +345,7 @@ export default function PublicTreeView() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.25, duration: 0.4 }}
           >
-            نسب آل القواسمي
+            نسب آل القاسمي
           </motion.h1>
           <motion.h2
             className="dark:text-[#f3ede1]"
@@ -279,7 +387,6 @@ export default function PublicTreeView() {
           <div className="branch-select-inner mx-auto max-w-6xl px-4">
             <h2 className="branch-title !mb-6 text-center dark:text-[#d6b877]">اختر الفخذ</h2>
 
-            {/* 👇 زر عرض التسلسل الكامل الجديد */}
             <div className="flex justify-center mb-10">
               <motion.button
                 onClick={() => setIsSequenceOpen(true)}
@@ -322,7 +429,6 @@ export default function PublicTreeView() {
             <p className="branch-note !mt-12 text-center dark:text-gray-400">الأفخاذ الجاهزة تفتح تلقائياً، وغير المكتملة تظهر لك رسالة قيد الإعداد.</p>
           </div>
 
-          {/* 👇 استدعاء نافذة التسلسل الجديدة */}
           <SequenceModal 
             isOpen={isSequenceOpen} 
             onClose={() => setIsSequenceOpen(false)}
@@ -382,6 +488,25 @@ export default function PublicTreeView() {
 
   return (
     <div className="no-print min-h-screen font-cairo dark:bg-[#12100e] transition-colors duration-500">
+      
+      {/* 🌟 الكود النووي: إجبار المتصفح على مسح اللون الأخضر واستخدام الرمادي للمتوفين */}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          html body .app-shell main .page-wrap div.deceased-card,
+          html body div.deceased-card {
+            background: #5e6368 !important;
+            background-color: #5e6368 !important;
+            background-image: none !important;
+            border-color: #4b5563 !important;
+          }
+          html body div.deceased-card:hover {
+            background: #4b5563 !important;
+            background-color: #4b5563 !important;
+            background-image: none !important;
+          }
+        `
+      }} />
+
       <Header
         title={currentPathNodes.length > 1 ? currentPathNodes[1].name.replace('فخذ ', '').trim() : "عائلة القواسمي"}
         branches={BRANCHES}
@@ -526,10 +651,17 @@ export default function PublicTreeView() {
                   initial={{ opacity: 0, scale: 0.95, y: -10 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   transition={{ duration: 0.35, delay: 0.05 }}
-                  className={`focus-card reveal in-view ${kidsCount ? 'has-children' : 'no-children'}`}
+                  className={`focus-card reveal in-view ${kidsCount ? 'has-children' : 'no-children'} ${focusNode.death_date ? 'deceased-card' : ''}`}
                 >
                   <LeafIcon />
-                  <div className="name">{displayName}</div>
+                  <div className="name" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                    <span>{displayName}</span>
+                    {focusNode.death_date && (
+                      <span style={{ fontFamily: "'Aref Ruqaa', 'Amiri', serif", fontSize: '24px', fontWeight: 'normal', color: '#f3ede1' }}>
+                        رحمه الله
+                      </span>
+                    )}
+                  </div>
 
                   {calculateAgeDisplay(focusNode.birth_date, focusNode.death_date) && (
                     <div className="text-[13px] text-[#fff9ee] mt-1.5 opacity-95 leading-relaxed font-bold bg-black/15 w-fit mx-auto px-3 py-0.5 rounded-full shadow-sm">
@@ -570,7 +702,15 @@ export default function PublicTreeView() {
                       initial="hidden"
                       animate="visible"
                     >
-                      {focusNode.children!.map((child) => {
+                      {/* 🌟 خوارزمية ترتيب الأبناء من الأكبر للأصغر */}
+                      {[...focusNode.children!]
+                        .sort((a, b) => {
+                          // استخراج سنة الولادة (وإذا ما في تاريخ بنعطيه رقم كبير جداً 9999 عشان ينزل لآخر القائمة)
+                          const yearA = a.birth_date ? parseInt(String(a.birth_date).split('-')[0]) : 9999;
+                          const yearB = b.birth_date ? parseInt(String(b.birth_date).split('-')[0]) : 9999;
+                          return yearA - yearB; // الترتيب تصاعدي (من الأقدم للأحدث)
+                        })
+                        .map((child) => {
                         const childKidsCount = child.children ? child.children.length : 0;
                         const totalDesc = countDescendants(child);
 
@@ -580,11 +720,18 @@ export default function PublicTreeView() {
                             variants={gridItemVariants}
                             whileHover={{ y: -6, scale: 1.02 }}
                             whileTap={{ scale: 0.97 }}
-                            className={`child-card reveal in-view dark:bg-[#1c1915] dark:border-[#d6b877]/20 ${childKidsCount ? 'has-children' : 'no-children'}`}
+                            className={`child-card reveal in-view dark:bg-[#1c1915] dark:border-[#d6b877]/20 ${childKidsCount ? 'has-children' : 'no-children'} ${child.death_date ? 'deceased-card' : ''}`}
                             onClick={() => navigateIntoChild(child.id)}
                           >
                             <LeafIcon />
-                            <div className="name dark:text-[#f3ede1]">{child.name}</div>
+                            <div className="name dark:text-[#f3ede1]" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                              <span>{child.name}</span>
+                              {child.death_date && (
+                                <span className="opacity-90" style={{ fontFamily: "'Aref Ruqaa', 'Amiri', serif", fontSize: '18px', fontWeight: 'normal', color: '#f3ede1' }}>
+                                  رحمه الله
+                                </span>
+                              )}
+                            </div>
 
                           {calculateAgeDisplay(child.birth_date, child.death_date) && (
                               <div className="text-[11px] mt-1.5 text-center leading-relaxed font-bold bg-black/15 dark:bg-black/30 text-white/95 dark:text-[#d6b877] w-fit mx-auto px-2.5 py-0.5 rounded-md transition-colors shadow-sm">
@@ -681,6 +828,10 @@ export default function PublicTreeView() {
               <div className="legend-modal-item"><div className="legend-box legend-father"></div><span className="dark:text-[#f3ede1]">الأب (الاسم المعروض حالياً)</span></div>
               <div className="legend-modal-item"><div className="legend-box legend-has-kids"></div><span className="dark:text-[#f3ede1]">ابن يمتلك أبناء (يمكن الدخول إليه)</span></div>
               <div className="legend-modal-item"><div className="legend-box legend-no-kids"></div><span className="dark:text-[#f3ede1]">ابن بدون أبناء</span></div>
+              <div className="legend-modal-item">
+                <div className="legend-box" style={{ backgroundColor: '#5e6368', border: '1px solid #4b5563' }}></div>
+                <span className="dark:text-[#f3ede1]">متوفى</span>
+              </div>
               <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} className="btn primary close-legend-btn dark:!bg-[#d6b877] dark:!text-[#1c1915]" onClick={() => setLegendOpen(false)}>إغلاق</motion.button>
             </motion.div>
           </motion.div>

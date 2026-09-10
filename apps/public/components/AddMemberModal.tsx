@@ -173,7 +173,7 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
             <>
               <div className="bg-gradient-to-b from-[#fdfbf7] to-white border border-[#d6b877]/40 p-5 rounded-2xl shadow-sm flex flex-col gap-5">
                 <div className="flex flex-col">
-                  <label className="font-bold text-[#7c6c53] text-xs flex items-center gap-1.5 mb-1.5">الاسم الخماسي: <span>👤</span></label>
+                  <label className="font-bold text-[#7c6c53] text-xs flex items-center gap-1.5 mb-1.5">الاسم الخماسي: </label>
                   <input 
                     type="text" 
                     value={parentName}
@@ -185,7 +185,7 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col relative">
-                    <label className="font-bold text-[#7c6c53] text-xs flex items-center gap-1 mb-1.5">الفخذ: <span className="text-sm">🌿</span></label>
+                    <label className="font-bold text-[#7c6c53] text-xs flex items-center gap-1 mb-1.5">الفخذ: <span className="text-sm"></span></label>
                     <div onClick={() => setIsBranchOpen(!isBranchOpen)} className={`${inputStyles} text-gray-700 text-center font-bold cursor-pointer flex justify-between items-center`}>
                       <span className="flex-1 truncate">{branch || "-- اختر الفخذ --"}</span>
                       <motion.svg animate={{ rotate: isBranchOpen ? 180 : 0 }} className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></motion.svg>
@@ -203,7 +203,7 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
                   </div>
 
                   <div className="flex flex-col relative">
-                    <label className="font-bold text-[#7c6c53] text-xs flex items-center gap-1 mb-1.5">الإقامة: <span className="text-sm">📍</span></label>
+                    <label className="font-bold text-[#7c6c53] text-xs flex items-center gap-1 mb-1.5">الإقامة: <span className="text-sm"></span></label>
                     <div onClick={() => setIsLocationOpen(!isLocationOpen)} className={`${inputStyles} text-gray-700 text-center font-bold cursor-pointer flex justify-between items-center`}>
                       <span className="flex-1 truncate">{location || "-- اختر الإقامة --"}</span>
                       <motion.svg animate={{ rotate: isLocationOpen ? 180 : 0 }} className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></motion.svg>
@@ -223,11 +223,11 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col">
-                    <label className="font-bold text-[#7c6c53] text-xs flex items-center gap-1 mb-1.5">سنة الولادة: <span>📅</span></label>
+                    <label className="font-bold text-[#7c6c53] text-xs flex items-center gap-1 mb-1.5">سنة الولادة:</label>
                     <input type="number" value={birthYear} onChange={(e) => setBirthYear(e.target.value)} placeholder="مثال: 1990" className={inputStyles} />
                   </div>
                   <div className="flex flex-col">
-                    <label className="font-bold text-[#7c6c53] text-xs flex items-center gap-1 mb-1.5">سنة الوفاة: <span>⚰️</span></label>
+                    <label className="font-bold text-[#7c6c53] text-xs flex items-center gap-1 mb-1.5">سنة الوفاة: </label>
                     <input type="number" value={deathYear} onChange={(e) => setDeathYear(e.target.value)} placeholder="اتركها فارغة للأحياء" className={inputStyles} />
                   </div>
                 </div>
@@ -236,7 +236,7 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
               <div className="pt-2">
                 <div className="flex justify-between items-center mb-4">
                   <h4 className="font-bold text-[#8a5f2e] text-lg flex items-center gap-2">
-                    <span className="bg-[#d6b877]/20 p-2 rounded-lg text-lg">👤</span> بيانات الأبناء
+                    <span className="bg-[#d6b877]/20 p-2 rounded-lg text-lg"></span> بيانات الأبناء
                   </h4>
                   <motion.button type="button" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setChildrenList([...childrenList, { name: "", birthYear: "", deathYear: "" }])} className="flex items-center gap-1 text-sm bg-gradient-to-r from-[#fffdf8] to-[#f3ede1] border border-[#d6b877] text-[#8a5f2e] px-4 py-2 rounded-xl shadow-sm font-bold">
                     <span>+</span> إضافة ابن
@@ -289,7 +289,7 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
               onClick={handleSubmit} disabled={status === "submitting"}
               className="bg-gradient-to-r from-[#4c7a3f] to-[#3a5c30] text-white font-bold py-3 px-8 rounded-xl text-sm w-full shadow-lg border border-[#2d4a25] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <span>🚀</span> {status === "submitting" ? "جاري الإرسال..." : "إرسال البيانات للتدقيق"}
+              {status === "submitting" ? "جاري الإرسال..." : "إرسال البيانات للتدقيق"}
             </motion.button>
           </div>
         )}
