@@ -16,6 +16,7 @@ import StatisticsModal from './StatisticsModal';
 import FamilyAboutModal from './FamilyAboutModal';
 import ComplaintsModal from './ComplaintsModal';
 import EditRequestModal from './EditRequestModal';
+import SequenceModal from './SequenceModal'; // 👈 استيراد نافذة التسلسل الجديدة
 
 const VIRTUAL_ROOT_ID = 941;
 const tree = treeDataRaw as unknown as FamilyNode;
@@ -93,7 +94,7 @@ function calculateAgeDisplay(birthStr?: string, deathStr?: string) {
 
   const birthYear = birthStr ? parseInt(birthStr.split('-')[0]) : null;
   const deathYear = deathStr ? parseInt(deathStr.split('-')[0]) : null;
-  const currentYear = new Date().getFullYear(); // رح ياخذ السنة الحالية تلقائياً
+  const currentYear = new Date().getFullYear(); 
 
   if (birthYear && deathYear) {
     const age = deathYear - birthYear;
@@ -106,7 +107,6 @@ function calculateAgeDisplay(birthStr?: string, deathStr?: string) {
   }
   return null;
 }
-
 
 export default function PublicTreeView() {
   const [viewState, setViewState] = useState<'splash' | 'branchSelect' | 'tree' | 'placeholder'>('splash');
@@ -127,14 +127,14 @@ export default function PublicTreeView() {
   const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [isComplaintsOpen, setIsComplaintsOpen] = useState(false);
   const [isEditRequestOpen, setIsEditRequestOpen] = useState(false);
-
   
+  const [isSequenceOpen, setIsSequenceOpen] = useState(false); // 👈 حالة فتح التسلسل الجديدة
+
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme === "dark") setIsDarkMode(true);
   }, []);
 
-  /* التعديل الجذري هون عشان Tailwind يفهم الدارك مود */
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add("dark");
@@ -277,7 +277,20 @@ export default function PublicTreeView() {
           transition={pageTransition}
         >
           <div className="branch-select-inner mx-auto max-w-6xl px-4">
-            <h2 className="branch-title !mb-10 text-center dark:text-[#d6b877]">اختر الفخذ</h2>
+            <h2 className="branch-title !mb-6 text-center dark:text-[#d6b877]">اختر الفخذ</h2>
+
+            {/* 👇 زر عرض التسلسل الكامل الجديد */}
+            <div className="flex justify-center mb-10">
+              <motion.button
+                onClick={() => setIsSequenceOpen(true)}
+                whileHover={{ scale: 1.03, boxShadow: "0 12px 26px rgba(138,95,46,0.4)" }}
+                whileTap={{ scale: 0.96 }}
+                className="flex items-center gap-2 rounded-full border border-gold-deep/20 bg-gradient-to-b from-white to-[#fdfbf7] px-6 py-3 font-cairo text-[15px] font-bold text-gold-deep shadow-[0_8px_20px_rgba(138,95,46,0.15)] transition-all dark:border-[#d6b877]/20 dark:from-[#1c1915] dark:to-[#1a1713] dark:text-[#d6b877]"
+              >
+                <span className="text-[18px]">🌳</span>
+                <span>عرض التسلسل الكامل لشجرة العائلة</span>
+              </motion.button>
+            </div>
 
             <motion.div
               className="grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
@@ -308,6 +321,18 @@ export default function PublicTreeView() {
 
             <p className="branch-note !mt-12 text-center dark:text-gray-400">الأفخاذ الجاهزة تفتح تلقائياً، وغير المكتملة تظهر لك رسالة قيد الإعداد.</p>
           </div>
+
+          {/* 👇 استدعاء نافذة التسلسل الجديدة */}
+          <SequenceModal 
+            isOpen={isSequenceOpen} 
+            onClose={() => setIsSequenceOpen(false)}
+            onSelectBranch={(branchId) => {
+              setIsSequenceOpen(false);
+              const branch = BRANCHES.find(b => b.id === branchId);
+              if (branch) handleSelectBranch(branch);
+            }}
+          />
+
         </motion.div>
       </AnimatePresence>
     );
@@ -574,9 +599,6 @@ export default function PublicTreeView() {
                         );
                       })}
                     </motion.div>
-                    
-                    
-
                   </>
                 ) : (
                   <motion.div
@@ -598,16 +620,6 @@ export default function PublicTreeView() {
             <div className="text-[12.5px] font-semibold text-ink-soft/90 dark:text-[#f3ede1]/70">
               إجمالي الأفراد في الشجرة: <span className="font-bold text-gold-deep dark:text-[#d6b877]">{countAllPeople(tree)}</span> فرد
             </div>
-
-          {/* <motion.button
-              onClick={() => setIsAddModalOpen(true)}
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.96 }}
-              className="group my-1 flex items-center gap-2 rounded-full border border-gold-deep/30 bg-white/40 px-5 py-1.5 text-[12px] font-bold text-gold-deep hover:bg-gold-deep/10 hover:shadow-sm dark:border-[#d6b877]/30 dark:bg-[#1c1915]/50 dark:text-[#d6b877]"
-            >
-              <span className="text-[14px] transition-transform duration-300 group-hover:scale-110">📝</span>
-              <span>طلب إضافة فرد جديد</span>
-            </motion.button>*/}
 
             <div className="my-0.5 h-[1px] w-1/4 max-w-[80px] bg-gradient-to-r from-transparent via-gold-deep/20 to-transparent dark:via-[#d6b877]/30" />
 
@@ -709,68 +721,41 @@ export default function PublicTreeView() {
       <LineageCertificateModal isOpen={lineagePath !== null} ancestorPath={lineagePath} totalCount={countAllPeople(tree)} onClose={() => setLineagePath(null)} />
       <VisualTreeModal isOpen={visualTreeRoot !== null} rootNode={visualTreeRoot} onClose={() => setVisualTreeRoot(null)} />
 
-
-
-
-     <LineageCertificateModal isOpen={lineagePath !== null} ancestorPath={lineagePath} totalCount={countAllPeople(tree)} onClose={() => setLineagePath(null)} />
-      <VisualTreeModal isOpen={visualTreeRoot !== null} rootNode={visualTreeRoot} onClose={() => setVisualTreeRoot(null)} />
-
-      {/* 👇 ضفنا المودال هون مع باقي النوافذ عشان يشتغل صح */}
       <FeaturesMenuModal 
-     isOpen={isFeaturesMenuOpen} 
-     onClose={() => setIsFeaturesMenuOpen(false)} 
-     onOpenKinship={() => {
-       setIsFeaturesMenuOpen(false);
-       setTimeout(() => setIsKinshipOpen(true), 150);
-     }}
-     onOpenAddMember={() => {
-       setIsFeaturesMenuOpen(false);
-       setTimeout(() => setIsAddModalOpen(true), 150);
-     }}
-     // 👇 ضفنا أمر الإحصائيات هون
-     onOpenStats={() => {
-       setIsFeaturesMenuOpen(false);
-       setTimeout(() => setIsStatsOpen(true), 150);
-     }}
-     onOpenAbout={() => {
-       setIsFeaturesMenuOpen(false);
-       setTimeout(() => setIsAboutOpen(true), 150);
-     }}
-     onOpenComplaints={() => {
-     setIsFeaturesMenuOpen(false);
-     setTimeout(() => setIsComplaintsOpen(true), 150); 
-    }}
-    onOpenEditRequest={() => {
-    setIsFeaturesMenuOpen(false);
-    setTimeout(() => setIsEditRequestOpen(true), 150);
-  }}
-   />
-
-      {/* 2. نافذة كاشف القرابة (لازم تكون موجودة هون) */}
-      <KinshipModal 
-        isOpen={isKinshipOpen} 
-        onClose={() => setIsKinshipOpen(false)} 
-        people={flatPeople} 
+        isOpen={isFeaturesMenuOpen} 
+        onClose={() => setIsFeaturesMenuOpen(false)} 
+        onOpenKinship={() => {
+          setIsFeaturesMenuOpen(false);
+          setTimeout(() => setIsKinshipOpen(true), 150);
+        }}
+        onOpenAddMember={() => {
+          setIsFeaturesMenuOpen(false);
+          setTimeout(() => setIsAddModalOpen(true), 150);
+        }}
+        onOpenStats={() => {
+          setIsFeaturesMenuOpen(false);
+          setTimeout(() => setIsStatsOpen(true), 150);
+        }}
+        onOpenAbout={() => {
+          setIsFeaturesMenuOpen(false);
+          setTimeout(() => setIsAboutOpen(true), 150);
+        }}
+        onOpenComplaints={() => {
+          setIsFeaturesMenuOpen(false);
+          setTimeout(() => setIsComplaintsOpen(true), 150); 
+        }}
+        onOpenEditRequest={() => {
+          setIsFeaturesMenuOpen(false);
+          setTimeout(() => setIsEditRequestOpen(true), 150);
+        }}
       />
 
-      <StatisticsModal 
-     isOpen={isStatsOpen} 
-     onClose={() => setIsStatsOpen(false)} 
-   />
+      <KinshipModal isOpen={isKinshipOpen} onClose={() => setIsKinshipOpen(false)} people={flatPeople} />
+      <StatisticsModal isOpen={isStatsOpen} onClose={() => setIsStatsOpen(false)} />
+      <FamilyAboutModal isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)} />
+      <ComplaintsModal isOpen={isComplaintsOpen} onClose={() => setIsComplaintsOpen(false)} />
+      <EditRequestModal isOpen={isEditRequestOpen} onClose={() => setIsEditRequestOpen(false)} />
 
-   <FamilyAboutModal 
-     isOpen={isAboutOpen} 
-     onClose={() => setIsAboutOpen(false)} 
-   />
-   <ComplaintsModal isOpen={isComplaintsOpen}
-    onClose={() => setIsComplaintsOpen(false)} 
-    />
-    <EditRequestModal 
-  isOpen={isEditRequestOpen} 
-  onClose={() => setIsEditRequestOpen(false)} 
-/>
-
-      {/* 3. نافذة إضافة الفرد */}
       <AnimatePresence>
         {isAddModalOpen && (
           <AddMemberModal key="add-member" onClose={() => setIsAddModalOpen(false)} />

@@ -40,15 +40,23 @@ export default function ComplaintsModal({ isOpen, onClose }: ComplaintsModalProp
     e.preventDefault();
     setErrorMsg("");
 
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    
+    // التحقق من الاسم الرباعي
+    const senderName = formData.get("sender_name") as string;
+    const nameWords = senderName.trim().split(/\s+/).length;
+    if (nameWords < 4) {
+      setErrorMsg("يرجى إدخال الاسم الرباعي كحد أدنى في خانة اسم المرسل.");
+      return;
+    }
+
     if (messageText.length > 100) {
       setErrorMsg("لا يمكن إرسال الطلب لأن الرسالة تجاوزت 100 حرف.");
       return;
     }
 
     setStatus("submitting");
-
-    const form = e.currentTarget;
-    const formData = new FormData(form);
     const data = new URLSearchParams(formData as any).toString();
 
     try {
@@ -79,7 +87,6 @@ export default function ComplaintsModal({ isOpen, onClose }: ComplaintsModalProp
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
             className="relative w-full max-w-md overflow-hidden rounded-3xl bg-[#fdfbf7] border border-[#c9974f]/30 shadow-2xl dark:bg-[#1c1915] dark:border-[#d6b877]/20 flex flex-col max-h-[90vh]"
           >
-            {/* الهيدر */}
             <div className="relative pt-6 pb-2 shrink-0 z-10 bg-[#fdfbf7] dark:bg-[#1c1915] rounded-t-3xl px-6 border-b border-[#c9974f]/10 dark:border-[#d6b877]/10">
               <button onClick={onClose} className="absolute left-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors dark:bg-[#2b261f] dark:text-gray-400 dark:hover:bg-red-900/30">✕</button>
               <div className="text-center mb-2">
@@ -88,7 +95,6 @@ export default function ComplaintsModal({ isOpen, onClose }: ComplaintsModalProp
               </div>
             </div>
 
-            {/* محتوى الفورم */}
             <div className="p-6 overflow-y-auto sidebar-scroll font-cairo">
               {status === "success" ? (
                 <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center py-8">
@@ -98,18 +104,10 @@ export default function ComplaintsModal({ isOpen, onClose }: ComplaintsModalProp
                   <button onClick={() => { setStatus("idle"); onClose(); }} className="mt-6 bg-[#c9974f]/10 text-[#8a5f2e] font-bold py-2 px-6 rounded-xl hover:bg-[#c9974f]/20 transition-colors dark:bg-[#d6b877]/10 dark:text-[#d6b877]">إغلاق</button>
                 </motion.div>
               ) : (
-                <form 
-                  name="complaints-form" 
-                  method="POST" 
-                  data-netlify="true" 
-                  netlify-honeypot="bot-field" 
-                  onSubmit={handleSubmit}
-                  className="space-y-4"
-                >
+                <form name="complaints-form" method="POST" data-netlify="true" netlify-honeypot="bot-field" onSubmit={handleSubmit} className="space-y-4">
                   <input type="hidden" name="form-name" value="complaints-form" />
                   <p className="hidden"><input name="bot-field" /></p>
 
-                  {/* نوع الرسالة (أزرار الراديو الكلاسيكية والفخمة) */}
                   <div>
                     <label className="block text-[13px] font-bold text-[#8a5f2e] dark:text-[#d6b877] mb-2">نوع الرسالة *</label>
                     <div className="grid grid-cols-2 gap-2">
@@ -148,7 +146,7 @@ export default function ComplaintsModal({ isOpen, onClose }: ComplaintsModalProp
                       name="sender_name" 
                       required 
                       onChange={handleNoEnglishInput}
-                      placeholder="اكتب اسمك هنا..." 
+                      placeholder="الاسم الرباعي كحد أدنى..." 
                       className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[14px] font-bold focus:border-[#c9974f] focus:ring-2 focus:ring-[#c9974f]/20 outline-none transition-all dark:bg-[#24201a] dark:border-gray-700 dark:text-white" 
                     />
                   </div>
@@ -175,4 +173,3 @@ export default function ComplaintsModal({ isOpen, onClose }: ComplaintsModalProp
     </AnimatePresence>
   );
 }
-

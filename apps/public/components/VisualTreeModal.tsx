@@ -6,8 +6,6 @@ import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import * as d3 from "d3";
 import type { FamilyNode } from "@/lib/constants";
-import { jsPDF } from "jspdf";
-import html2canvas from "html2canvas";
 
 interface VisualTreeModalProps {
   isOpen: boolean;
@@ -22,11 +20,9 @@ export default function VisualTreeModal({ isOpen, rootNode, onClose }: VisualTre
   const miniMapRef = useRef<HTMLDivElement>(null);
   const zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
   const svgRef = useRef<d3.Selection<SVGSVGElement, unknown, null, undefined> | null>(null);
-  const treeExtentRef = useRef({ x0: 0, x1: 0, y0: 0, y1: 0, width: 0, height: 0 });
   const syncMiniMapRef = useRef<((transform: d3.ZoomTransform) => void) | null>(null);
 
   const [mounted, setMounted] = useState(false);
-  const [printMarkup, setPrintMarkup] = useState<string | null>(null);
   const [cachedRootNode, setCachedRootNode] = useState<FamilyNode | null>(null);
 
   useEffect(() => setMounted(true), []);
@@ -41,24 +37,19 @@ export default function VisualTreeModal({ isOpen, rootNode, onClose }: VisualTre
     host.innerHTML = "";
     if (miniMapRef.current) miniMapRef.current.innerHTML = "";
 
-    const root = d3.hierarchy(rootNode as any) as d3.HierarchyPointNode<FamilyNode>;
-    
-    const dx = 150;
-    const dy = 170;
-    d3.tree<FamilyNode>().nodeSize([dx, dy])(root);
-
-    let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
-    root.each((d) => {
-      if (d.x > x1) x1 = d.x;
-      if (d.x < x0) x0 = d.x;
-      if (d.y > y1) y1 = d.y;
-      if (d.y < y0) y0 = d.y;
+    const { root, childScale, fontChild, rootScale, fontRoot, maxNameLen, x0, x1, y0, y1 } = buildRadialLayout(rootNode, {
+      minRadius: 10000,
+      minChildScale: 4,
+      maxChildScale: 6,
+      minFontChild: 50,
+      maxFontChild: 55,
+      fontToChildRatio: 8.75,
+      rootToChildRatio: 1.375,
     });
     
-    const padding = 100;
+    const padding = safeContentPadding(childScale, fontChild, maxNameLen, 150);
     const width = x1 - x0 + padding * 2;
     const height = y1 - y0 + padding * 2;
-    treeExtentRef.current = { x0, x1, y0, y1, width, height };
 
     const svg = d3
       .select(host)
@@ -81,46 +72,33 @@ export default function VisualTreeModal({ isOpen, rootNode, onClose }: VisualTre
     zoomRef.current = zoomBehavior;
     svg.call(zoomBehavior);
 
-    drawTreeInto(g, root, { 
-      rootScale: 2.2,
-      childScale: 1.6,
-      fontRoot: 17,
-      fontChild: 14
-    });
+    drawTreeInto(g, root, { rootScale, childScale, fontRoot, fontChild });
 
     const host2ClientW = host.clientWidth || 900;
     const host2ClientH = host.clientHeight || 600;
     const initialScale = Math.min(host2ClientW / width, host2ClientH / height, 1) * 0.95;
-    const initialX = host2ClientW / 2 - root.x * initialScale;
-    const initialY = 250 * initialScale; 
+    
+    const initialX = host2ClientW / 2 - ((x0 + x1) / 2) * initialScale;
+    const initialY = host2ClientH / 2 - ((y0 + y1) / 2) * initialScale; 
     svg.call(zoomBehavior.transform as any, d3.zoomIdentity.translate(initialX, initialY).scale(initialScale));
 
     if (miniMapRef.current) {
       const MINI_W = 190, MINI_H = 110;
       const miniScale = Math.min(MINI_W / width, MINI_H / height) * 0.92;
-      const miniSvg = d3
-        .select(miniMapRef.current)
-        .append("svg")
-        .attr("width", MINI_W)
-        .attr("height", MINI_H)
+      const miniSvg = d3.select(miniMapRef.current).append("svg")
+        .attr("width", MINI_W).attr("height", MINI_H)
         .style("background", "transparent");
 
-      const miniG = miniSvg
-        .append("g")
-        .attr(
-          "transform",
-          `translate(${MINI_W / 2 - ((x0 + x1) / 2) * miniScale}, ${MINI_H / 2 - ((y0 + y1) / 2) * miniScale}) scale(${miniScale})`
-        );
+      const miniG = miniSvg.append("g").attr(
+        "transform",
+        `translate(${MINI_W / 2 - ((x0 + x1) / 2) * miniScale}, ${MINI_H / 2 - ((y0 + y1) / 2) * miniScale}) scale(${miniScale})`
+      );
 
       drawTreeInto(miniG, root, { rootScale: 1.6, childScale: 1.15, fontRoot: 0, fontChild: 0 }, true);
 
-      const viewportRect = miniSvg
-        .append("rect")
-        .attr("class", "viewport-rect")
-        .attr("fill", "rgba(138,95,46,0.15)")
-        .attr("stroke", "#8a5f2e")
-        .attr("stroke-width", 1.5)
-        .attr("pointer-events", "none");
+      const viewportRect = miniSvg.append("rect")
+        .attr("class", "viewport-rect").attr("fill", "rgba(138,95,46,0.15)")
+        .attr("stroke", "#8a5f2e").attr("stroke-width", 1.5).attr("pointer-events", "none");
 
       miniSvg.on("click", (event) => {
         const [mx, my] = d3.pointer(event);
@@ -161,95 +139,118 @@ export default function VisualTreeModal({ isOpen, rootNode, onClose }: VisualTre
     };
   }, [isOpen, rootNode]);
 
-const handleExportSVG = () => {
+  const handleExportSVG = () => {
     if (!rootNode) return;
 
     try {
       const btn = document.getElementById("pdf-btn");
       if (btn) btn.innerHTML = "⏳ جاري التجهيز...";
 
-      // 1. مضاعفة مسافات الشجرة عشان تاخذ راحتها وتصير هي العنصر الأكبر
-      const dx = 800; 
-      const dy = 700; 
-      const root = d3.hierarchy(rootNode as any) as d3.HierarchyPointNode<FamilyNode>;
-      d3.tree<FamilyNode>().nodeSize([dx, dy])(root);
+      const { root, childScale, fontChild, rootScale, fontRoot, maxNameLen, x0: tx0, x1: tx1, y0: ty0, y1: ty1 } =
+        buildRadialLayout(rootNode, {
+          minRadius: 2000,       
+          minChildScale: 150,     
+          maxChildScale: 150,
+          minFontChild: 1000,      
+          maxFontChild: 1500,
+          fontToChildRatio: 6.84,
+          rootToChildRatio: 2.5,
+        });
 
-      const totalMembers = root.descendants().length;
-      const currentDate = new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
-
-      let tx0 = Infinity, tx1 = -Infinity, ty0 = Infinity, ty1 = -Infinity;
-      root.each((d) => {
-        if (d.x > tx1) tx1 = d.x;
-        if (d.x < tx0) tx0 = d.x;
-        if (d.y > ty1) ty1 = d.y;
-        if (d.y < ty0) ty0 = d.y;
-      });
+      const totalMembersCount = root.descendants().length;
       
+      const printDate = new Date().toLocaleDateString('ar-JO', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+
       const treeActualWidth = tx1 - tx0;
       const treeActualHeight = ty1 - ty0;
 
-      const baseDynamicWidth = Math.max(4000, treeActualWidth + 1800);
-      const headerScale = baseDynamicWidth / 4000; 
+      const padding = safeContentPadding(childScale, fontChild, maxNameLen, 2500);
+      
+      const dynamicWidth = treeActualWidth + padding * 2;
+      const headerScale = Math.max(1, dynamicWidth / 3000);
+      
+      const headerHeight = 1500 * headerScale;
+      // 🌟 التعديل 1: إضافة مساحة مخصصة للذيل السفلي (Footer) لعدم تداخل الشجرة معه
+      const footerHeight = 600 * headerScale; 
+      
+      // دمج مساحة التذييل في الطول الكلي للوحة
+      const dynamicHeight = treeActualHeight + padding * 2 + headerHeight + footerHeight;
 
-      // 2. تصغير أحجام نصوص العناوين والفوتر عشان ما تسرق النظر من الشجرة
-      const titleFontSize = 80 * headerScale;
-      const subTitleFontSize = 45 * headerScale;
-      const footerFontSize = 32 * headerScale;
-
-      // 3. تقليل المساحات الفارغة (الهوامش) لتعبئة الصفحة بالشجرة
-      const topPadding = (220 * headerScale) + 1500; 
-      const bottomPadding = (160 * headerScale) + 500; 
-
-      const dynamicWidth = baseDynamicWidth;
-      const dynamicHeight = Math.max(2500, treeActualHeight + topPadding + bottomPadding); 
-
-      // تنحيف الإطار قليلاً ليعطي مساحة أكبر للداخل
-      const outerM = 30 * headerScale;
-      const innerM = 60 * headerScale;
-
-      // 4. بناء الشجرة: تكبير الورقات وخطوط الأسماء للضعف تقريباً!
       const tempSvgDoc = document.createElementNS("http://www.w3.org/2000/svg", "svg");
       const g = d3.select(tempSvgDoc).append("g");
-      drawTreeInto(g, root, { rootScale: 16, childScale: 12.5, fontRoot: 160, fontChild: 125 });
+      
+      drawTreeInto(g, root, { rootScale, childScale, fontRoot, fontChild });
       const treeInnerMarkup = g.node()?.innerHTML || "";
 
-      // 5. التوسيط المضمون
-      const translateX = (dynamicWidth - treeActualWidth) / 2 - tx0;
-      const translateY = topPadding;
+      const translateX = dynamicWidth / 2 - ((tx0 + tx1) / 2);
+      const translateY = headerHeight + padding - ty0;
 
-      // 6. بناء الملف النهائي
+      const hs = headerScale;
+      const margin = 120 * hs;
+
       const svgContent = `
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${dynamicWidth} ${dynamicHeight}" width="100%" height="100%" style="background-color: #fffdf8;">
+          <defs>
+            <pattern id="bg-pattern" x="0" y="0" width="${100 * hs}" height="${100 * hs}" patternUnits="userSpaceOnUse">
+              <path d="M${50 * hs} 0 L${100 * hs} ${50 * hs} L${50 * hs} ${100 * hs} L0 ${50 * hs} Z" fill="none" stroke="#d6b877" stroke-width="${1 * hs}" opacity="0.15"/>
+            </pattern>
+          </defs>
+
           <style>
-            @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@700;900&amp;family=Aref+Ruqaa:wght@700&amp;display=swap');
+            @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@700;900&amp;family=Amiri:wght@400;700&amp;family=Aref+Ruqaa:wght@700&amp;display=swap');
             .title { font-family: 'Aref Ruqaa', serif; }
+            .ayah { font-family: 'Amiri', serif; } 
             .subtitle { font-family: 'Cairo', sans-serif; }
           </style>
 
-          <!-- الإطار الخارجي -->
-          <rect x="${outerM}" y="${outerM}" width="${dynamicWidth - (outerM * 2)}" height="${dynamicHeight - (outerM * 2)}" fill="#fffdf8" stroke="#8a5f2e" stroke-width="${18 * headerScale}" rx="${40 * headerScale}" />
+          <rect x="0" y="0" width="${dynamicWidth}" height="${dynamicHeight}" fill="#fffdf8" />
+          <rect x="0" y="0" width="${dynamicWidth}" height="${dynamicHeight}" fill="url(#bg-pattern)" />
+
+          <!-- ================= الإطارات المتداخلة ================= -->
+          <rect x="${margin}" y="${margin}" width="${dynamicWidth - 2*margin}" height="${dynamicHeight - 2*margin}" fill="none" stroke="#2b1d12" stroke-width="${14 * hs}" />
+          <rect x="${margin + 24*hs}" y="${margin + 24*hs}" width="${dynamicWidth - 2*(margin + 24*hs)}" height="${dynamicHeight - 2*(margin + 24*hs)}" fill="none" stroke="#d4af37" stroke-width="${4 * hs}" />
+          <rect x="${margin + 36*hs}" y="${margin + 36*hs}" width="${dynamicWidth - 2*(margin + 36*hs)}" height="${dynamicHeight - 2*(margin + 36*hs)}" fill="none" stroke="#8a5f2e" stroke-width="${2 * hs}" />
+
+          <!-- ================= زوايا الإطار الهندسية ================= -->
+          ${[
+            [margin, margin],
+            [dynamicWidth - margin, margin],
+            [margin, dynamicHeight - margin],
+            [dynamicWidth - margin, dynamicHeight - margin]
+          ].map(([cx, cy]) => `
+            <g transform="translate(${cx}, ${cy})">
+              <rect x="${-35 * hs}" y="${-35 * hs}" width="${70 * hs}" height="${70 * hs}" fill="#fffdf8" />
+              <rect x="${-24 * hs}" y="${-24 * hs}" width="${48 * hs}" height="${48 * hs}" fill="#2b1d12" />
+              <rect x="${-12 * hs}" y="${-12 * hs}" width="${24 * hs}" height="${24 * hs}" fill="none" stroke="#d4af37" stroke-width="${3 * hs}" />
+              <circle cx="0" cy="0" r="${5 * hs}" fill="#fffdf8" />
+            </g>
+          `).join('')}
+
+          <!-- ================= النصوص العلوية ================= -->
+          <text class="title" x="${dynamicWidth / 2}" y="${380 * hs}" text-anchor="middle" font-size="${160 * hs}" fill="#2b1d12" font-weight="900">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</text>
+          <text class="ayah" x="${dynamicWidth / 2}" y="${580 * hs}" text-anchor="middle" font-size="${100 * hs}" fill="#5c4a38" font-weight="700">وَهُوَ الَّذِي خَلَقَ مِنَ الْمَاءِ بَشَرًا فَجَعَلَهُ نَسَبًا وَصِهْرًا ۗ وَكَانَ رَبُّكَ قَدِيرًا</text>
+
+          <text class="title" x="${dynamicWidth / 2}" y="${1020 * hs}" text-anchor="middle" font-size="${220 * hs}" fill="#2b1d12" font-weight="900">شجرة عائلة القواسمي</text>
+          <line x1="${dynamicWidth / 2 - 500 * hs}" y1="${1100 * hs}" x2="${dynamicWidth / 2 + 500 * hs}" y2="${1100 * hs}" stroke="#d4af37" stroke-width="${4 * hs}" stroke-linecap="round" />
+          <text class="subtitle" x="${dynamicWidth / 2}" y="${1240 * hs}" text-anchor="middle" font-size="${100 * hs}" fill="#8a5f2e" font-weight="bold">فرع: ${rootNode.name.replace("فخذ ", "")}</text>
           
-          <!-- الإطار الداخلي -->
-          <rect x="${innerM}" y="${innerM}" width="${dynamicWidth - (innerM * 2)}" height="${dynamicHeight - (innerM * 2)}" fill="none" stroke="#d6b877" stroke-width="${8 * headerScale}" rx="${25 * headerScale}" />
-          
-          <!-- العناوين العلوية -->
-          <text class="title" x="${dynamicWidth / 2}" y="${outerM + (140 * headerScale)}" text-anchor="middle" font-size="${titleFontSize}" fill="#8a5f2e" font-weight="900">الشجرة الرقمية</text>
-          <text class="subtitle" x="${dynamicWidth / 2}" y="${outerM + (220 * headerScale)}" text-anchor="middle" font-size="${subTitleFontSize}" fill="#7c6c53" font-weight="bold">فرع: ${rootNode.name.replace("فخذ ", "")}</text>
-          
-          <!-- الشجرة المدمجة -->
+          <!-- ================= الشجرة ================= -->
           <g transform="translate(${translateX}, ${translateY})">
             ${treeInnerMarkup}
           </g>
 
-          <!-- ====== الفوتر ====== -->
-          <line x1="${innerM + (80 * headerScale)}" y1="${dynamicHeight - innerM - (100 * headerScale)}" x2="${dynamicWidth - innerM - (80 * headerScale)}" y2="${dynamicHeight - innerM - (100 * headerScale)}" stroke="#d6b877" stroke-width="${3 * headerScale}" stroke-dasharray="${12 * headerScale}, ${12 * headerScale}" opacity="0.6" />
-
-          <text class="subtitle" x="${dynamicWidth - innerM - (80 * headerScale)}" y="${dynamicHeight - innerM - (40 * headerScale)}" text-anchor="end" font-size="${footerFontSize}" fill="#8a5f2e" font-weight="bold">عدد الأفراد الموثقين: ${totalMembers} فرد</text>
-          <text class="subtitle" x="${innerM + (80 * headerScale)}" y="${dynamicHeight - innerM - (40 * headerScale)}" text-anchor="start" font-size="${footerFontSize}" fill="#8a5f2e" font-weight="bold">تاريخ الإصدار: ${currentDate}</text>
+          <!-- ================= تذييل الوثيقة (معلومات الطباعة) ================= -->
+          <!-- 🌟 التعديل 2: تم تغيير الخط ليكون أردني رسمي وتصغير الحجم بشكل مريح 🌟 -->
+          <text font-family="'Amiri', serif" x="${dynamicWidth / 2}" y="${dynamicHeight - margin - 220 * hs}" text-anchor="middle" font-size="${50 * hs}" fill="#5c4a38" font-weight="bold">
+            عدد الأفراد في هذا التسلسل: ${totalMembersCount} فرداً   |   تاريخ الإصدار: ${printDate}
+          </text>
         </svg>
       `;
 
-      // 7. التحميل
       const blob = new Blob([svgContent], { type: "image/svg+xml;charset=utf-8" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -259,15 +260,85 @@ const handleExportSVG = () => {
       link.click();
       document.body.removeChild(link);
 
-      if (btn) btn.innerHTML = "🌿 حفظ الشجرة كـ SVG";
+      if (btn) btn.innerHTML = "🖨️ طباعة / حفظ SVG";
     } catch (error) {
       console.error("خطأ أثناء التصدير:", error);
       alert("حدث خطأ أثناء التصدير.");
       const btn = document.getElementById("pdf-btn");
-      if (btn) btn.innerHTML = "🌿 حفظ الشجرة كـ SVG";
+      if (btn) btn.innerHTML = "🖨️ طباعة / حفظ SVG";
     }
   };
 
+  function buildRadialLayout(
+    data: FamilyNode,
+    opts: {
+      minRadius: number;
+      minChildScale: number;
+      maxChildScale: number;
+      minFontChild: number;
+      maxFontChild: number;
+      fontToChildRatio: number; 
+      rootToChildRatio: number; 
+    }
+  ) {
+    const root = d3.hierarchy(data as any) as d3.HierarchyPointNode<FamilyNode>;
+    const maxDepth = root.height || 1;
+    const names = root.descendants().map((d) => (d.data as FamilyNode).name.replace("فخذ ", ""));
+    const maxNameLen = Math.max(...names.map((n) => n.length), 4);
+ 
+    // 🌟 التعديل الجذري: تثبيت الحجم الذي تدخله أنت تماماً دون قيود رياضية 🌟
+    let radius = opts.minRadius;
+    let childScale = opts.maxChildScale; // سيأخذ القيمة الكبيرة التي وضعتها (مثلاً 140) مباشرة
+    let fontChild = opts.maxFontChild;   // سيأخذ حجم الخط الذي وضعته مباشرة
+
+    // توسيع الدائرة تلقائياً إذا كانت الأوراق الضخمة تحتاج مساحة لكي لا تتداخل
+    const neededRadiusForDepth = maxDepth * (maxNameLen * fontChild * 0.65 + 55 * childScale) * 1.3;
+    if (radius < neededRadiusForDepth) {
+      radius = neededRadiusForDepth;
+    }
+ 
+    const rootScale = childScale * opts.rootToChildRatio;
+    const fontRoot = fontChild * opts.rootToChildRatio;
+ 
+    d3.cluster<FamilyNode>()
+      .size([2 * Math.PI, radius])
+      .separation((a, b) => (a.parent === b.parent ? 1 : 1.5))(root);
+ 
+    let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+    root.each((d: any) => {
+      const cx = d.y * Math.cos(d.x - Math.PI / 2);
+      const cy = d.y * Math.sin(d.x - Math.PI / 2);
+      if (cx > x1) x1 = cx;
+      if (cx < x0) x0 = cx;
+      if (cy > y1) y1 = cy;
+      if (cy < y0) y0 = cy;
+    });
+ 
+    return {
+      root: root as d3.HierarchyPointNode<FamilyNode>,
+      radius,
+      childScale,
+      fontChild,
+      rootScale,
+      fontRoot,
+      maxNameLen,
+      x0,
+      x1,
+      y0,
+      y1,
+    };
+  }
+   
+  function safeContentPadding(childScale: number, fontChild: number, maxNameLen: number, base: number) {
+    const leafPhysicalLength = 50 * childScale; 
+    const textPhysicalLength = maxNameLen * fontChild * 1.0; 
+    const frameAndSafetyMargin = 1500; 
+
+    const requiredSpace = leafPhysicalLength + textPhysicalLength + frameAndSafetyMargin;
+
+    return Math.max(base, requiredSpace);
+  }
+ 
   function drawTreeInto(
     g: d3.Selection<SVGGElement, unknown, null, undefined>,
     root: d3.HierarchyPointNode<FamilyNode>,
@@ -276,17 +347,16 @@ const handleExportSVG = () => {
   ) {
     g.append("g")
       .attr("fill", "none")
-      .attr("stroke", "#6b8e5c")
-      .attr("stroke-width", miniature ? 0.6 : 6.0)
+      .attr("stroke", "#5c4a38") 
+      .attr("stroke-width", miniature ? 0.6 : 1.2 * opts.childScale) 
       .selectAll("path")
       .data(root.links())
       .join("path")
       .attr(
         "d",
-        d3
-          .linkVertical()
-          .x((d: any) => d.x)
-          .y((d: any) => d.y) as any
+        d3.linkRadial()
+          .angle((d: any) => d.x)
+          .radius((d: any) => d.y) as any
       );
 
     const node = g
@@ -294,84 +364,70 @@ const handleExportSVG = () => {
       .selectAll("g")
       .data(root.descendants())
       .join("g")
-      .attr("transform", (d: any) => `translate(${d.x},${d.y})`);
+      .attr("transform", (d: any) => `rotate(${(d.x * 180) / Math.PI - 90}) translate(${d.y},0)`);
 
-    node
+    const rootNodes = node.filter((d: any) => d.depth === 0);
+    const childNodes = node.filter((d: any) => d.depth !== 0);
+
+    rootNodes
+      .append("circle")
+      .attr("r", 22 * opts.rootScale) 
+      .attr("fill", "#a97d3f")
+      .attr("stroke", "#4a3320")
+      .attr("stroke-width", miniature ? 1 : 1.5 * opts.rootScale)
+      .style("filter", miniature ? "none" : "drop-shadow(0 4px 8px rgba(0,0,0,0.4))");
+
+    const RADIAL_LEAF = "M -15,0 C -5,-18 20,-22 40,0 C 20,22 -5,18 -15,0 Z";
+    
+    childNodes
       .append("path")
-      .attr("d", LEAF_PATH)
-      .attr("fill", (d: any) => (d.depth === 0 ? "#a97d3f" : "#2d4a25"))
-      .attr("stroke", (d: any) => (d.depth === 0 ? "#8a5f2e" : "#1f3d1f"))
+      .attr("d", RADIAL_LEAF)
+      .attr("fill", "#2d4a25")
+      .attr("stroke", "#1f3d1f")
       .attr("stroke-width", miniature ? 0.5 : 2.5)
-      .attr("transform", (d: any) => `scale(${d.depth === 0 ? opts.rootScale : opts.childScale})`)
-      .style("filter", miniature ? "none" : "drop-shadow(0 6px 10px rgba(0,0,0,0.4))");
+      .attr("transform", `scale(${opts.childScale})`)
+      .style("filter", miniature ? "none" : "drop-shadow(0 3px 5px rgba(0,0,0,0.3))");
 
-   if (!miniature) {
-      node
+    if (!miniature) {
+      rootNodes
         .append("text")
-        .attr("y", (d: any) => (d.depth === 0 ? -10 * opts.rootScale : -10 * opts.childScale)) 
-        .attr("dy", "0.35em")
+        .attr("transform", (d: any) => {
+           const angle = (d.x * 180) / Math.PI - 90;
+           return `rotate(${-angle})`; 
+        })
+        .attr("dominant-baseline", "central") 
         .attr("fill", "#fff")
         .attr("font-family", "'Cairo', sans-serif")
-        .attr("font-size", (d: any) => (d.depth === 0 ? `${opts.fontRoot}px` : `${opts.fontChild}px`))
+        .attr("font-size", `${opts.fontRoot * 0.65}px`)
+        .attr("font-weight", "900")
+        .style("text-anchor", "middle")
+        .text((d: any) => (d.data as FamilyNode).name.replace("فخذ ", ""));
+
+      childNodes
+        .append("text")
+        .attr("transform", (d: any) => {
+          const angle = (d.x * 180) / Math.PI - 90;
+          const leafCenter = 13 * opts.childScale;
+          
+          if (angle > 90 && angle <= 270) {
+            return `translate(${leafCenter}, 0) rotate(180)`;
+          } else {
+            return `translate(${leafCenter}, 0) rotate(0)`;
+          }
+        })
+        .attr("dominant-baseline", "central") 
+        .attr("fill", "#fff")
+        .attr("font-family", "'Cairo', sans-serif")
+        .attr("font-size", `${opts.fontChild}px`)
         .attr("font-weight", "900")
         .style("text-anchor", "middle")
         .text((d: any) => (d.data as FamilyNode).name.replace("فخذ ", ""));
     }
   }
-
-  function buildPrintSvgMarkup(node: FamilyNode): string {
-    // 1. زيادة المسافات عشان الورق ياخذ راحته وما يركب على بعضه
-    const dx = 290; // كبرناها لـ 290 عشان يبعدوا أفقياً (كانت 170)
-    const dy = 260; // كبرناها لـ 260 عشان يبعدوا عمودياً والخطوط الخضراء تبين أحلى
-
-    const root = d3.hierarchy(node) as d3.HierarchyPointNode<FamilyNode>;
-    d3.tree<FamilyNode>().nodeSize([dx, dy])(root);
-
-    let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
-    root.each((d) => {
-      if (d.x > x1) x1 = d.x;
-      if (d.x < x0) x0 = d.x;
-      if (d.y > y1) y1 = d.y;
-      if (d.y < y0) y0 = d.y;
-    });
-    
-    // زدنا الحواف شوي عشان الورق اللي ع الأطراف ما ينقص
-    const padding = 220; 
-    const width = x1 - x0 + padding * 2;
-    const height = y1 - y0 + padding * 2;
-
-    const svgNS = "http://www.w3.org/2000/svg";
-    const svgEl = document.createElementNS(svgNS, "svg") as unknown as SVGSVGElement;
-    
-    svgEl.setAttribute("viewBox", `${x0 - padding} ${y0 - padding * 0.7} ${width} ${height}`);
-    svgEl.setAttribute("width", "100%");
-    svgEl.setAttribute("height", "100%");
-    svgEl.setAttribute("preserveAspectRatio", "xMidYMid meet");
-
-    const g = d3.select(svgEl).append("g") as unknown as d3.Selection<SVGGElement, unknown, null, undefined>;
-    
-    // 2. تكبير الخطوط بشكل كبير لتناسب حجم الورق
-    drawTreeInto(g, root, { 
-      rootScale: 4.2,   
-      childScale: 3.4,  
-      fontRoot: 48,     // كبرنا خط الجد لـ 48 (كان 34)
-      fontChild: 38     // كبرنا خط الأبناء لـ 38 (كان 26)
-    });
-
-    return svgEl.outerHTML;
-  }
-
-  function handlePrint() {
-    if (!rootNode) return;
-    setPrintMarkup(buildPrintSvgMarkup(rootNode));
-    setTimeout(() => {
-      window.print();
-    }, 250);
-  }
-
+  
   const displayNode = rootNode ?? cachedRootNode;
 
-  const modalContent = (
+  return (
     <AnimatePresence>
       {isOpen && displayNode && (
         <motion.div
@@ -396,11 +452,10 @@ const handleExportSVG = () => {
                   الشجرة الرقمية: {displayNode.name.replace("فخذ ", "")}
                 </h3>
                 <p className="m-0 text-[12px] text-ink-soft">
-                  مرر واسحب للتنقل، استخدم عجلة الفأرة للتكبير — عند الطباعة تُعاد صياغة الشجرة تلقائياً لتملأ الصفحة بالكامل
+                  مرر واسحب للتنقل، استخدم عجلة الفأرة للتكبير
                 </p>
               </div>
               <div className="flex gap-2">
-                {/* تمت إضافة id="pdf-btn" للزر */}
                 <motion.button
                   id="pdf-btn"
                   type="button"
@@ -430,7 +485,6 @@ const handleExportSVG = () => {
               className="relative flex-1 overflow-hidden bg-[#8a5f2e] p-2 m-4 rounded-xl shadow-inner"
             >
               <div className="relative h-full w-full overflow-hidden rounded-lg border-2 border-[#f3ede1]/80 p-[4px]">
-                {/* تمت إضافة id="tree-capture-area" هنا */}
                 <div id="tree-capture-area" className="relative h-full w-full overflow-hidden rounded-md border-[1.5px] border-[#d6b877] bg-[#fffdf8]">
                   <div ref={hostRef} className="h-full w-full touch-none select-none outline-none" />
 
@@ -445,55 +499,5 @@ const handleExportSVG = () => {
         </motion.div>
       )}
     </AnimatePresence>
-  );
-
-
-
-  const printArea = (
-    <div className="print-visual-tree hidden print:flex flex-col w-full h-screen bg-white p-4">
-      <style>{`
-        @media print {
-          body > *:not(.print-visual-tree) { display: none !important; }
-          body { background: white !important; margin: 0 !important; padding: 0 !important; overflow: hidden !important; }
-          @page { size: landscape; margin: 5mm; }
-          .print-visual-tree {
-            display: flex !important;
-            flex-direction: column !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            background: white !important;
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            box-sizing: border-box !important;
-          }
-          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-        }
-      `}</style>
-
-      <div className="flex-1 w-full bg-[#8a5f2e] p-[8px] rounded-2xl flex flex-col shadow-sm">
-        <div className="flex-1 relative w-full flex flex-col overflow-hidden rounded-xl border-[3px] border-[#f3ede1]/90 p-[5px]">
-          <div className="flex-1 relative w-full flex flex-col overflow-hidden rounded-lg border-[2px] border-[#d6b877] bg-[#fffdf8] p-6">
-            
-            <div className="mb-2 text-center flex-none">
-              <h1 className="font-ruqaa text-[34px] text-[#8a5f2e] font-extrabold m-0 drop-shadow-sm">الشجرة الرقمية</h1>
-              <h2 className="text-[#7c6c53] text-[18px] font-bold m-0 mt-1">فرع: {displayNode?.name.replace("فخذ ", "")}</h2>
-            </div>
-
-            {printMarkup && (
-              <div className="flex-1 w-full flex items-center justify-center overflow-hidden" dangerouslySetInnerHTML={{ __html: printMarkup }} />
-            )}
-            
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  return (
-    <>
-      {modalContent}
-      {mounted && displayNode && typeof document !== "undefined" ? createPortal(printArea, document.body) : null}
-    </>
   );
 }

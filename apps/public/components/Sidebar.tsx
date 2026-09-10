@@ -1,4 +1,4 @@
-// Sidebar.tsx
+// apps/public/components/Sidebar.tsx
 "use client";
 
 import { useState, useMemo } from "react";
@@ -58,25 +58,37 @@ export default function Sidebar({ people, isOpen, onClose, onSelectPerson }: Sid
   const { displayed, totalCount } = useMemo(() => {
     let result = people;
     if (search.trim()) {
+      // 1. نقسم البحث لكلمات منفصلة
       const searchKeywords = normalizeArabic(search).split(" ").filter(word => word.length > 0);
       
       result = people.filter(p => {
-        // تنظيف اسم الشخص الحالي
         const cleanName = normalizeArabic(p.name);
         
-        // ربط ذكي: هل الكلمات المدخلة موجودة في اسم الشخص أو اسم أبيه (لو وُجد الأب في القائمة)
+        // 2. الشرط الأساسي: الكلمة الأولى من البحث يجب أن تكون في بداية اسم الشخص نفسه
+        if (!cleanName.startsWith(searchKeywords[0])) {
+          return false;
+        }
+
+        // 3. إذا كان البحث كلمة واحدة فقط ونجح بالشرط، نعرضه
+        if (searchKeywords.length === 1) {
+          return true;
+        }
+
+        // 4. دمج اسم الشخص مع اسم أبوه
         const fatherObj = p.father ? people.find(item => item.name === p.father) : null;
         const fatherName = fatherObj ? normalizeArabic(fatherObj.name) : (p.father ? normalizeArabic(p.father) : "");
         
-        // دمج اسم الشخص مع اسم الأب لنص واحد شامل يسهل البحث فيه
-        const fullContext = `${cleanName} ${fatherName}`;
+        // السر الجديد هون: نقسم الاسم الكامل (الابن + الأب) إلى كلمات منفصلة
+        const contextWords = `${cleanName} ${fatherName}`.split(" ").filter(w => w.length > 0);
 
-        // التأكد من أن جميع الكلمات المكتوبة في البحث مطابقة (سواء باسم الشخص أو أبيه)
-        return searchKeywords.every(keyword => fullContext.includes(keyword));
+        // نتأكد إن *كل* كلمة كتبها المستخدم في البحث، يوجد ما يطابق "بدايتها" في كلمات الاسم أو الأب
+        return searchKeywords.every(keyword => 
+          contextWords.some(word => word.startsWith(keyword))
+        );
       });
     }
     return {
-      displayed: result.slice(0, 50),
+      displayed: result.slice(0, 50), // نحدد العرض بـ 50 نتيجة للحفاظ على الأداء
       totalCount: result.length
     };
   }, [people, search]);

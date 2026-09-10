@@ -35,16 +35,12 @@ export default function EditRequestModal({ isOpen, onClose }: EditRequestModalPr
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     let value = e.target.value;
-    
-    // منع الحروف الإنجليزية
     if (/[a-zA-Z]/.test(value)) {
       value = value.replace(/[a-zA-Z]/g, '');
       setErrorMsg("عذراً، ممنوع استخدام الحروف الإنجليزية!");
     } else {
       setErrorMsg("");
     }
-    
-    // تحديث النص (المتصفح سيمنع التجاوز تلقائياً بسبب maxLength)
     setInfoText(value);
   };
 
@@ -52,21 +48,43 @@ export default function EditRequestModal({ isOpen, onClose }: EditRequestModalPr
     e.preventDefault();
     setErrorMsg("");
 
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+
     if (!selectedEditType) {
       setErrorMsg("الرجاء اختيار نوع التعديل من القائمة.");
       return;
     }
 
-    // حماية إضافية قبل الإرسال
-    if (infoText.length > 100) {
+    const targetPerson = formData.get("target_person") as string;
+    const submitterName = formData.get("submitter_name") as string;
+    const correctInfo = formData.get("correct_info") as string;
+
+    // 1. التحقق من اسم الفرد المراد التعديل عليه (خماسي)
+    if (targetPerson.trim().split(/\s+/).length < 5) {
+      setErrorMsg("اسم الفرد المراد تعديل بياناته يجب أن يكون خماسياً كحد أدنى.");
+      return;
+    }
+
+    // 2. التحقق من الاسم الصحيح (خماسي) - فقط في حالة تصحيح الاسم
+    if (selectedEditType === "تصحيح خطأ في الاسم" && correctInfo.trim().split(/\s+/).length < 5) {
+      setErrorMsg("الاسم الصحيح المُراد إضافته يجب أن يكون خماسياً كحد أدنى.");
+      return;
+    }
+
+    // 3. التحقق من اسم مقدم الطلب (خماسي)
+    if (submitterName.trim().split(/\s+/).length < 5) {
+      setErrorMsg("اسم مقدم الطلب يجب أن يكون خماسياً كحد أدنى.");
+      return;
+    }
+
+    // 4. حماية مربع النص (أقصى حد 100 حرف) للخيارات الأخرى
+    if (infoText.length > 100 && (selectedEditType === "تعديل صلة قرابة (نقل لفرع آخر)" || selectedEditType === "أخرى")) {
       setErrorMsg("لا يمكن إرسال الطلب لأن المعلومة تجاوزت 100 حرف.");
       return;
     }
 
     setStatus("submitting");
-
-    const form = e.currentTarget;
-    const formData = new FormData(form);
     const data = new URLSearchParams(formData as any).toString();
 
     try {
@@ -86,6 +104,52 @@ export default function EditRequestModal({ isOpen, onClose }: EditRequestModalPr
     }
   };
 
+  // دالة ذكية لتحديد نوع الخانة المطلوبة بناءً على الاختيار
+  const renderDynamicInput = () => {
+    if (selectedEditType === "تصحيح خطأ في الاسم") {
+      return (
+        <input 
+          type="text" 
+          name="correct_info" 
+          required
+          onChange={handleNoEnglishInput}
+          placeholder="الاسم الخماسي الصحيح كحد أدنى..." 
+          className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[14px] font-bold focus:border-[#c9974f] focus:ring-2 focus:ring-[#c9974f]/20 outline-none transition-all dark:bg-[#24201a] dark:border-gray-700 dark:text-white dark:focus:ring-[#d6b877]/20" 
+        />
+      );
+    } 
+    
+    if (selectedEditType === "إضافة تاريخ ولادة أو وفاة") {
+      return (
+        <input 
+          type="date" 
+          name="correct_info" 
+          required
+          className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[14px] font-bold focus:border-[#c9974f] focus:ring-2 focus:ring-[#c9974f]/20 outline-none transition-all dark:bg-[#24201a] dark:border-gray-700 dark:text-white dark:focus:ring-[#d6b877]/20" 
+        />
+      );
+    }
+
+    // الحالة الافتراضية (نص طويل للقرابة أو أخرى)
+    return (
+      <>
+        <textarea 
+          name="correct_info" 
+          required 
+          rows={3}
+          value={infoText}
+          maxLength={100}
+          onChange={handleTextareaChange}
+          placeholder="اكتب المعلومة الصحيحة هنا (بحد أقصى 100 حرف)..." 
+          className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[14px] font-bold focus:border-[#c9974f] focus:ring-2 focus:ring-[#c9974f]/20 outline-none transition-all resize-none dark:bg-[#24201a] dark:border-gray-700 dark:text-white dark:focus:ring-[#d6b877]/20" 
+        />
+        <div className={`mt-1 text-left text-[11px] font-bold ${infoText.length === 100 ? 'text-orange-500' : 'text-gray-400 dark:text-gray-500'}`}>
+          {infoText.length} / 100 حرف
+        </div>
+      </>
+    );
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -98,7 +162,6 @@ export default function EditRequestModal({ isOpen, onClose }: EditRequestModalPr
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
             className="relative w-full max-w-md overflow-hidden rounded-3xl bg-[#fdfbf7] border border-[#c9974f]/30 shadow-2xl dark:bg-[#1c1915] dark:border-[#d6b877]/20 flex flex-col max-h-[90vh]"
           >
-            {/* الهيدر */}
             <div className="relative pt-6 pb-2 shrink-0 z-10 bg-[#fdfbf7] dark:bg-[#1c1915] rounded-t-3xl px-6 border-b border-[#c9974f]/10 dark:border-[#d6b877]/10">
               <button onClick={onClose} className="absolute left-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors dark:bg-[#2b261f] dark:text-gray-400 dark:hover:bg-red-900/30">✕</button>
               <div className="text-center mb-2">
@@ -107,7 +170,6 @@ export default function EditRequestModal({ isOpen, onClose }: EditRequestModalPr
               </div>
             </div>
 
-            {/* محتوى الفورم */}
             <div className="p-6 overflow-y-auto sidebar-scroll font-cairo">
               {status === "success" ? (
                 <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center py-8">
@@ -117,14 +179,7 @@ export default function EditRequestModal({ isOpen, onClose }: EditRequestModalPr
                   <button onClick={() => { setStatus("idle"); onClose(); }} className="mt-6 bg-[#c9974f]/10 text-[#8a5f2e] font-bold py-2 px-6 rounded-xl hover:bg-[#c9974f]/20 transition-colors dark:bg-[#d6b877]/10 dark:text-[#d6b877]">إغلاق</button>
                 </motion.div>
               ) : (
-                <form 
-                  name="edit-requests-form" 
-                  method="POST" 
-                  data-netlify="true" 
-                  netlify-honeypot="bot-field" 
-                  onSubmit={handleSubmit}
-                  className="space-y-4"
-                >
+                <form name="edit-requests-form" method="POST" data-netlify="true" netlify-honeypot="bot-field" onSubmit={handleSubmit} className="space-y-4">
                   <input type="hidden" name="form-name" value="edit-requests-form" />
                   <p className="hidden"><input name="bot-field" /></p>
 
@@ -135,12 +190,11 @@ export default function EditRequestModal({ isOpen, onClose }: EditRequestModalPr
                       name="target_person" 
                       required
                       onChange={handleNoEnglishInput}
-                      placeholder="الاسم الرباعي أو الثلاثي..." 
+                      placeholder="الاسم الخماسي كحد أدنى..." 
                       className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[14px] font-bold focus:border-[#c9974f] focus:ring-2 focus:ring-[#c9974f]/20 outline-none transition-all dark:bg-[#24201a] dark:border-gray-700 dark:text-white dark:focus:ring-[#d6b877]/20" 
                     />
                   </div>
 
-                  {/* القائمة المنسدلة الفخمة */}
                   <div className="relative">
                     <label className="block text-[13px] font-bold text-[#8a5f2e] dark:text-[#d6b877] mb-2">نوع التعديل *</label>
                     <input type="hidden" name="edit_type" value={selectedEditType} />
@@ -164,20 +218,13 @@ export default function EditRequestModal({ isOpen, onClose }: EditRequestModalPr
                     <AnimatePresence>
                       {isDropdownOpen && (
                         <motion.div 
-                          initial={{ opacity: 0, y: -10 }} 
-                          animate={{ opacity: 1, y: 0 }} 
-                          exit={{ opacity: 0, y: -10 }}
-                          transition={{ duration: 0.2 }}
+                          initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}
                           className="absolute z-20 w-full mt-2 bg-white border border-[#c9974f]/30 rounded-xl shadow-xl overflow-hidden dark:bg-[#1c1915] dark:border-[#d6b877]/30"
                         >
                           {editOptions.map((option) => (
                             <div 
                               key={option}
-                              onClick={() => {
-                                setSelectedEditType(option);
-                                setIsDropdownOpen(false);
-                                setErrorMsg("");
-                              }}
+                              onClick={() => { setSelectedEditType(option); setIsDropdownOpen(false); setErrorMsg(""); }}
                               className={`px-4 py-3 text-[13px] font-bold cursor-pointer transition-colors hover:bg-[#c9974f]/10 dark:hover:bg-[#d6b877]/10 
                                 ${selectedEditType === option ? 'bg-[#c9974f]/15 text-[#8a5f2e] border-r-4 border-[#8a5f2e] dark:bg-[#d6b877]/15 dark:text-[#d6b877] dark:border-[#d6b877]' : 'text-gray-700 border-r-4 border-transparent dark:text-gray-300'}`}
                             >
@@ -189,23 +236,15 @@ export default function EditRequestModal({ isOpen, onClose }: EditRequestModalPr
                     </AnimatePresence>
                   </div>
 
-                  <div>
-                    <label className="block text-[13px] font-bold text-[#8a5f2e] dark:text-[#d6b877] mb-2">المعلومة الصحيحة المُراد إضافتها *</label>
-                    <textarea 
-                      name="correct_info" 
-                      required 
-                      rows={3}
-                      value={infoText}
-                      maxLength={100} // تم تحديد السقف هنا، المتصفح لن يقبل أحرف إضافية
-                      onChange={handleTextareaChange}
-                      placeholder="اكتب المعلومة الصحيحة هنا (بحد أقصى 100 حرف)..." 
-                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[14px] font-bold focus:border-[#c9974f] focus:ring-2 focus:ring-[#c9974f]/20 outline-none transition-all resize-none dark:bg-[#24201a] dark:border-gray-700 dark:text-white dark:focus:ring-[#d6b877]/20" 
-                    />
-                    {/* عداد الأحرف */}
-                    <div className={`mt-1 text-left text-[11px] font-bold ${infoText.length === 100 ? 'text-orange-500' : 'text-gray-400 dark:text-gray-500'}`}>
-                      {infoText.length} / 100 حرف
-                    </div>
-                  </div>
+                  {/* الحقل الديناميكي يظهر فقط إذا تم اختيار نوع التعديل */}
+                  {selectedEditType && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }}
+                    >
+                      <label className="block text-[13px] font-bold text-[#8a5f2e] dark:text-[#d6b877] mb-2">المعلومة الصحيحة المُراد إضافتها *</label>
+                      {renderDynamicInput()}
+                    </motion.div>
+                  )}
 
                   <div className="pt-2 border-t border-[#c9974f]/10 dark:border-[#d6b877]/10">
                     <label className="block text-[13px] font-bold text-[#8a5f2e] dark:text-[#d6b877] mb-2">اسم مقدم الطلب *</label>
@@ -214,7 +253,7 @@ export default function EditRequestModal({ isOpen, onClose }: EditRequestModalPr
                       name="submitter_name" 
                       required 
                       onChange={handleNoEnglishInput}
-                      placeholder="الاسم لتأكيد التعديل..."
+                      placeholder="الاسم الخماسي كحد أدنى..."
                       className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[14px] font-bold focus:border-[#c9974f] focus:ring-2 focus:ring-[#c9974f]/20 outline-none transition-all dark:bg-[#24201a] dark:border-gray-700 dark:text-white" 
                     />
                   </div>
