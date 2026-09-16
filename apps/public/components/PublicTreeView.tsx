@@ -17,6 +17,7 @@ import FamilyAboutModal from './FamilyAboutModal';
 import ComplaintsModal from './ComplaintsModal';
 import EditRequestModal from './EditRequestModal';
 import SequenceModal from './SequenceModal';
+import IosInstallPrompt from "./IosInstallPrompt";
 
 const VIRTUAL_ROOT_ID = 941;
 const tree = treeDataRaw as unknown as FamilyNode;
@@ -678,6 +679,10 @@ export default function PublicTreeView() {
       <AnimatePresence>
         {isAddModalOpen && <AddMemberModal key="add-member" onClose={() => setIsAddModalOpen(false)} />}
       </AnimatePresence>
+
+      {/* 🌟 نافذة الآيفون المنبثقة 🌟 */}
+      <IosInstallPrompt />
+
     </div>
   );
 }
