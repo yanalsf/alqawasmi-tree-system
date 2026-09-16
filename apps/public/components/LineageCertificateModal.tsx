@@ -22,14 +22,12 @@ export default function LineageCertificateModal({
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  // نحتفظ بآخر مسار صحيح حتى تكتمل حركة الإغلاق (حتى لو تحول ancestorPath إلى null فوراً)
   const [cachedPath, setCachedPath] = useState<FamilyNode[] | null>(null);
   useEffect(() => {
     if (ancestorPath && ancestorPath.length > 0) setCachedPath(ancestorPath);
   }, [ancestorPath]);
 
   const pathToRender = ancestorPath && ancestorPath.length > 0 ? ancestorPath : cachedPath;
-
   const person = pathToRender ? pathToRender[pathToRender.length - 1] : null;
   const reversedPath = pathToRender ? [...pathToRender].reverse() : [];
 
@@ -47,6 +45,16 @@ export default function LineageCertificateModal({
     hidden: { opacity: 0, y: 16, scale: 0.92 },
     visible: { opacity: 1, y: 0, scale: 1 },
   };
+
+  // 🌟 متغيرات الحجم الذكي (Dynamic Scaling) لضمان عدم خروج الأجداد من الصفحة
+  const pathCount = reversedPath.length;
+  const isVeryLong = pathCount > 11;
+  const isLong = pathCount > 7 && pathCount <= 11;
+
+  const boxPadding = isVeryLong ? "px-4 py-1.5" : isLong ? "px-6 py-2" : "px-10 py-2.5";
+  const boxTextSize = isVeryLong ? "text-[15px]" : isLong ? "text-[18px]" : "text-[22px]";
+  const minWidth = isVeryLong ? "min-w-[150px]" : isLong ? "min-w-[180px]" : "min-w-[220px]";
+  const connectorSize = isVeryLong ? "w-[20px] h-[20px] text-[9px] my-0.5 border-[1.5px]" : isLong ? "w-[24px] h-[24px] text-[10px] my-1 border-[2px]" : "w-[28px] h-[28px] text-[12px] my-1.5 border-[2px]";
 
   // =================================================================
   // 1. النافذة المنبثقة البسيطة والفخمة على الشاشة (للمعاينة)
@@ -68,22 +76,18 @@ export default function LineageCertificateModal({
             exit={{ opacity: 0, scale: 0.92, y: 16 }}
             transition={{ type: "spring", damping: 26, stiffness: 320 }}
             onClick={(e) => e.stopPropagation()}
-            className="flex flex-col w-[420px] max-w-full bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.4)] overflow-hidden text-center border border-gold/20"
+            className="flex flex-col w-[420px] max-w-full bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.4)] overflow-hidden text-center border border-gold/20 dark:bg-[#161411] dark:border-white/10"
           >
-            {/* الترويسة */}
-            <div className="p-6 pb-5 bg-gradient-to-b from-panel to-white border-b border-gold/10">
-              <h3 className="m-0 mb-2 text-[24px] font-extrabold text-gold-deep font-ruqaa drop-shadow-sm">
+            <div className="p-6 pb-5 bg-gradient-to-b from-panel to-white border-b border-gold/10 dark:from-[#1c1915] dark:to-[#161411] dark:border-white/10">
+              <h3 className="m-0 mb-2 text-[24px] font-extrabold text-gold-deep font-ruqaa drop-shadow-sm dark:text-[#d6b877]">
                 وثيقة إثبات نسب
               </h3>
-              <p className="m-0 text-[13px] text-ink-soft leading-relaxed">
+              <p className="m-0 text-[13px] text-ink-soft leading-relaxed dark:text-gray-400">
                 سيتم طباعة سلسلة نسب <span className="font-bold text-gold-deep">"{person.name}"</span><br/> وصولاً إلى الجد <span className="font-bold text-ink">"{reversedPath[reversedPath.length - 1].name.replace('فخذ ', '')}"</span>.
               </p>
             </div>
 
-            {/* قائمة الأسماء (سلسلة فخمة مع خط متصل) */}
-            <div className="flex-1 overflow-y-auto p-6 bg-[#fbfaf8] flex flex-col items-center justify-start max-h-[45vh] custom-scrollbar relative">
-
-              {/* الخط العمودي الخفيف في الخلفية لربط الأسماء */}
+            <div className="flex-1 overflow-y-auto p-6 bg-[#fbfaf8] flex flex-col items-center justify-start max-h-[45vh] custom-scrollbar relative dark:bg-[#161411]">
               <motion.div
                 initial={{ scaleY: 0 }}
                 animate={{ scaleY: 1 }}
@@ -102,21 +106,19 @@ export default function LineageCertificateModal({
                   const isFocus = i === 0;
                   return (
                     <motion.div key={node.id} variants={cardVariants} className="flex flex-col items-center w-full">
-                      {/* بطاقة الاسم (بارزة وواضحة) */}
                       <motion.div
                         whileHover={{ scale: 1.05 }}
                         className={`px-8 py-3 rounded-2xl font-bold min-w-[200px] text-center relative z-10 ${
                           isFocus
                             ? 'bg-gradient-to-r from-[#d3a765] to-[#8a5f2e] text-white border-2 border-[#8a5f2e] shadow-[0_6px_15px_rgba(138,95,46,0.3)] text-[18px]'
-                            : 'bg-white text-[#1f3d1f] border-2 border-[#7ba869]/60 shadow-[0_4px_12px_rgba(0,0,0,0.08)] text-[16px]'
+                            : 'bg-white text-[#1f3d1f] border-2 border-[#7ba869]/60 shadow-[0_4px_12px_rgba(0,0,0,0.08)] text-[16px] dark:bg-[#1c1915] dark:text-[#a8c99a] dark:border-[#7ba869]/40'
                         }`}
                       >
                         {node.name.replace('فخذ ', '')}
                       </motion.div>
 
-                      {/* رابط "بن" بين الأسماء */}
                       {i < reversedPath.length - 1 && (
-                        <div className="w-[30px] h-[30px] flex items-center justify-center rounded-full bg-white border-2 border-[#7ba869] text-[#4c7a3f] text-[12px] font-black my-1.5 relative z-10 shadow-sm">
+                        <div className="w-[30px] h-[30px] flex items-center justify-center rounded-full bg-white border-2 border-[#7ba869] text-[#4c7a3f] text-[12px] font-black my-1.5 relative z-10 shadow-sm dark:bg-[#1c1915] dark:text-[#8fc47a]">
                           بـن
                         </div>
                       )}
@@ -126,8 +128,7 @@ export default function LineageCertificateModal({
               </motion.div>
             </div>
 
-            {/* الأزرار الفخمة */}
-            <div className="p-5 bg-white border-t border-gold/10 flex gap-4 relative z-20">
+            <div className="p-5 bg-white border-t border-gold/10 flex gap-4 relative z-20 dark:bg-[#161411] dark:border-white/10">
               <motion.button
                 type="button"
                 whileHover={{ scale: 1.02 }}
@@ -142,7 +143,7 @@ export default function LineageCertificateModal({
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={onClose}
-                className="flex-1 rounded-2xl bg-[#f8f9fa] px-4 py-3.5 font-bold text-[#7c6c53] shadow-sm border border-[#c9974f]/30 hover:bg-gray-100 hover:text-[#8a5f2e]"
+                className="flex-1 rounded-2xl bg-[#f8f9fa] px-4 py-3.5 font-bold text-[#7c6c53] shadow-sm border border-[#c9974f]/30 hover:bg-gray-100 hover:text-[#8a5f2e] dark:bg-[#24201a] dark:text-gray-400 dark:border-[#d6b877]/20 dark:hover:bg-white/5 dark:hover:text-[#d6b877]"
               >
                 إغلاق
               </motion.button>
@@ -154,33 +155,44 @@ export default function LineageCertificateModal({
   );
 
   // =================================================================
-  // 2. حاوية الطباعة الفخمة A4 (تظهر في الـ PDF فقط)
+  // 2. حاوية الطباعة الفخمة A4 (تظهر في الـ PDF فقط ومحمية من التقسيم)
   // =================================================================
   const printArea = (
-    <div className="print-exact-container hidden print:flex flex-col w-full h-screen max-h-screen overflow-hidden bg-white">
+    <div className="print-exact-container hidden print:flex flex-col w-full h-full bg-white">
       <style>{`
-        /* تنسيق شريط التمرير للنافذة المنبثقة */
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(201, 151, 79, 0.5); border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(138, 95, 46, 0.8); }
 
-        /* تنسيقات الطباعة الإجبارية */
+        /* 🌟 الكود السري لحماية الطباعة على الموبايل من التقسيم */
         @media print {
+          html, body {
+            width: 100% !important;
+            height: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+            background: white !important;
+          }
           body > *:not(.print-exact-container) { display: none !important; }
-          body { background: white !important; margin: 0 !important; padding: 0 !important; overflow: hidden !important; }
           @page { size: A4 portrait; margin: 0 !important; }
           .print-exact-container {
             display: flex !important;
             flex-direction: column !important;
-            width: 100% !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            width: 100vw !important;
             height: 100vh !important;
-            max-height: 100vh !important;
             background: white !important;
             box-sizing: border-box !important;
             overflow: hidden !important;
             page-break-after: avoid !important;
             page-break-before: avoid !important;
+            page-break-inside: avoid !important;
           }
           * {
             -webkit-print-color-adjust: exact !important;
@@ -190,34 +202,34 @@ export default function LineageCertificateModal({
       `}</style>
 
       {/* الترويسة للطباعة */}
-      <div className="flex-none text-center relative z-10 bg-white pt-10 pb-4">
-        <h1 className="font-ruqaa text-[42px] text-[#8a5f2e] font-extrabold mb-2 m-0">شجرة عائلة القواسمي</h1>
-        <h2 className="text-[#7c6c53] text-[18px] font-bold m-0">وثيقة إثبات تسلسل نسب: {person?.name}</h2>
-        <div className="w-[85%] h-[2.5px] bg-[#c9974f] mx-auto mt-5"></div>
+      <div className={`flex-none text-center relative z-10 bg-white ${isVeryLong ? 'pt-4 pb-2' : isLong ? 'pt-6 pb-3' : 'pt-10 pb-4'}`}>
+        <h1 className={`font-ruqaa ${isVeryLong ? 'text-[32px]' : isLong ? 'text-[36px]' : 'text-[42px]'} text-[#8a5f2e] font-extrabold mb-1 m-0`}>شجرة عائلة القواسمي</h1>
+        <h2 className={`text-[#7c6c53] ${isVeryLong ? 'text-[15px]' : isLong ? 'text-[16px]' : 'text-[18px]'} font-bold m-0`}>وثيقة إثبات تسلسل نسب: {person?.name}</h2>
+        <div className={`w-[85%] h-[2.5px] bg-[#c9974f] mx-auto ${isVeryLong ? 'mt-2' : 'mt-5'}`}></div>
       </div>
 
       {/* الخط الأخضر المتصل والبطاقات للطباعة */}
-      <div className="flex-1 relative flex flex-col justify-center items-center w-full overflow-hidden">
+      <div className="flex-1 relative flex flex-col justify-center items-center w-full overflow-hidden min-h-0">
         <div className="absolute top-0 bottom-0 left-1/2 w-[3px] bg-[#6b8e5c] -translate-x-1/2 z-0"></div>
 
-        <div className="relative z-10 flex flex-col items-center justify-center h-full py-2 w-full">
+        <div className="relative z-10 flex flex-col items-center justify-center h-full py-1 w-full min-h-0">
           {reversedPath.map((node, i) => {
             const isFocus = i === 0;
             const isRoot = i === reversedPath.length - 1;
             const borderRadius = i % 2 === 0 ? '26px 0 26px 0' : '0 26px 0 26px';
-            let bg = '#e6f2e6'; let color = '#1f3d1f'; let border = '2px solid #3a5c30';
+            let bg = '#e6f2e6'; let color = '#1f3d1f'; let border = isVeryLong ? '1px solid #3a5c30' : '2px solid #3a5c30';
 
-            if (isFocus) { bg = 'linear-gradient(160deg, #d3a765, #8a5f2e)'; color = '#fff'; border = '2px solid #8a5f2e'; } 
-            else if (isRoot) { bg = '#c5e0c5'; border = '2px solid #2d4a25'; }
+            if (isFocus) { bg = 'linear-gradient(160deg, #d3a765, #8a5f2e)'; color = '#fff'; border = isVeryLong ? '1px solid #8a5f2e' : '2px solid #8a5f2e'; } 
+            else if (isRoot) { bg = '#c5e0c5'; border = isVeryLong ? '1px solid #2d4a25' : '2px solid #2d4a25'; }
 
             return (
-              <div key={node.id} className="flex flex-col items-center shrink-1" style={{ pageBreakInside: 'avoid' }}>
-                <div className="px-10 py-2.5 font-extrabold text-[22px] min-w-[220px] text-center shadow-[0_4px_10px_rgba(0,0,0,0.08)] font-cairo" style={{ background: bg, color, border, borderRadius }}>
+              <div key={node.id} className="flex flex-col items-center shrink min-h-0" style={{ pageBreakInside: 'avoid' }}>
+                <div className={`${boxPadding} font-extrabold ${boxTextSize} ${minWidth} text-center shadow-[0_4px_10px_rgba(0,0,0,0.08)] font-cairo`} style={{ background: bg, color, border, borderRadius }}>
                   {node.name.replace('فخذ ', '')}
                 </div>
                 
                 {i < reversedPath.length - 1 && (
-                  <div className="w-[28px] h-[28px] rounded-full border-[2px] border-[#6b8e5c] bg-white text-[#6b8e5c] flex items-center justify-center text-[12px] font-black my-1.5 z-10 font-cairo relative">
+                  <div className={`${connectorSize} rounded-full border-[#6b8e5c] bg-white text-[#6b8e5c] flex items-center justify-center font-black z-10 font-cairo relative`}>
                     بـن
                   </div>
                 )}
@@ -228,11 +240,11 @@ export default function LineageCertificateModal({
       </div>
 
       {/* التذييل للطباعة */}
-      <div className="flex-none w-[85%] mx-auto border-t-[2px] border-b-0 border-x-0 border-dashed border-[#c9974f] pt-5 pb-8 text-center relative z-10 bg-white">
-        <span className="text-[14.5px] font-bold text-[#7c6c53]">
+      <div className={`flex-none w-[85%] mx-auto border-t-[2px] border-b-0 border-x-0 border-dashed border-[#c9974f] ${isVeryLong ? 'pt-3 pb-4' : 'pt-5 pb-8'} text-center relative z-10 bg-white`}>
+        <span className={`${isVeryLong ? 'text-[12px]' : 'text-[14.5px]'} font-bold text-[#7c6c53]`}>
           عدد الأفراد داخل الشجرة: <span className="text-[#8a5f2e]">{totalCount} فرد</span>
           <span className="mx-4 text-[#c9974f]">|</span>
-          <span className="text-[13.5px] font-normal opacity-90">تاريخ الطباعة: {dateAr}</span>
+          <span className={`${isVeryLong ? 'text-[11px]' : 'text-[13.5px]'} font-normal opacity-90`}>تاريخ الطباعة: {dateAr}</span>
         </span>
       </div>
     </div>

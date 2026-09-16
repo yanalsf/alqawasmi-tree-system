@@ -13,6 +13,11 @@ export default function ComplaintsModal({ isOpen, onClose }: ComplaintsModalProp
   const [errorMsg, setErrorMsg] = useState("");
   const [messageText, setMessageText] = useState("");
 
+  // 🌟 حالات رقم الهاتف
+  const [phone, setPhone] = useState("");
+  const [countryCode, setCountryCode] = useState("+962");
+  const [isCountryOpen, setIsCountryOpen] = useState(false);
+
   const handleNoEnglishInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     if (/[a-zA-Z]/.test(value)) {
@@ -43,11 +48,16 @@ export default function ComplaintsModal({ isOpen, onClose }: ComplaintsModalProp
     const form = e.currentTarget;
     const formData = new FormData(form);
     
-    // التحقق من الاسم الرباعي
     const senderName = formData.get("sender_name") as string;
     const nameWords = senderName.trim().split(/\s+/).length;
     if (nameWords < 4) {
       setErrorMsg("يرجى إدخال الاسم الرباعي كحد أدنى في خانة اسم المرسل.");
+      return;
+    }
+
+    // 🌟 التحقق من إدخال رقم الهاتف
+    if (!phone.trim()) {
+      setErrorMsg("رقم الهاتف مطلوب للتواصل!");
       return;
     }
 
@@ -68,6 +78,8 @@ export default function ComplaintsModal({ isOpen, onClose }: ComplaintsModalProp
       setStatus("success");
       form.reset();
       setMessageText("");
+      setPhone(""); // تصفير الهاتف
+      setCountryCode("+962");
     } catch (error) {
       console.error(error);
       setStatus("error");
@@ -106,6 +118,8 @@ export default function ComplaintsModal({ isOpen, onClose }: ComplaintsModalProp
               ) : (
                 <form name="complaints-form" method="POST" data-netlify="true" netlify-honeypot="bot-field" onSubmit={handleSubmit} className="space-y-4">
                   <input type="hidden" name="form-name" value="complaints-form" />
+                  {/* 🌟 دمج وإرسال رقم الهاتف */}
+                  <input type="hidden" name="phone" value={`${countryCode} ${phone}`} />
                   <p className="hidden"><input name="bot-field" /></p>
 
                   <div>
@@ -149,6 +163,43 @@ export default function ComplaintsModal({ isOpen, onClose }: ComplaintsModalProp
                       placeholder="الاسم الرباعي كحد أدنى..." 
                       className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[14px] font-bold focus:border-[#c9974f] focus:ring-2 focus:ring-[#c9974f]/20 outline-none transition-all dark:bg-[#24201a] dark:border-gray-700 dark:text-white" 
                     />
+                  </div>
+
+                  {/* 🌟 خانة الهاتف الجديدة */}
+                  <div className="pt-2">
+                    <label className="block text-[13px] font-bold text-[#8a5f2e] dark:text-[#d6b877] mb-2">رقم الهاتف (للتواصل) *</label>
+                    <div className="flex gap-2 w-full" dir="ltr">
+                      <div className="relative w-[110px] shrink-0">
+                        <div 
+                          onClick={() => setIsCountryOpen(!isCountryOpen)} 
+                          className="w-full h-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-3 text-[14px] font-bold flex justify-between items-center cursor-pointer transition-all hover:border-[#c9974f]/50 dark:bg-[#24201a] dark:border-gray-700 dark:text-white"
+                        >
+                          <span className="flex-1 text-center leading-none mt-1" dir="ltr">
+                            {countryCode === '+962' ? '🇯🇴 +962' : '🇵🇸 +970'}
+                          </span>
+                          <svg className={`w-4 h-4 transition-transform duration-300 text-[#8a5f2e] dark:text-[#d6b877] ${isCountryOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                        <AnimatePresence>
+                          {isCountryOpen && (
+                            <motion.div 
+                              initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} 
+                              className="absolute top-[100%] left-0 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden dark:bg-[#1c1915] dark:border-gray-700"
+                            >
+                              <div onClick={() => { setCountryCode("+962"); setIsCountryOpen(false); }} className="p-3 text-center cursor-pointer hover:bg-[#c9974f]/10 text-gray-700 dark:text-gray-300 font-bold text-[13px] border-b border-gray-100 dark:border-gray-800 transition-colors">🇯🇴 +962</div>
+                              <div onClick={() => { setCountryCode("+970"); setIsCountryOpen(false); }} className="p-3 text-center cursor-pointer hover:bg-[#c9974f]/10 text-gray-700 dark:text-gray-300 font-bold text-[13px] transition-colors">🇵🇸 +970</div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                      <input 
+                        type="tel" 
+                        value={phone} 
+                        onChange={(e) => setPhone(e.target.value)} 
+                        placeholder="790 000 000" 
+                        className="w-full flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[14px] font-bold focus:border-[#c9974f] focus:ring-2 focus:ring-[#c9974f]/20 outline-none transition-all dark:bg-[#24201a] dark:border-gray-700 dark:text-white text-left tracking-wider" 
+                        dir="ltr"
+                      />
+                    </div>
                   </div>
 
                   {errorMsg && (

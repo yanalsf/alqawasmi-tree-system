@@ -1,11 +1,17 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import "./globals.css";
 import "./legacy.css"; // the original site's stylesheet, verbatim
 import HiddenNetlifyForms from "../components/HiddenNetlifyForms";
  
 export const metadata: Metadata = {
-  title: "شجرة العائلة",
+  title: "شجرة عائلة القواسمي",
+  description: "تطبيق شجرة عائلة القواسمي الرسمية",
+  manifest: "/manifest.json",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#8a5f2e",
 };
  
 export default function RootLayout({ children }: { children: React.ReactNode }) {

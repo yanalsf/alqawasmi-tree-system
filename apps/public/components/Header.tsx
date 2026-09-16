@@ -18,20 +18,38 @@ interface HeaderProps {
   isSidebarOpen?: boolean; 
   isDarkMode: boolean;
   onToggleDarkMode: () => void;
-  // أضفنا الدالة الخاصة بفتح قائمة المزايا هنا
-  onOpenFeatures: () => void; 
+  onOpenFeatures: () => void;
+  showDates?: boolean;
+  setShowDates?: (val: boolean) => void;
+  reduceAnimations?: boolean;
+  setReduceAnimations?: (val: boolean) => void;
 }
+
+// 🌟 زر Toggle ذكي ومصمم خصيصاً للغة العربية
+const CustomToggle = ({ isOn, onToggle }: { isOn: boolean; onToggle: () => void }) => (
+  <div 
+    onClick={onToggle}
+    className={`relative flex h-7 w-[50px] cursor-pointer items-center rounded-full p-1 transition-colors duration-300 ${isOn ? 'bg-gradient-to-r from-[#8a5f2e] to-[#c9974f] dark:from-[#d6b877] dark:to-[#b68d40]' : 'bg-gray-300 dark:bg-gray-700'}`}
+    style={{ justifyContent: isOn ? 'flex-end' : 'flex-start' }}
+  >
+    <motion.div layout className="h-5 w-5 rounded-full bg-white shadow-sm" />
+  </div>
+);
 
 export default function Header({
   title = "عائلة القواسمي",
-  branches,
-  onNavigateHome,
-  onSelectBranch,
-  onToggleSidebar,
+  branches = [],
+  onNavigateHome = () => {},
+  onSelectBranch = () => {},
+  onToggleSidebar = () => {},
   isSidebarOpen = false,
-  isDarkMode,
-  onToggleDarkMode,
-  onOpenFeatures, // استلمنا الدالة هنا
+  isDarkMode = false,
+  onToggleDarkMode = () => {},
+  onOpenFeatures = () => {},
+  showDates = true,
+  setShowDates,
+  reduceAnimations = false,
+  setReduceAnimations
 }: HeaderProps) {
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const [isSettingsOpen, setSettingsOpen] = useState(false);
@@ -47,46 +65,51 @@ export default function Header({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const glassBtn = "cursor-pointer relative flex h-[42px] items-center justify-center rounded-full border-[1.5px] border-gold-deep/30 bg-gradient-to-b from-[#fffdf8] to-[#fcf8f2] shadow-[0_4px_12px_rgba(138,95,46,0.08)] backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-gold-deep/60 hover:shadow-[0_8px_20px_rgba(138,95,46,0.15)] dark:border-[#d6b877]/30 dark:from-[#1c1915] dark:to-[#14120f] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] dark:hover:border-[#d6b877]/60";
+
   return (
     <>
-      {/* العنوان وزر الإعدادات وزر المزايا في أعلى اليسار */}
-     <div ref={wrapRef} className="fixed top-[18px] left-[18px] z-[12] flex items-center gap-2">
+     <div ref={wrapRef} className="fixed top-[18px] left-[18px] z-[12] flex items-center gap-2.5">
         <motion.span
           role="button"
           tabIndex={0}
           aria-haspopup="true"
           aria-expanded={isDropdownOpen}
           onClick={() => setDropdownOpen((v) => !v)}
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.97 }}
-          className="inline-block cursor-pointer select-none rounded-[20px] border border-gold-deep/30 bg-[rgba(255,253,248,0.85)] px-[18px] py-2 font-ruqaa text-[22px] font-bold text-gold-deep shadow-card transition-colors hover:bg-[rgba(255,253,248,0.98)] hover:shadow-[0_10px_24px_rgba(138,95,46,0.25)] max-[900px]:text-base max-[900px]:px-3.5 max-[900px]:py-1.5 dark:bg-[#1c1915]/90 dark:text-[#d6b877] dark:shadow-card-dark dark:border-[#d6b877]/30"
+          whileTap={{ scale: 0.96 }}
+          className={`${glassBtn} cursor-pointer select-none px-5 font-ruqaa text-[21px] font-bold text-gold-deep dark:text-[#d6b877] leading-none pt-1`}
         >
           {title}
         </motion.span>
 
-        <motion.button
-          type="button"
-          onClick={() => setSettingsOpen(true)}
-          whileHover={{ scale: 1.08, rotate: 20 }}
-          whileTap={{ scale: 0.9 }}
-          className="grid h-9 w-9 place-items-center rounded-full border border-gold-deep/30 bg-[rgba(255,253,248,0.85)] text-lg shadow-card dark:bg-[#1c1915]/90 dark:border-[#d6b877]/30"
-          title="الإعدادات"
-        >
-          ⚙️
-        </motion.button>
-
-        {/* زر "المزيد" الجديد الذي يفتح قائمة المزايا */}
+        {/* 🌟 زر المزيد أصبح هنا بالوسط 🌟 */}
         <motion.button
           type="button"
           onClick={onOpenFeatures}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="flex h-9 items-center gap-1.5 rounded-full border border-gold-deep/30 bg-[rgba(255,253,248,0.85)] px-3 text-[13px] font-bold text-gold-deep shadow-card transition-colors hover:bg-gold-deep/10 dark:bg-[#1c1915]/90 dark:border-[#d6b877]/30 dark:text-[#d6b877] dark:hover:bg-[#d6b877]/10"
+          whileTap={{ scale: 0.96 }}
+          className={`${glassBtn} px-5 gap-1.5 font-cairo text-[14px] font-extrabold text-gold-deep dark:text-[#d6b877]`}
         >
-          ✨ المزيد
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+          </svg>
+          المزيد
         </motion.button>
 
-        {/* القائمة المنسدلة الفخمة */}
+        {/* 🌟 زر الإعدادات أصبح على الطرف 🌟 */}
+        <motion.button
+          type="button"
+          onClick={() => setSettingsOpen(true)}
+          whileHover={{ rotate: 30 }}
+          whileTap={{ scale: 0.9 }}
+          className={`${glassBtn} w-[42px] !px-0 text-gold-deep dark:text-[#d6b877]`}
+          title="الإعدادات"
+        >
+          <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </motion.button>
+
         <AnimatePresence>
           {isDropdownOpen && (
             <motion.div
@@ -94,7 +117,7 @@ export default function Header({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -8, scale: 0.97 }}
               transition={{ type: "spring", damping: 24, stiffness: 320 }}
-              className="absolute left-0 top-[calc(100%+12px)] z-20 flex min-w-[250px] flex-col rounded-2xl !border !border-gold-deep/20 !bg-[#fdfbf7] py-3 shadow-[0_15px_40px_rgba(58,44,30,0.12)] backdrop-blur-md origin-top-left dark:!bg-[#1c1915] dark:!border-[#d6b877]/20"
+              className="absolute left-0 top-[calc(100%+12px)] z-20 flex min-w-[250px] flex-col rounded-2xl !border-[1.5px] !border-gold-deep/20 !bg-[#fdfbf7] py-3 shadow-[0_15px_40px_rgba(58,44,30,0.12)] backdrop-blur-md origin-top-left dark:!bg-[#1c1915] dark:!border-[#d6b877]/20"
             >
               <div className="px-2 mb-1">
                 <motion.button
@@ -136,7 +159,6 @@ export default function Header({
         </AnimatePresence>
       </div>
 
-      {/* زر الفهرس يظهر فقط عندما يكون الفهرس مغلقاً */}
       <AnimatePresence>
         {!isSidebarOpen && (
           <motion.button
@@ -155,7 +177,6 @@ export default function Header({
         )}
       </AnimatePresence>
 
-      {/* خلفية معتمة عند فتح الإعدادات */}
       <AnimatePresence>
         {isSettingsOpen && (
           <motion.div
@@ -169,51 +190,84 @@ export default function Header({
         )}
       </AnimatePresence>
 
-      {/* قائمة الإعدادات الجانبية تفتح من اليسار بالشكل الصحيح والمنسق */}
       <motion.aside
         initial={false}
         animate={{ x: isSettingsOpen ? 0 : "-100%" }}
         transition={{ type: "spring", damping: 30, stiffness: 300 }}
-        className="flex h-screen w-[300px] max-w-[85vw] flex-col overflow-hidden rounded-r-[28px] bg-panel p-5 shadow-2xl fixed top-0 left-0 z-50 dark:bg-[#1c1915] dark:border-r dark:border-[#d6b877]/20 transition-colors duration-300"
+        className="flex h-screen w-[320px] max-w-[85vw] flex-col overflow-hidden rounded-r-[32px] bg-[#fdfbf7]/95 p-6 shadow-[20px_0_40px_rgba(0,0,0,0.15)] backdrop-blur-2xl fixed top-0 left-0 z-50 dark:bg-[#161411]/95 dark:border-r dark:border-[#d6b877]/20 transition-colors duration-300 font-cairo"
       >
-        <div className="mb-6 flex items-center justify-between border-b border-gold/10 pb-3 dark:border-[#d6b877]/10">
-          <h3 className="text-base font-extrabold text-gold-deep m-0 dark:text-[#d6b877]">⚙️ الإعدادات</h3>
+        <div className="mb-8 flex items-center justify-between border-b border-[#c9974f]/20 pb-4 dark:border-[#d6b877]/20">
+          <h3 className="text-[20px] font-extrabold text-[#8a5f2e] m-0 dark:text-[#d6b877] flex items-center gap-2">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            الإعدادات
+          </h3>
           <motion.button
             type="button"
             onClick={() => setSettingsOpen(false)}
-            whileHover={{ scale: 1.1, rotate: 90, backgroundColor: "#7a2e2e" }}
+            whileHover={{ scale: 1.1, rotate: 90 }}
             whileTap={{ scale: 0.9 }}
-            className="w-8 h-8 rounded-full bg-paper border border-gold-deep/30 text-ink-soft flex items-center justify-center text-sm font-bold shadow-sm hover:text-white hover:border-maroon transition-colors dark:bg-[#2b261f] dark:border-[#d6b877]/30 dark:text-[#f3ede1] dark:hover:text-white"
+            className="w-8 h-8 rounded-full bg-white border border-[#c9974f]/30 text-gray-500 flex items-center justify-center text-sm font-bold shadow-sm hover:text-red-500 hover:border-red-300 hover:bg-red-50 transition-colors dark:bg-[#2b261f] dark:border-[#d6b877]/30 dark:text-gray-400 dark:hover:text-red-400"
           >
             ✕
           </motion.button>
         </div>
-        
-        {/*
-        <div className="flex items-center justify-between">
-          <span className="flex items-center gap-2 text-sm text-ink font-bold dark:text-[#f3ede1]">
-            <motion.span
-              key={isDarkMode ? "moon" : "sun"}
-              initial={{ opacity: 0, rotate: -90, scale: 0.5 }}
-              animate={{ opacity: 1, rotate: 0, scale: 1 }}
-              transition={{ duration: 0.3 }}
-              className="inline-block"
-            >
-              {isDarkMode ? "🌙" : "☀️"}
-            </motion.span>
-            <span>الوضع الليلي</span>
-          </span>
-          <label className="relative inline-block h-6 w-[46px] cursor-pointer">
-            <input type="checkbox" checked={isDarkMode} onChange={onToggleDarkMode} className="peer absolute h-0 w-0 opacity-0" />
-            <span className="absolute inset-0 rounded-full bg-ink-soft/30 transition-colors peer-checked:bg-gold-deep dark:bg-[#3a352d] dark:peer-checked:bg-[#8a5f2e]" />
-            <motion.span
-              layout
-              animate={{ x: isDarkMode ? 22 : 2 }}
-              transition={{ type: "spring", damping: 20, stiffness: 400 }}
-              className="absolute left-0 top-0.5 h-5 w-5 rounded-full bg-white shadow-sm dark:bg-[#f3ede1]"
-            />
-          </label>
-        </div>*/}
+
+        <div className="flex flex-col gap-6 overflow-y-auto sidebar-scroll pb-10 px-1">
+          
+          <div className="flex flex-col gap-3">
+            <span className="text-[12px] font-bold text-[#c9974f] dark:text-[#d6b877]/70 uppercase tracking-widest px-1">المظهر والتصميم</span>
+            
+            <div className="flex items-center justify-between bg-white dark:bg-[#24201a] border border-gray-100 dark:border-gray-800 p-4 rounded-2xl shadow-sm transition-all hover:border-[#c9974f]/30">
+              <span className="flex items-center gap-3 text-[14px] font-bold text-[#5c4a38] dark:text-[#f3ede1]">
+                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-[#c9974f]/10 text-[#8a5f2e] dark:bg-[#d6b877]/10 dark:text-[#d6b877]">
+                  {isDarkMode ? (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                  ) : (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5" strokeWidth="2"></circle><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path></svg>
+                  )}
+                </span>
+                الوضع الليلي
+              </span>
+              {/* 🌟 حماية باستخدام Optional Chaining لمنع الكراش */}
+              <CustomToggle isOn={isDarkMode} onToggle={() => onToggleDarkMode?.()} />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <span className="text-[12px] font-bold text-[#c9974f] dark:text-[#d6b877]/70 uppercase tracking-widest px-1">العرض والتفضيلات</span>
+            
+            <div className="flex items-center justify-between bg-white dark:bg-[#24201a] border border-gray-100 dark:border-gray-800 p-4 rounded-2xl shadow-sm transition-all hover:border-[#c9974f]/30">
+              <span className="flex items-center gap-3 text-[14px] font-bold text-[#5c4a38] dark:text-[#f3ede1]">
+                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-[#c9974f]/10 text-[#8a5f2e] dark:bg-[#d6b877]/10 dark:text-[#d6b877]">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                </span>
+                إظهار تواريخ الميلاد
+              </span>
+              {/* 🌟 حماية باستخدام Optional Chaining لمنع الكراش */}
+              <CustomToggle isOn={!!showDates} onToggle={() => setShowDates?.(!showDates)} />
+            </div>
+
+            <div className="flex items-center justify-between bg-white dark:bg-[#24201a] border border-gray-100 dark:border-gray-800 p-4 rounded-2xl shadow-sm transition-all hover:border-[#c9974f]/30">
+              <span className="flex items-center gap-3 text-[14px] font-bold text-[#5c4a38] dark:text-[#f3ede1]">
+                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-[#c9974f]/10 text-[#8a5f2e] dark:bg-[#d6b877]/10 dark:text-[#d6b877]">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                </span>
+                تقليل الحركات
+              </span>
+              {/* 🌟 حماية باستخدام Optional Chaining لمنع الكراش */}
+              <CustomToggle isOn={!!reduceAnimations} onToggle={() => setReduceAnimations?.(!reduceAnimations)} />
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-auto pt-4 border-t border-[#c9974f]/20 dark:border-[#d6b877]/20 text-center">
+          <p className="text-[11px] font-bold text-gray-400 dark:text-gray-500">
+            الإصدار 1.2.0 • شجرة عائلة القواسمي
+          </p>
+        </div>
       </motion.aside>
     </>
   );

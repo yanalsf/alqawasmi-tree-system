@@ -449,14 +449,14 @@ export default function VisualTreeModal({ isOpen, rootNode, onClose }: VisualTre
             exit={{ opacity: 0, scale: 0.96, y: 12 }}
             transition={{ type: "spring", damping: 28, stiffness: 320 }}
             onClick={(e) => e.stopPropagation()}
-            className="flex flex-col w-[94vw] h-[90vh] bg-[#fbfaf8] rounded-3xl shadow-2xl overflow-hidden border border-gold/20"
+            className="flex flex-col w-[94vw] h-[90vh] bg-[#fbfaf8] rounded-3xl shadow-2xl overflow-hidden border border-gold/20 dark:bg-[#161411] dark:border-[#d6b877]/20"
           >
-            <div className="p-5 bg-gradient-to-b from-panel to-white border-b border-gold/10 flex items-center justify-between">
+            <div className="p-5 bg-gradient-to-b from-panel to-white border-b border-gold/10 flex items-center justify-between dark:from-[#1c1915] dark:to-[#161411] dark:border-white/10">
               <div>
-                <h3 className="m-0 text-[20px] font-extrabold text-gold-deep font-ruqaa">
+                <h3 className="m-0 text-[20px] font-extrabold text-gold-deep font-ruqaa dark:text-[#d6b877]">
                   الشجرة الرقمية: {displayNode.name.replace("فخذ ", "")}
                 </h3>
-                <p className="m-0 text-[12px] text-ink-soft">
+                <p className="m-0 text-[12px] text-ink-soft dark:text-gray-400">
                   مرر واسحب للتنقل، استخدم عجلة الفأرة للتكبير
                 </p>
               </div>
@@ -476,7 +476,7 @@ export default function VisualTreeModal({ isOpen, rootNode, onClose }: VisualTre
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.96 }}
                   onClick={onClose}
-                  className="rounded-xl bg-[#f8f9fa] border border-gold-deep/30 px-5 py-2 font-bold text-[#7c6c53] text-[13.5px] hover:bg-gray-100 transition-colors"
+                  className="rounded-xl bg-[#f8f9fa] border border-gold-deep/30 px-5 py-2 font-bold text-[#7c6c53] text-[13.5px] hover:bg-gray-100 transition-colors dark:bg-[#24201a] dark:border-[#d6b877]/20 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-[#d6b877]"
                 >
                   ✕ إغلاق
                 </motion.button>
@@ -490,12 +490,12 @@ export default function VisualTreeModal({ isOpen, rootNode, onClose }: VisualTre
               className="relative flex-1 overflow-hidden bg-[#8a5f2e] p-2 m-4 rounded-xl shadow-inner"
             >
               <div className="relative h-full w-full overflow-hidden rounded-lg border-2 border-[#f3ede1]/80 p-[4px]">
-                <div id="tree-capture-area" className="relative h-full w-full overflow-hidden rounded-md border-[1.5px] border-[#d6b877] bg-[#fffdf8]">
+                <div id="tree-capture-area" className="relative h-full w-full overflow-hidden rounded-md border-[1.5px] border-[#d6b877] bg-[#fffdf8] dark:bg-[#161411] dark:border-[#d6b877]/30">
                   <div ref={hostRef} className="h-full w-full touch-none select-none outline-none" />
 
-                  <div className="absolute bottom-4 left-4 overflow-hidden rounded-xl border-2 border-[#8a5f2e]/60 bg-white shadow-lg z-10">
+                  <div className="absolute bottom-4 left-4 overflow-hidden rounded-xl border-2 border-[#8a5f2e]/60 bg-white shadow-lg z-10 dark:bg-[#1c1915] dark:border-[#d6b877]/40">
                     <div className="bg-[#8a5f2e] px-3 py-1.5 text-[12px] font-bold text-white text-center">خريطة الشجرة</div>
-                    <div ref={miniMapRef} className="cursor-pointer bg-[#fffdf8]" />
+                    <div ref={miniMapRef} className="cursor-pointer bg-[#fffdf8] dark:bg-[#161411]" />
                   </div>
                 </div>
               </div>

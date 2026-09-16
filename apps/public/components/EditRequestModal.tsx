@@ -20,6 +20,11 @@ export default function EditRequestModal({ isOpen, onClose }: EditRequestModalPr
   const [errorMsg, setErrorMsg] = useState("");
   const [infoText, setInfoText] = useState("");
   
+  // 🌟 حالات رقم الهاتف
+  const [phone, setPhone] = useState("");
+  const [countryCode, setCountryCode] = useState("+962");
+  const [isCountryOpen, setIsCountryOpen] = useState(false);
+
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedEditType, setSelectedEditType] = useState("");
 
@@ -60,25 +65,27 @@ export default function EditRequestModal({ isOpen, onClose }: EditRequestModalPr
     const submitterName = formData.get("submitter_name") as string;
     const correctInfo = formData.get("correct_info") as string;
 
-    // 1. التحقق من اسم الفرد المراد التعديل عليه (خماسي)
     if (targetPerson.trim().split(/\s+/).length < 5) {
       setErrorMsg("اسم الفرد المراد تعديل بياناته يجب أن يكون خماسياً كحد أدنى.");
       return;
     }
 
-    // 2. التحقق من الاسم الصحيح (خماسي) - فقط في حالة تصحيح الاسم
     if (selectedEditType === "تصحيح خطأ في الاسم" && correctInfo.trim().split(/\s+/).length < 5) {
       setErrorMsg("الاسم الصحيح المُراد إضافته يجب أن يكون خماسياً كحد أدنى.");
       return;
     }
 
-    // 3. التحقق من اسم مقدم الطلب (خماسي)
     if (submitterName.trim().split(/\s+/).length < 5) {
       setErrorMsg("اسم مقدم الطلب يجب أن يكون خماسياً كحد أدنى.");
       return;
     }
 
-    // 4. حماية مربع النص (أقصى حد 100 حرف) للخيارات الأخرى
+    // 🌟 التحقق من إدخال رقم الهاتف
+    if (!phone.trim()) {
+      setErrorMsg("رقم الهاتف مطلوب للتواصل وتدقيق الطلب!");
+      return;
+    }
+
     if (infoText.length > 100 && (selectedEditType === "تعديل صلة قرابة (نقل لفرع آخر)" || selectedEditType === "أخرى")) {
       setErrorMsg("لا يمكن إرسال الطلب لأن المعلومة تجاوزت 100 حرف.");
       return;
@@ -97,6 +104,8 @@ export default function EditRequestModal({ isOpen, onClose }: EditRequestModalPr
       form.reset();
       setInfoText(""); 
       setSelectedEditType(""); 
+      setPhone(""); // تصفير الهاتف
+      setCountryCode("+962");
     } catch (error) {
       console.error(error);
       setStatus("error");
@@ -104,7 +113,6 @@ export default function EditRequestModal({ isOpen, onClose }: EditRequestModalPr
     }
   };
 
-  // دالة ذكية لتحديد نوع الخانة المطلوبة بناءً على الاختيار
   const renderDynamicInput = () => {
     if (selectedEditType === "تصحيح خطأ في الاسم") {
       return (
@@ -131,7 +139,6 @@ export default function EditRequestModal({ isOpen, onClose }: EditRequestModalPr
       );
     }
 
-    // الحالة الافتراضية (نص طويل للقرابة أو أخرى)
     return (
       <>
         <textarea 
@@ -182,6 +189,8 @@ export default function EditRequestModal({ isOpen, onClose }: EditRequestModalPr
               ) : (
                 <form name="edit-requests-form" method="POST" data-netlify="true" netlify-honeypot="bot-field" onSubmit={handleSubmit} className="space-y-4">
                   <input type="hidden" name="form-name" value="edit-requests-form" />
+                  {/* 🌟 دمج وإرسال رقم الهاتف */}
+                  <input type="hidden" name="phone" value={`${countryCode} ${phone}`} />
                   <p className="hidden"><input name="bot-field" /></p>
 
                   <div>
@@ -237,7 +246,6 @@ export default function EditRequestModal({ isOpen, onClose }: EditRequestModalPr
                     </AnimatePresence>
                   </div>
 
-                  {/* الحقل الديناميكي يظهر فقط إذا تم اختيار نوع التعديل */}
                   {selectedEditType && (
                     <motion.div
                       initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }}
@@ -257,6 +265,43 @@ export default function EditRequestModal({ isOpen, onClose }: EditRequestModalPr
                       placeholder="الاسم الخماسي كحد أدنى..."
                       className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[14px] font-bold focus:border-[#c9974f] focus:ring-2 focus:ring-[#c9974f]/20 outline-none transition-all dark:bg-[#24201a] dark:border-gray-700 dark:text-white" 
                     />
+                  </div>
+
+                  {/* 🌟 خانة الهاتف الجديدة */}
+                  <div className="pt-2">
+                    <label className="block text-[13px] font-bold text-[#8a5f2e] dark:text-[#d6b877] mb-2">رقم الهاتف (للتواصل) *</label>
+                    <div className="flex gap-2 w-full" dir="ltr">
+                      <div className="relative w-[110px] shrink-0">
+                        <div 
+                          onClick={() => setIsCountryOpen(!isCountryOpen)} 
+                          className="w-full h-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-3 text-[14px] font-bold flex justify-between items-center cursor-pointer transition-all hover:border-[#c9974f]/50 dark:bg-[#24201a] dark:border-gray-700 dark:text-white"
+                        >
+                          <span className="flex-1 text-center leading-none mt-1" dir="ltr">
+                            {countryCode === '+962' ? '🇯🇴 +962' : '🇵🇸 +970'}
+                          </span>
+                          <svg className={`w-4 h-4 transition-transform duration-300 text-[#8a5f2e] dark:text-[#d6b877] ${isCountryOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                        <AnimatePresence>
+                          {isCountryOpen && (
+                            <motion.div 
+                              initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} 
+                              className="absolute top-[100%] left-0 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden dark:bg-[#1c1915] dark:border-gray-700"
+                            >
+                              <div onClick={() => { setCountryCode("+962"); setIsCountryOpen(false); }} className="p-3 text-center cursor-pointer hover:bg-[#c9974f]/10 text-gray-700 dark:text-gray-300 font-bold text-[13px] border-b border-gray-100 dark:border-gray-800 transition-colors">🇯🇴 +962</div>
+                              <div onClick={() => { setCountryCode("+970"); setIsCountryOpen(false); }} className="p-3 text-center cursor-pointer hover:bg-[#c9974f]/10 text-gray-700 dark:text-gray-300 font-bold text-[13px] transition-colors">🇵🇸 +970</div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                      <input 
+                        type="tel" 
+                        value={phone} 
+                        onChange={(e) => setPhone(e.target.value)} 
+                        placeholder="790 000 000" 
+                        className="w-full flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[14px] font-bold focus:border-[#c9974f] focus:ring-2 focus:ring-[#c9974f]/20 outline-none transition-all dark:bg-[#24201a] dark:border-gray-700 dark:text-white text-left tracking-wider" 
+                        dir="ltr"
+                      />
+                    </div>
                   </div>
 
                   {errorMsg && (

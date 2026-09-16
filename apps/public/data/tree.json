@@ -368,7 +368,7 @@
                                   "id": 49,
                                   "name": "عمر",
                                   "birth_date": null,
-                                  "death_date": null
+                                  "death_date": 2017
                                 }
                               ]
                             },
@@ -6590,7 +6590,15 @@
                               "id": 781,
                               "name": "علاء الدين",
                               "birth_date": null,
-                              "death_date": null
+                              "death_date": null,
+                              "children": [
+                                {
+                                  "id": 1206,
+                                  "name": "احمد",
+                                  "birth_date": null,
+                                  "death_date": null
+                                }
+                              ]
                             }
                           ]
                         },
@@ -6670,7 +6678,15 @@
                               "id": 793,
                               "name": "ابراهيم",
                               "birth_date": null,
-                              "death_date": null
+                              "death_date": null,
+                              "children": [
+                                {
+                                  "id": 1213,
+                                  "name": "حمدي",
+                                  "birth_date": null,
+                                  "death_date": null
+                                }
+                              ]
                             }
                           ]
                         },
@@ -6690,6 +6706,26 @@
                               "id": 796,
                               "name": "كريم",
                               "birth_date": null,
+                              "death_date": null,
+                              "children": [
+                                {
+                                  "id": 1212,
+                                  "name": "نوح",
+                                  "birth_date": null,
+                                  "death_date": null
+                                }
+                              ]
+                            },
+                            {
+                              "id": 1210,
+                              "name": "محمد",
+                              "birth_date": null,
+                              "death_date": null
+                            },
+                            {
+                              "id": 1211,
+                              "name": "سليمان",
+                              "birth_date": null,
                               "death_date": null
                             }
                           ]
@@ -6704,7 +6740,27 @@
                               "id": 798,
                               "name": "قصي",
                               "birth_date": null,
-                              "death_date": null
+                              "death_date": null,
+                              "children": [
+                                {
+                                  "id": 1207,
+                                  "name": "عصام",
+                                  "birth_date": null,
+                                  "death_date": null
+                                },
+                                {
+                                  "id": 1208,
+                                  "name": "تيم",
+                                  "birth_date": null,
+                                  "death_date": null
+                                },
+                                {
+                                  "id": 1209,
+                                  "name": "كريم",
+                                  "birth_date": null,
+                                  "death_date": null
+                                }
+                              ]
                             },
                             {
                               "id": 799,
@@ -6744,7 +6800,15 @@
                               "id": 804,
                               "name": "ايوب",
                               "birth_date": null,
-                              "death_date": null
+                              "death_date": null,
+                              "children": [
+                                {
+                                  "id": 1216,
+                                  "name": "انور",
+                                  "birth_date": null,
+                                  "death_date": null
+                                }
+                              ]
                             },
                             {
                               "id": 805,
@@ -6823,18 +6887,16 @@
                           "death_date": null,
                           "children": [
                             {
-                              "id": 816,
-                              "name": "وسام",
+                              "id": 1214,
+                              "name": "عباده",
                               "birth_date": null,
-                              "death_date": null,
-                              "children": [
-                                {
-                                  "id": 817,
-                                  "name": "عبادة",
-                                  "birth_date": null,
-                                  "death_date": null
-                                }
-                              ]
+                              "death_date": null
+                            },
+                            {
+                              "id": 1215,
+                              "name": "كنان",
+                              "birth_date": null,
+                              "death_date": null
                             }
                           ]
                         },
