@@ -104,13 +104,13 @@ export default function EditPersonModal({ isOpen, person, onClose, onSaved }: Ed
             autoFocus
           />
           <input
-            type="date"
+            type="number"
             value={birthDate}
             onChange={(e) => setBirthDate(e.target.value)}
             className="mb-3 w-full rounded-lg border border-gray-300 px-2.5 py-2.5 text-right outline-none"
           />
           <input
-            type="date"
+            type="number"
             value={deathDate}
             onChange={(e) => setDeathDate(e.target.value)}
             className="mb-5 w-full rounded-lg border border-gray-300 px-2.5 py-2.5 text-right outline-none"
