@@ -626,6 +626,7 @@ export default function PublicTreeView() {
                   }}
                   className="!inline !m-0 !border-none !bg-transparent !p-0 !shadow-none font-bold text-gold-deep underline decoration-gold-deep/30 underline-offset-4 outline-none transition-all hover:text-gold-deep/70 hover:decoration-gold-deep/70 focus:outline-none dark:text-[#d6b877] cursor-pointer"
                 >
+                  
                   ينال سفيان ربحي القواسمي
                 </button>
               </p>
