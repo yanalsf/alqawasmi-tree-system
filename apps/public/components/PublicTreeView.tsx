@@ -691,11 +691,6 @@ export default function PublicTreeView() {
       <IosInstallPrompt />
 
 
-      {/* 🔴 TEST-MARKER-12345 — علامة تجريبية مؤقتة للتأكد من وصول الديبلوي */}
-      <div style={{ position: 'fixed', top: 0, left: 0, background: 'red', color: 'white', padding: '4px 10px', zIndex: 99999, fontWeight: 'bold' }}>
-        TEST-MARKER-12345
-      </div>
-
       {/* نماذج وهمية لتعريف الحقول لسيرفر Netlify وقت البناء */}
       <div style={{ display: 'none' }}>
         <form name="add-member-form" data-netlify="true">
