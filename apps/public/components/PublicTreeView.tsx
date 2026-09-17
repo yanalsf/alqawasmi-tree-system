@@ -535,7 +535,7 @@ export default function PublicTreeView() {
                             )}
 
                             {!isRoot && <div className="father-tag mt-1 dark:text-gray-400">ابن {displayName}</div>}
-                            <div className="sub dark:text-gray-500">{childKidsCount ? `${childKidsCount} أبناء` : 'بدون أبناء'}</div>
+                            <div className="sub dark:text-gray-500">{childKidsCount ? `${childKidsCount} أبناء` : ''}</div>
                             {childKidsCount > 0 && (
   <div className="mt-2.5 mx-auto flex w-fit items-center gap-1.5 rounded-full border border-white/20 bg-black/25 px-3 py-1 text-[11px] font-bold text-[#f3ede1] shadow-sm backdrop-blur-md transition-colors hover:bg-black/40">
     <svg className="w-3.5 h-3.5 text-[#d6b877]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
@@ -689,6 +689,35 @@ export default function PublicTreeView() {
 
       {/* 🌟 نافذة الآيفون المنبثقة 🌟 */}
       <IosInstallPrompt />
+
+
+      {/* نماذج وهمية لتعريف الحقول لسيرفر Netlify وقت البناء */}
+      <div style={{ display: 'none' }}>
+        <form name="add-member-form" data-netlify="true">
+          <input type="text" name="parent_name" />
+          <input type="text" name="phone" />
+          <input type="text" name="branch" />
+          <input type="text" name="location" />
+          <input type="text" name="birth_year" />
+          <input type="text" name="death_year" />
+          <input type="text" name="children_data" />
+        </form>
+        
+        <form name="edit-requests-form" data-netlify="true">
+          <input type="text" name="target_person" />
+          <input type="text" name="edit_type" />
+          <input type="text" name="correct_info" />
+          <input type="text" name="submitter_name" />
+          <input type="text" name="phone" />
+        </form>
+        
+        <form name="complaints-form" data-netlify="true">
+          <input type="text" name="message_type" />
+          <input type="text" name="message_text" />
+          <input type="text" name="sender_name" />
+          <input type="text" name="phone" />
+        </form>
+      </div>
 
     </div>
   );

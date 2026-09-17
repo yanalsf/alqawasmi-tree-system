@@ -296,7 +296,6 @@ export default function EditRequestModal({ isOpen, onClose }: EditRequestModalPr
                      {/* خانة إدخال الرقم */}
 <input
   type="tel"
-  name="phone" // 🌟 هذا السطر هو اللي رح يخلي Netlify يحفظ الرقم
   value={phone}
   onChange={(e) => setPhone(e.target.value)}
   placeholder="790 000 000"
