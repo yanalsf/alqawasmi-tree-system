@@ -92,6 +92,10 @@ export default function EditRequestModal({ isOpen, onClose }: EditRequestModalPr
     }
 
     setStatus("submitting");
+
+    // 🌟 عنوان موحّد وواضح للطلب بلوحة Netlify
+    formData.set("name", `طلب تعديل (${selectedEditType}) - ${targetPerson}`);
+
     const data = new URLSearchParams(formData as any).toString();
 
     try {
@@ -189,8 +193,10 @@ export default function EditRequestModal({ isOpen, onClose }: EditRequestModalPr
               ) : (
                 <form name="edit-requests-form" method="POST" data-netlify="true" netlify-honeypot="bot-field" onSubmit={handleSubmit} className="space-y-4">
                   <input type="hidden" name="form-name" value="edit-requests-form" />
+                  {/* 🌟 اسم موحّد لعنوان الطلب بلوحة Netlify */}
+                  <input type="hidden" name="name" value={`طلب تعديل - ${selectedEditType || "غير محدد"}`} />
                   {/* 🌟 دمج وإرسال رقم الهاتف */}
-                  <input type="hidden" name="phone" value={`${countryCode} ${phone}`} />
+                  <input type="hidden" name="edit_phone" value={`${countryCode} ${phone}`} />
                   <p className="hidden"><input name="bot-field" /></p>
 
                   <div>

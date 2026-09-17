@@ -67,6 +67,11 @@ export default function ComplaintsModal({ isOpen, onClose }: ComplaintsModalProp
     }
 
     setStatus("submitting");
+
+    // 🌟 عنوان موحّد وواضح للطلب بلوحة Netlify
+    const messageType = (formData.get("message_type") as string) || "رسالة";
+    formData.set("name", `${messageType} - ${senderName}`);
+
     const data = new URLSearchParams(formData as any).toString();
 
     try {
@@ -118,8 +123,10 @@ export default function ComplaintsModal({ isOpen, onClose }: ComplaintsModalProp
               ) : (
                 <form name="complaints-form" method="POST" data-netlify="true" netlify-honeypot="bot-field" onSubmit={handleSubmit} className="space-y-4">
                   <input type="hidden" name="form-name" value="complaints-form" />
+                  {/* 🌟 اسم موحّد لعنوان الطلب بلوحة Netlify */}
+                  <input type="hidden" name="name" value="شكوى/رسالة جديدة" />
                   {/* 🌟 دمج وإرسال رقم الهاتف */}
-                  <input type="hidden" name="phone" value={`${countryCode} ${phone}`} />
+                  <input type="hidden" name="complaint_phone" value={`${countryCode} ${phone}`} />
                   <p className="hidden"><input name="bot-field" /></p>
 
                   <div>

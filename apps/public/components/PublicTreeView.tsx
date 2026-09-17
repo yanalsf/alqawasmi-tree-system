@@ -694,8 +694,9 @@ export default function PublicTreeView() {
       {/* نماذج وهمية لتعريف الحقول لسيرفر Netlify وقت البناء */}
       <div style={{ display: 'none' }}>
         <form name="add-member-form" data-netlify="true">
+          <input type="text" name="name" />
           <input type="text" name="parent_name" />
-          <input type="text" name="phone" />
+          <input type="text" name="member_phone" />
           <input type="text" name="branch" />
           <input type="text" name="location" />
           <input type="text" name="birth_year" />
@@ -703,19 +704,23 @@ export default function PublicTreeView() {
           <input type="text" name="children_data" />
         </form>
         
-        <form name="edit-requests-form" data-netlify="true">
+        <form name="edit-requests-form" data-netlify="true" netlify-honeypot="bot-field">
+          <input type="text" name="name" />
           <input type="text" name="target_person" />
           <input type="text" name="edit_type" />
           <input type="text" name="correct_info" />
           <input type="text" name="submitter_name" />
-          <input type="text" name="phone" />
+          <input type="text" name="edit_phone" />
+          <input type="text" name="bot-field" />
         </form>
         
-        <form name="complaints-form" data-netlify="true">
+        <form name="complaints-form" data-netlify="true" netlify-honeypot="bot-field">
+          <input type="text" name="name" />
           <input type="text" name="message_type" />
           <input type="text" name="message_text" />
           <input type="text" name="sender_name" />
-          <input type="text" name="phone" />
+          <input type="text" name="complaint_phone" />
+          <input type="text" name="bot-field" />
         </form>
       </div>
 

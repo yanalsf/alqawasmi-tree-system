@@ -107,8 +107,9 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
 
     const payload = new URLSearchParams({
       "form-name": "add-member-form",
+      name: `طلب إضافة فرد - ${parentName}`,
       parent_name: parentName,
-      phone: `${countryCode} ${phone}`,
+      member_phone: `${countryCode} ${phone}`,
       branch,
       location,
       birth_year: birthYear,
