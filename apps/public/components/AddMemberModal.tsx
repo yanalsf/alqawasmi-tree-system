@@ -271,14 +271,15 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
                     </div>
 
                     {/* خانة إدخال الرقم */}
-                    <input 
-                      type="tel" 
-                      value={phone} 
-                      onChange={(e) => setPhone(e.target.value)} 
-                      placeholder="790 000 000" 
-                      className="w-full flex-1 p-3 rounded-xl border border-[#d6b877]/60 bg-white focus:outline-none focus:ring-2 focus:ring-[#8a5f2e]/20 focus:border-[#8a5f2e] text-[15px] font-bold transition-all shadow-sm text-left tracking-wider dark:bg-[#24201a] dark:text-[#f3ede1] dark:border-[#d6b877]/20"
-                      dir="ltr"
-                    />
+<input
+  type="tel"
+  name="phone" // 🌟 هذا السطر هو اللي رح يخلي Netlify يحفظ الرقم
+  value={phone}
+  onChange={(e) => setPhone(e.target.value)}
+  placeholder="790 000 000"
+  className="w-full flex-1 p-3 rounded-xl border border-[#d6b877]/60..." /* بقية الكلاسات اللي عندك */
+  dir="ltr"
+/>
                   </div>
                 </div>
 

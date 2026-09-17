@@ -191,14 +191,16 @@ export default function ComplaintsModal({ isOpen, onClose }: ComplaintsModalProp
                           )}
                         </AnimatePresence>
                       </div>
-                      <input 
-                        type="tel" 
-                        value={phone} 
-                        onChange={(e) => setPhone(e.target.value)} 
-                        placeholder="790 000 000" 
-                        className="w-full flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[14px] font-bold focus:border-[#c9974f] focus:ring-2 focus:ring-[#c9974f]/20 outline-none transition-all dark:bg-[#24201a] dark:border-gray-700 dark:text-white text-left tracking-wider" 
-                        dir="ltr"
-                      />
+                      {/* خانة إدخال الرقم */}
+<input
+  type="tel"
+  name="phone" // 🌟 هذا السطر هو اللي رح يخلي Netlify يحفظ الرقم
+  value={phone}
+  onChange={(e) => setPhone(e.target.value)}
+  placeholder="790 000 000"
+  className="w-full flex-1 p-3 rounded-xl border border-[#d6b877]/60..." /* بقية الكلاسات اللي عندك */
+  dir="ltr"
+/>
                     </div>
                   </div>
 

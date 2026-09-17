@@ -289,19 +289,36 @@ export default function SequenceModal({ isOpen, onClose, onSelectBranch }: Seque
             className="relative flex h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-3xl border border-gold-deep/30 bg-[#fbfaf8] dark:bg-[#161411] shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* الترويسة العلوية الفخمة */}
-            <div className="flex shrink-0 flex-wrap items-center justify-between gap-4 border-b border-gold-deep/15 bg-gradient-to-r from-[#fdfbf7] via-white to-[#fdfbf7] px-6 py-4 shadow-[0_4px_20px_rgba(138,95,46,0.03)] dark:border-white/10 dark:from-[#161411] dark:via-[#1c1915] dark:to-[#161411]">
-              <h3 className="font-ruqaa text-[22px] m-0 font-bold text-gold-deep dark:text-[#d6b877] flex items-center gap-2 drop-shadow-sm">
-                <span className="text-[24px]">🌳</span> تسلسل الأفخاذ الكامل
-              </h3>
+            {/* الترويسة العلوية الفخمة (نسخة متجاوبة للموبايل) */}
+            <div className="flex shrink-0 flex-col sm:flex-row sm:flex-wrap items-center justify-between gap-4 border-b border-gold-deep/15 bg-gradient-to-r from-[#fdfbf7] via-white to-[#fdfbf7] px-4 sm:px-6 py-4 shadow-[0_4px_20px_rgba(138,95,46,0.03)] dark:border-white/10 dark:from-[#161411] dark:via-[#1c1915] dark:to-[#161411]">
+              
+              {/* 🌟 العنوان وزر الإغلاق (يظهران في نفس السطر براحة تامة على الموبايل) */}
+              <div className="flex w-full sm:w-auto items-center justify-between">
+                <h3 className="font-ruqaa text-[20px] sm:text-[22px] m-0 font-bold text-gold-deep dark:text-[#d6b877] flex items-center gap-2 drop-shadow-sm">
+                  <span className="text-[22px] sm:text-[24px]">🌳</span> تسلسل الأفخاذ الكامل
+                </h3>
+
+                {/* زر الإغلاق الدائري - يظهر هنا فقط في الموبايل */}
+                <button 
+                  onClick={onClose} 
+                  className="sm:hidden cursor-pointer group flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gold-deep/20 bg-white text-[#7c6c53] shadow-sm transition-all duration-300 hover:border-red-300 hover:bg-red-50 hover:text-red-500 hover:shadow-md dark:border-white/10 dark:bg-[#1c1915] dark:text-gray-400 dark:hover:border-red-500/40 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+                  aria-label="إغلاق"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-300 group-hover:rotate-90">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </div>
  
-              <div className="flex items-center gap-3 md:gap-5">
+              {/* 🌟 أزرار الإجراءات (تنزل لسطر جديد في الموبايل) */}
+              <div className="flex w-full sm:w-auto items-center justify-center sm:justify-end gap-2.5 sm:gap-5 flex-wrap sm:flex-nowrap">
                 
-                {/* زر طباعة PDF (تصميم أنيق وجديد) */}
+                {/* زر طباعة PDF */}
                 <button
                   onClick={handleExportPDF}
                   disabled={isExporting}
-                  className="group relative flex items-center gap-2 rounded-full border border-[#4c7a3f]/30 bg-gradient-to-b from-[#fbfaf8] to-[#f4ead5] px-5 py-2 font-cairo text-[14px] font-bold text-[#3a5c30] shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md hover:border-[#4c7a3f]/60 disabled:opacity-70 disabled:hover:translate-y-0 dark:border-[#d6b877]/20 dark:from-[#1c1915] dark:to-[#171411] dark:text-[#90ad7a] dark:hover:border-[#d6b877]/50"
+                  className="cursor-pointer shrink-0 group relative flex items-center gap-2 rounded-full border border-[#4c7a3f]/30 bg-gradient-to-b from-[#fbfaf8] to-[#f4ead5] px-4 sm:px-5 py-2 font-cairo text-[13.5px] sm:text-[14px] font-bold text-[#3a5c30] shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md hover:border-[#4c7a3f]/60 disabled:opacity-70 disabled:hover:translate-y-0 dark:border-[#d6b877]/20 dark:from-[#1c1915] dark:to-[#171411] dark:text-[#90ad7a] dark:hover:border-[#d6b877]/50"
                 >
                   {isExporting ? (
                     '⏳ جاري التجهيز...'
@@ -320,11 +337,11 @@ export default function SequenceModal({ isOpen, onClose, onSelectBranch }: Seque
                 {/* فاصل عمودي */}
                 <div className="h-7 w-[1.5px] rounded-full bg-gold-deep/20 dark:bg-white/10 hidden sm:block"></div>
 
-                {/* أزرار التبديل (Segmented Control احترافي) */}
-                <div className="flex items-center rounded-full border border-gold-deep/15 bg-gray-50/80 p-1 shadow-inner dark:border-white/10 dark:bg-black/30">
+                {/* أزرار التبديل (مخطط / قائمة) */}
+                <div className="flex shrink-0 items-center rounded-full border border-gold-deep/15 bg-gray-50/80 p-1 shadow-inner dark:border-white/10 dark:bg-black/30">
                   <button
                     onClick={() => setViewMode('diagram')}
-                    className={`rounded-full px-6 py-1.5 font-cairo text-[13.5px] font-bold transition-all duration-300 ${
+                    className={`cursor-pointer rounded-full px-5 sm:px-6 py-1.5 font-cairo text-[13px] sm:text-[13.5px] font-bold transition-all duration-300 ${
                       viewMode === 'diagram' 
                         ? 'bg-gold-deep text-white shadow-md dark:bg-[#d6b877] dark:text-[#161411]' 
                         : 'text-[#7c6c53] hover:text-gold-deep dark:text-gray-400 dark:hover:text-[#d6b877]'
@@ -334,7 +351,7 @@ export default function SequenceModal({ isOpen, onClose, onSelectBranch }: Seque
                   </button>
                   <button
                     onClick={() => setViewMode('list')}
-                    className={`rounded-full px-6 py-1.5 font-cairo text-[13.5px] font-bold transition-all duration-300 ${
+                    className={`cursor-pointer rounded-full px-5 sm:px-6 py-1.5 font-cairo text-[13px] sm:text-[13.5px] font-bold transition-all duration-300 ${
                       viewMode === 'list' 
                         ? 'bg-gold-deep text-white shadow-md dark:bg-[#d6b877] dark:text-[#161411]' 
                         : 'text-[#7c6c53] hover:text-gold-deep dark:text-gray-400 dark:hover:text-[#d6b877]'
@@ -347,10 +364,10 @@ export default function SequenceModal({ isOpen, onClose, onSelectBranch }: Seque
                 {/* فاصل عمودي */}
                 <div className="h-7 w-[1.5px] rounded-full bg-gold-deep/20 dark:bg-white/10 hidden sm:block ml-1"></div>
 
-                {/* زر الإغلاق الدائري */}
+                {/* زر الإغلاق الدائري - يظهر هنا فقط في الشاشات الكبيرة */}
                 <button 
                   onClick={onClose} 
-                  className="group flex h-9 w-9 items-center justify-center rounded-full border border-gold-deep/20 bg-white text-[#7c6c53] shadow-sm transition-all duration-300 hover:border-red-300 hover:bg-red-50 hover:text-red-500 hover:shadow-md dark:border-white/10 dark:bg-[#1c1915] dark:text-gray-400 dark:hover:border-red-500/40 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+                  className="hidden sm:flex cursor-pointer group h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gold-deep/20 bg-white text-[#7c6c53] shadow-sm transition-all duration-300 hover:border-red-300 hover:bg-red-50 hover:text-red-500 hover:shadow-md dark:border-white/10 dark:bg-[#1c1915] dark:text-gray-400 dark:hover:border-red-500/40 dark:hover:bg-red-500/10 dark:hover:text-red-400"
                   aria-label="إغلاق"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-300 group-hover:rotate-90">
@@ -372,12 +389,13 @@ export default function SequenceModal({ isOpen, onClose, onSelectBranch }: Seque
               
               <div 
                 id="sequence-export-area"
-                className={`relative mx-auto transition-all duration-300 ${
+                className={`relative transition-all duration-300 ${
                   isExporting
                     ? 'w-max min-w-full overflow-visible bg-[#fffdf8] p-24 dark:bg-[#161411]'
                     : viewMode === 'diagram'
-                    ? 'flex w-full justify-center py-2'
-                    : 'w-full max-w-2xl pb-10 px-4'
+                    // 🌟 التعديل هنا: يبدأ من اليمين للموبايل، ويتوسط في الشاشات الكبيرة
+                    ? 'flex w-full justify-start md:justify-center py-8 px-4 sm:px-8'
+                    : 'w-full max-w-2xl pb-10 px-4 mx-auto'
                 }`}
               >
                 {/* الإطار والعناوين الخاصة بالطباعة */}
@@ -392,6 +410,54 @@ export default function SequenceModal({ isOpen, onClose, onSelectBranch }: Seque
                       <h2 className="font-cairo text-3xl text-[#7c6c53] dark:text-gray-400 font-bold">عائلة القواسمي</h2>
                     </div>
                   </>
+                )}
+
+                {/* الشجرة */}
+                {viewMode === 'diagram' ? (
+                  <style>{`
+                    .gen-org-tree, .gen-org-tree ul { list-style:none; margin:0; padding:0; display:flex; justify-content:center; }
+                    .gen-org-tree { width:max-content; --tree-line: rgba(138,95,46,0.5); }
+                    .dark .gen-org-tree { --tree-line: rgba(214,184,119,0.4); }
+                    .gen-org-tree li {
+                      position:relative; display:flex; flex-direction:column; align-items:center;
+                      padding:32px 16px 0; text-align:center;
+                    }
+                    .gen-org-tree > li { padding-top:0; }
+                    .gen-org-tree li::before, .gen-org-tree li::after {
+                      content:''; position:absolute; top:0; width:50%; height:26px;
+                      border-top:2.5px solid var(--tree-line);
+                    }
+                    .gen-org-tree li::before { inset-inline-end:50%; border-inline-end:2.5px solid var(--tree-line); border-top-right-radius: 12px; }
+                    .gen-org-tree li::after { inset-inline-start:50%; border-inline-start:2.5px solid var(--tree-line); border-top-left-radius: 12px;}
+                    .gen-org-tree > li::before, .gen-org-tree > li::after { display:none; }
+                    .gen-org-tree li:only-child::before, .gen-org-tree li:only-child::after { display:none; }
+                    .gen-org-tree li:first-child::before { border-color:transparent; }
+                    .gen-org-tree li:last-child::after { border-color:transparent; }
+                    .gen-org-tree li > ul { position:relative; padding-top:26px; }
+                    .gen-org-tree li > ul::before {
+                      content:''; position:absolute; top:0; inset-inline-start:50%; width:0; height:26px;
+                      border-inline-start:2.5px solid var(--tree-line);
+                    }
+                  `}</style>
+                ) : null}
+
+                {viewMode === 'diagram' ? (
+                  <ul
+                    ref={treeContentRef}
+                    style={{ 
+                      transform: isExporting ? 'scale(1)' : `scale(${scale})`, 
+                      transformOrigin: 'top center', 
+                      transition: 'transform 0.25s ease' 
+                    }}
+                    // 🌟 حذفنا mx-auto من هنا ليعود للوضع الطبيعي
+                    className="gen-org-tree relative z-10"
+                  >
+                    {renderDiagramNode(sequenceData)}
+                  </ul>
+                ) : (
+                  <div className={`relative z-10 w-fit mx-auto ${isExporting ? 'scale-125 origin-top mt-10 mb-20' : 'rounded-2xl border border-gold-deep/10 bg-white/60 p-6 shadow-sm dark:border-[#d6b877]/10 dark:bg-black/20'}`}>
+                    {renderListNode(sequenceData)}
+                  </div>
                 )}
 
                 {/* الشجرة */}

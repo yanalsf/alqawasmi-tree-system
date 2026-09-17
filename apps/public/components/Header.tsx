@@ -25,7 +25,6 @@ interface HeaderProps {
   setReduceAnimations?: (val: boolean) => void;
 }
 
-// 🌟 زر Toggle ذكي ومصمم خصيصاً للغة العربية
 const CustomToggle = ({ isOn, onToggle }: { isOn: boolean; onToggle: () => void }) => (
   <div 
     onClick={onToggle}
@@ -65,11 +64,13 @@ export default function Header({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const glassBtn = "cursor-pointer relative flex h-[42px] items-center justify-center rounded-full border-[1.5px] border-gold-deep/30 bg-gradient-to-b from-[#fffdf8] to-[#fcf8f2] shadow-[0_4px_12px_rgba(138,95,46,0.08)] backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-gold-deep/60 hover:shadow-[0_8px_20px_rgba(138,95,46,0.15)] dark:border-[#d6b877]/30 dark:from-[#1c1915] dark:to-[#14120f] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] dark:hover:border-[#d6b877]/60";
+  // 🌟 تم تصغير الارتفاع قليلاً على الشاشات الصغيرة (h-[38px]) وجعله (h-[42px]) على الشاشات الأكبر
+  const glassBtn = "cursor-pointer relative flex h-[38px] sm:h-[42px] items-center justify-center rounded-full border-[1.5px] border-gold-deep/30 bg-gradient-to-b from-[#fffdf8] to-[#fcf8f2] shadow-[0_4px_12px_rgba(138,95,46,0.08)] backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-gold-deep/60 hover:shadow-[0_8px_20px_rgba(138,95,46,0.15)] dark:border-[#d6b877]/30 dark:from-[#1c1915] dark:to-[#14120f] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] dark:hover:border-[#d6b877]/60";
 
   return (
     <>
-     <div ref={wrapRef} className="fixed top-[18px] left-[18px] z-[12] flex items-center gap-2.5">
+     {/* 🌟 تم ضبط المحاذاة (top-[14px]) وتقليل الفراغات (gap-1.5) للشاشات الصغيرة */}
+     <div ref={wrapRef} className="fixed top-[14px] left-[8px] sm:left-[18px] z-[12] flex items-center gap-1.5 sm:gap-2.5">
         <motion.span
           role="button"
           tabIndex={0}
@@ -77,34 +78,32 @@ export default function Header({
           aria-expanded={isDropdownOpen}
           onClick={() => setDropdownOpen((v) => !v)}
           whileTap={{ scale: 0.96 }}
-          className={`${glassBtn} cursor-pointer select-none px-5 font-ruqaa text-[21px] font-bold text-gold-deep dark:text-[#d6b877] leading-none pt-1`}
+          className={`${glassBtn} cursor-pointer select-none px-3 sm:px-5 font-ruqaa text-[17px] sm:text-[21px] font-bold text-gold-deep dark:text-[#d6b877] leading-none pt-1`}
         >
           {title}
         </motion.span>
 
-        {/* 🌟 زر المزيد أصبح هنا بالوسط 🌟 */}
         <motion.button
           type="button"
           onClick={onOpenFeatures}
           whileTap={{ scale: 0.96 }}
-          className={`${glassBtn} px-5 gap-1.5 font-cairo text-[14px] font-extrabold text-gold-deep dark:text-[#d6b877]`}
+          className={`${glassBtn} px-3 sm:px-5 gap-1 sm:gap-1.5 font-cairo text-[12.5px] sm:text-[14px] font-extrabold text-gold-deep dark:text-[#d6b877]`}
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
           </svg>
           المزيد
         </motion.button>
 
-        {/* 🌟 زر الإعدادات أصبح على الطرف 🌟 */}
         <motion.button
           type="button"
           onClick={() => setSettingsOpen(true)}
           whileHover={{ rotate: 30 }}
           whileTap={{ scale: 0.9 }}
-          className={`${glassBtn} w-[42px] !px-0 text-gold-deep dark:text-[#d6b877]`}
+          className={`${glassBtn} w-[38px] sm:w-[42px] !px-0 text-gold-deep dark:text-[#d6b877]`}
           title="الإعدادات"
         >
-          <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg className="w-[16px] h-[16px] sm:w-[18px] sm:h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="3"></circle>
             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
           </svg>
@@ -170,7 +169,8 @@ export default function Header({
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             transition={{ type: "spring", damping: 20, stiffness: 300 }}
-            className="fixed top-[14px] right-[14px] z-50 rounded-[22px] bg-gold-deep px-4 py-2.5 text-[13px] font-bold text-[#fff8ec] shadow-card min-[901px]:hidden"
+            // 🌟 تم تصغير الحواف وتوحيد المحاذاة (top-[14px]) ليصبح بموازاة الأزرار اليسرى تماماً
+            className="fixed top-[14px] right-[8px] sm:right-[14px] z-50 rounded-[22px] bg-gold-deep px-3 sm:px-4 py-[9px] sm:py-2.5 text-[12.5px] sm:text-[13px] font-bold text-[#fff8ec] shadow-card min-[901px]:hidden"
           >
             ☰ الفهرس
           </motion.button>
@@ -231,7 +231,6 @@ export default function Header({
                 </span>
                 الوضع الليلي
               </span>
-              {/* 🌟 حماية باستخدام Optional Chaining لمنع الكراش */}
               <CustomToggle isOn={isDarkMode} onToggle={() => onToggleDarkMode?.()} />
             </div>
           </div>
@@ -246,7 +245,6 @@ export default function Header({
                 </span>
                 إظهار تواريخ الميلاد
               </span>
-              {/* 🌟 حماية باستخدام Optional Chaining لمنع الكراش */}
               <CustomToggle isOn={!!showDates} onToggle={() => setShowDates?.(!showDates)} />
             </div>
 
@@ -257,7 +255,6 @@ export default function Header({
                 </span>
                 تقليل الحركات
               </span>
-              {/* 🌟 حماية باستخدام Optional Chaining لمنع الكراش */}
               <CustomToggle isOn={!!reduceAnimations} onToggle={() => setReduceAnimations?.(!reduceAnimations)} />
             </div>
           </div>
