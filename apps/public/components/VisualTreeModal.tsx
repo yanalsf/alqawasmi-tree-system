@@ -148,13 +148,16 @@ export default function VisualTreeModal({ isOpen, rootNode, onClose }: VisualTre
 
       const { root, childScale, fontChild, rootScale, fontRoot, maxNameLen, x0: tx0, x1: tx1, y0: ty0, y1: ty1 } =
         buildRadialLayout(rootNode, {
-          minRadius: 2000,       
-          minChildScale: 150,     
-          maxChildScale: 150,
-          minFontChild: 1000,      
-          maxFontChild: 1500,
+          minRadius: 2600,
+          minChildScale: 200,
+          maxChildScale: 175,
+          minFontChild: 1300,
+          maxFontChild: 1900,
           fontToChildRatio: 6.84,
-          rootToChildRatio: 2.5,
+          // 🌟 تقريب حجم الورقة من حجم دائرة الأب بدل تصغيرها كثيراً عنها
+          rootToChildRatio: 1.7,
+          // 🌟 تقليل المسافة الزاوية بين الورقات المتجاورة لشكل أكثر تناسقاً
+          separationFactor: 0.55,
         });
 
       const totalMembersCount = root.descendants().length;
@@ -168,14 +171,15 @@ export default function VisualTreeModal({ isOpen, rootNode, onClose }: VisualTre
       const treeActualWidth = tx1 - tx0;
       const treeActualHeight = ty1 - ty0;
 
-      const padding = safeContentPadding(childScale, fontChild, maxNameLen, 2500);
+      // 🌟 تكبير حجم الورقة (اللوحة) لتعطي مساحة أفخم حول الشجرة
+      const padding = safeContentPadding(childScale, fontChild, maxNameLen, 3500);
       
       const dynamicWidth = treeActualWidth + padding * 2;
       const headerScale = Math.max(1, dynamicWidth / 3000);
       
-      const headerHeight = 1500 * headerScale;
+      const headerHeight = 1800 * headerScale;
       // 🌟 التعديل 1: إضافة مساحة مخصصة للذيل السفلي (Footer) لعدم تداخل الشجرة معه
-      const footerHeight = 600 * headerScale; 
+      const footerHeight = 750 * headerScale; 
       
       // دمج مساحة التذييل في الطول الكلي للوحة
       const dynamicHeight = treeActualHeight + padding * 2 + headerHeight + footerHeight;
@@ -192,14 +196,42 @@ export default function VisualTreeModal({ isOpen, rootNode, onClose }: VisualTre
       const hs = headerScale;
       const margin = 120 * hs;
 
+      // 🌟 نحسب الحجم الحقيقي بالمليمتر للتوثيق فقط (لاستخدامه لاحقاً عند ضبط
+      // مقاس اللوحة يدوياً في Illustrator/Inkscape قبل الطباعة)، لكن لا نفرضه
+      // كـ width/height فعلي على الجذر — لأن ذلك يكسر التكبير التلقائي عند فتح
+      // الملف كمعاينة في المتصفح (يصبح العنصر الزخرفي الواحد يملأ الشاشة رغم
+      // تصغير الزوم، كما لاحظت). الأمان: نترك width/height = 100% للعرض،
+      // ونحمل القياس الحقيقي كـ data-attribute توثيقي فقط.
+      const MM_PER_UNIT = 0.1;
+      const widthMm = (dynamicWidth * MM_PER_UNIT).toFixed(1);
+      const heightMm = (dynamicHeight * MM_PER_UNIT).toFixed(1);
+
       const svgContent = `
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${dynamicWidth} ${dynamicHeight}" width="100%" height="100%" style="background-color: #fffdf8;">
+        <!-- 🌟 الحجم الحقيقي عند الطباعة: ${widthMm}mm × ${heightMm}mm.
+             عند الاستيراد إلى Illustrator/Inkscape للطباعة النهائية، اضبط مقاس
+             اللوحة (Document Setup / Document Properties) على هذا الرقم يدوياً
+             قبل تحويل النص إلى Outlines. -->
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${dynamicWidth} ${dynamicHeight}" width="100%" height="100%" data-print-width-mm="${widthMm}" data-print-height-mm="${heightMm}" style="background-color: #fffdf8;">
           <defs>
             <pattern id="bg-pattern" x="0" y="0" width="${100 * hs}" height="${100 * hs}" patternUnits="userSpaceOnUse">
               <path d="M${50 * hs} 0 L${100 * hs} ${50 * hs} L${50 * hs} ${100 * hs} L0 ${50 * hs} Z" fill="none" stroke="#d6b877" stroke-width="${1 * hs}" opacity="0.15"/>
             </pattern>
+            <!-- 🌟 قوس خفيف لرسم الآية عليه بانحناء أنيق -->
+            <path id="ayah-curve" fill="none"
+              d="M ${dynamicWidth / 2 - 1050 * hs} ${700 * hs}
+                 Q ${dynamicWidth / 2} ${580 * hs} ${dynamicWidth / 2 + 1050 * hs} ${700 * hs}" />
           </defs>
 
+          <!--
+            ⚠️ ملاحظة طباعة هامة:
+            الخطوط أدناه محمّلة عبر @import من الإنترنت، وهذا يعمل فقط داخل المتصفح.
+            معظم برامج الطباعة (Illustrator, Inkscape, أي RIP في المطبعة) لا تجلب خطوطاً
+            من الشبكة عند فتح ملف SVG، وستستبدل الخط بخط افتراضي قد لا يدعم العربية.
+            قبل التسليم للمطبعة: حوّل كل النصوص إلى مسارات (Outlines) عبر
+            Inkscape: Path → Object to Path، أو Illustrator: Type → Create Outlines.
+            هذا يضمن ظهور النص بنفس الشكل تماماً على أي جهاز أو مطبعة دون الاعتماد
+            على توفر الخط.
+          -->
           <style>
             @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@700;900&amp;family=Amiri:wght@400;700&amp;family=Aref+Ruqaa:wght@700&amp;display=swap');
             .title { font-family: 'Aref Ruqaa', serif; }
@@ -231,12 +263,14 @@ export default function VisualTreeModal({ isOpen, rootNode, onClose }: VisualTre
           `).join('')}
 
           <!-- ================= النصوص العلوية ================= -->
-          <text class="title" x="${dynamicWidth / 2}" y="${380 * hs}" text-anchor="middle" font-size="${160 * hs}" fill="#2b1d12" font-weight="900">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</text>
-          <text class="ayah" x="${dynamicWidth / 2}" y="${580 * hs}" text-anchor="middle" font-size="${100 * hs}" fill="#5c4a38" font-weight="700">وَهُوَ الَّذِي خَلَقَ مِنَ الْمَاءِ بَشَرًا فَجَعَلَهُ نَسَبًا وَصِهْرًا ۗ وَكَانَ رَبُّكَ قَدِيرًا</text>
+          <text class="title" x="${dynamicWidth / 2}" y="${460 * hs}" text-anchor="middle" font-size="${160 * hs}" fill="#2b1d12" font-weight="900">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</text>
+          <text class="ayah" text-anchor="middle" direction="rtl" font-size="${100 * hs}" fill="#5c4a38" font-weight="700">
+            <textPath href="#ayah-curve" startOffset="50%">وَهُوَ الَّذِي خَلَقَ مِنَ الْمَاءِ بَشَرًا فَجَعَلَهُ نَسَبًا وَصِهْرًا ۗ وَكَانَ رَبُّكَ قَدِيرًا</textPath>
+          </text>
 
-          <text class="title" x="${dynamicWidth / 2}" y="${1020 * hs}" text-anchor="middle" font-size="${220 * hs}" fill="#2b1d12" font-weight="900">شجرة عائلة القواسمي</text>
-          <line x1="${dynamicWidth / 2 - 500 * hs}" y1="${1100 * hs}" x2="${dynamicWidth / 2 + 500 * hs}" y2="${1100 * hs}" stroke="#d4af37" stroke-width="${4 * hs}" stroke-linecap="round" />
-          <text class="subtitle" x="${dynamicWidth / 2}" y="${1240 * hs}" text-anchor="middle" font-size="${100 * hs}" fill="#8a5f2e" font-weight="bold">فرع: ${rootNode.name.replace("فخذ ", "")}</text>
+          <text class="title" x="${dynamicWidth / 2}" y="${1250 * hs}" text-anchor="middle" font-size="${220 * hs}" fill="#2b1d12" font-weight="900">شجرة عائلة القواسمي</text>
+          <line x1="${dynamicWidth / 2 - 500 * hs}" y1="${1330 * hs}" x2="${dynamicWidth / 2 + 500 * hs}" y2="${1330 * hs}" stroke="#d4af37" stroke-width="${4 * hs}" stroke-linecap="round" />
+          <text class="subtitle" x="${dynamicWidth / 2}" y="${1470 * hs}" text-anchor="middle" font-size="${100 * hs}" fill="#8a5f2e" font-weight="bold">فرع: ${rootNode.name.replace("فخذ ", "")}</text>
           
           <!-- ================= الشجرة ================= -->
           <g transform="translate(${translateX}, ${translateY})">
@@ -284,6 +318,7 @@ export default function VisualTreeModal({ isOpen, rootNode, onClose }: VisualTre
       maxFontChild: number;
       fontToChildRatio: number; 
       rootToChildRatio: number; 
+      separationFactor?: number;
     }
   ) {
     const root = d3.hierarchy(data as any) as d3.HierarchyPointNode<FamilyNode>;
@@ -305,9 +340,20 @@ export default function VisualTreeModal({ isOpen, rootNode, onClose }: VisualTre
     const rootScale = childScale * opts.rootToChildRatio;
     const fontRoot = fontChild * opts.rootToChildRatio;
  
+    const sepFactor = opts.separationFactor ?? 1;
     d3.cluster<FamilyNode>()
       .size([2 * Math.PI, radius])
-      .separation((a, b) => (a.parent === b.parent ? 1 : 1.5))(root);
+      .separation((a, b) => (a.parent === b.parent ? 1 : 1.5) * sepFactor)(root);
+
+    // 🌟 فحص السعة الزاوية: تأكد أن أضيق حلقة (أكثر الأجيال ازدحاماً بالإخوة) تملك
+    // مساحة قوسية كافية لعرض كل تسمية دون تراكب، وإلا وسّع نصف القطر وأعد التوزيع.
+    const minAngularRadius = computeMinAngularRadius(root, fontChild, childScale);
+    if (minAngularRadius > radius) {
+      radius = minAngularRadius;
+      d3.cluster<FamilyNode>()
+        .size([2 * Math.PI, radius])
+        .separation((a, b) => (a.parent === b.parent ? 1 : 1.5) * sepFactor)(root);
+    }
  
     let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
     root.each((d: any) => {
@@ -334,6 +380,43 @@ export default function VisualTreeModal({ isOpen, rootNode, onClose }: VisualTre
     };
   }
    
+  // 🌟 يحسب أصغر نصف قطر تحتاجه الشجرة بحيث لا تتراكب تسميات أي حلقة (جيل) مهما كثر
+  // عدد الإخوة فيها. يقارن، لكل مجموعة إخوة، مجموع الطول القوسي المطلوب لأسمائهم
+  // بمحيط الحلقة عند عمقهم، ويرجع أكبر نصف قطر مطلوب عبر كل الأعماق.
+  function computeMinAngularRadius(
+    root: d3.HierarchyPointNode<FamilyNode>,
+    fontChild: number,
+    childScale: number
+  ) {
+    const maxDepth = root.height || 1;
+    const byParent = new Map<any, any[]>();
+    root.each((d: any) => {
+      if (d.depth === 0) return;
+      const key = d.parent;
+      if (!byParent.has(key)) byParent.set(key, []);
+      byParent.get(key)!.push(d);
+    });
+ 
+    let maxRequiredRadius = 0;
+    byParent.forEach((siblings) => {
+      if (siblings.length < 2) return;
+      const depth = siblings[0].depth;
+      const labelLen = Math.max(
+        ...siblings.map((d: any) => (d.data as FamilyNode).name.replace("فخذ ", "").length)
+      );
+      // طول القوس التقريبي الذي تحتاجه كل تسمية + هامش أمان 15%
+      const neededArcPerNode = labelLen * fontChild * 0.62 + 45 * childScale;
+      const totalArcNeeded = neededArcPerNode * siblings.length * 1.15;
+      // نصف القطر اللازم عند هذا الجيل حتى يتسع محيط الحلقة لكل الأقواس المطلوبة
+      const requiredRingRadius = totalArcNeeded / (2 * Math.PI);
+      // نُسقط هذا المطلب على نصف القطر الكامل للشجرة بالتناسب مع عمق هذا الجيل
+      const requiredFullRadius = requiredRingRadius * (maxDepth / depth);
+      if (requiredFullRadius > maxRequiredRadius) maxRequiredRadius = requiredFullRadius;
+    });
+ 
+    return maxRequiredRadius;
+  }
+ 
   function safeContentPadding(childScale: number, fontChild: number, maxNameLen: number, base: number) {
     const leafPhysicalLength = 50 * childScale; 
     const textPhysicalLength = maxNameLen * fontChild * 1.0; 
@@ -423,11 +506,22 @@ export default function VisualTreeModal({ isOpen, rootNode, onClose }: VisualTre
         .attr("dominant-baseline", "central") 
         .attr("fill", "#fff")
         .attr("font-family", "'Cairo', sans-serif")
-        .attr("font-size", `${opts.fontChild}px`)
+        // 🌟 تدرّج هرمي للخط بحسب الجيل: الحلقات القريبة من الجذر أبرز قليلاً،
+        // والحلقات البعيدة (الأكثر ازدحاماً بالإخوة) تصغر تدريجياً لتحافظ على الوضوح
+        // دون تراكب، بدل استخدام حجم خط واحد ثابت لكل الأجيال.
+        .attr("font-size", (d: any) => `${fontSizeForDepth(d.depth, root.height || 1, opts.fontChild)}px`)
         .attr("font-weight", "900")
         .style("text-anchor", "middle")
         .text((d: any) => (d.data as FamilyNode).name.replace("فخذ ", ""));
     }
+  }
+
+  // نطاق التدرج: 115% من الحجم الأساسي عند أول جيل، ينخفض تدريجياً إلى 78% عند أعمق جيل
+  function fontSizeForDepth(depth: number, maxDepth: number, baseFontChild: number) {
+    if (maxDepth <= 1) return baseFontChild;
+    const t = (depth - 1) / (maxDepth - 1); // 0 عند أقرب جيل، 1 عند أبعد جيل
+    const factor = 1.15 - t * (1.15 - 0.78);
+    return baseFontChild * factor;
   }
   
   const displayNode = rootNode ?? cachedRootNode;

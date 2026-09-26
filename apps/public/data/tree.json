@@ -106,7 +106,7 @@
                                 },
                                 {
                                   "id": 17,
-                                  "name": "قيص",
+                                  "name": "قيس",
                                   "birth_date": null,
                                   "death_date": null
                                 },
@@ -521,7 +521,7 @@
                             {
                               "id": 72,
                               "name": "علي",
-                              "birth_date": null,
+                              "birth_date": 2008,
                               "death_date": null
                             },
                             {
@@ -4016,7 +4016,7 @@
                                 },
                                 {
                                   "id": 1117,
-                                  "name": "اسامة",
+                                  "name": "اسامه",
                                   "birth_date": null,
                                   "death_date": null
                                 }

@@ -84,6 +84,10 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
       setErrorMsg("رقم الهاتف مطلوب للتواصل وتدقيق الطلب!");
       return;
     }
+    if (!/^[0-9]{9}$/.test(phone.trim())) {
+      setErrorMsg("رقم الهاتف يجب أن يتكون من 9 أرقام بالضبط (بدون الصفر الأول أو رمز الدولة).");
+      return;
+    }
     if (!branch) {
       setErrorMsg("يجب اختيار الفخذ!");
       return;
@@ -107,7 +111,7 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
 
     const payload = new URLSearchParams({
       "form-name": "add-member-form",
-      name: `طلب إضافة فرد - ${parentName}`,
+      name: `🆕 إضافة فرد | ${parentName}`,
       parent_name: parentName,
       member_phone: `${countryCode} ${phone}`,
       branch,
@@ -275,8 +279,9 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
 <input
   type="tel"
   value={phone}
-  onChange={(e) => setPhone(e.target.value)}
-  placeholder="790 000 000"
+  onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, "").slice(0, 9))}
+  placeholder="791234567"
+  maxLength={9}
   className="w-full flex-1 p-3 rounded-xl border border-[#d6b877]/60..." /* بقية الكلاسات اللي عندك */
   dir="ltr"
 />

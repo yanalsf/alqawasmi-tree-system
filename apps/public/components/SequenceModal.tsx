@@ -206,7 +206,7 @@ export default function SequenceModal({ isOpen, onClose, onSelectBranch }: Seque
               background: `linear-gradient(145deg, ${node.color}e6, ${node.color})`,
               boxShadow: `0 4px 15px ${node.color}40`
             }}
-            className="relative z-10 inline-flex items-center justify-center whitespace-nowrap rounded-xl border border-white/20 px-7 py-3 font-cairo text-[18px] font-extrabold text-white transition-all hover:-translate-y-1 hover:shadow-lg focus:outline-none dark:border-white/10"
+            className="cursor-pointer relative z-10 inline-flex items-center justify-center whitespace-nowrap rounded-xl border border-white/20 px-7 py-3 font-cairo text-[18px] font-extrabold text-white transition-all hover:-translate-y-1 hover:shadow-lg focus:outline-none dark:border-white/10"
           >
             {node.name}
           </button>
@@ -238,7 +238,7 @@ export default function SequenceModal({ isOpen, onClose, onSelectBranch }: Seque
           <button
             onClick={() => onSelectBranch(node.branch)}
             style={{ background: `linear-gradient(145deg, ${node.color}e6, ${node.color})` }}
-            className="relative z-10 inline-flex items-center gap-2 rounded-lg px-5 py-2.5 font-cairo text-[14.5px] font-extrabold text-white shadow-md ring-1 ring-white/10 transition-all hover:-translate-x-1 hover:shadow-lg focus:outline-none"
+            className="cursor-pointer relative z-10 inline-flex items-center gap-2 rounded-lg px-5 py-2.5 font-cairo text-[14.5px] font-extrabold text-white shadow-md ring-1 ring-white/10 transition-all hover:-translate-x-1 hover:shadow-lg focus:outline-none"
           >
             <span className="h-1.5 w-1.5 rounded-full bg-white/70" />
             {node.name}
@@ -292,13 +292,12 @@ export default function SequenceModal({ isOpen, onClose, onSelectBranch }: Seque
             {/* الترويسة العلوية الفخمة (نسخة متجاوبة للموبايل) */}
             <div className="flex shrink-0 flex-col sm:flex-row sm:flex-wrap items-center justify-between gap-4 border-b border-gold-deep/15 bg-gradient-to-r from-[#fdfbf7] via-white to-[#fdfbf7] px-4 sm:px-6 py-4 shadow-[0_4px_20px_rgba(138,95,46,0.03)] dark:border-white/10 dark:from-[#161411] dark:via-[#1c1915] dark:to-[#161411]">
               
-              {/* 🌟 العنوان وزر الإغلاق (يظهران في نفس السطر براحة تامة على الموبايل) */}
+              {/* العنوان وزر الإغلاق */}
               <div className="flex w-full sm:w-auto items-center justify-between">
                 <h3 className="font-ruqaa text-[20px] sm:text-[22px] m-0 font-bold text-gold-deep dark:text-[#d6b877] flex items-center gap-2 drop-shadow-sm">
                   <span className="text-[22px] sm:text-[24px]">🌳</span> تسلسل الأفخاذ الكامل
                 </h3>
 
-                {/* زر الإغلاق الدائري - يظهر هنا فقط في الموبايل */}
                 <button 
                   onClick={onClose} 
                   className="sm:hidden cursor-pointer group flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gold-deep/20 bg-white text-[#7c6c53] shadow-sm transition-all duration-300 hover:border-red-300 hover:bg-red-50 hover:text-red-500 hover:shadow-md dark:border-white/10 dark:bg-[#1c1915] dark:text-gray-400 dark:hover:border-red-500/40 dark:hover:bg-red-500/10 dark:hover:text-red-400"
@@ -311,10 +310,8 @@ export default function SequenceModal({ isOpen, onClose, onSelectBranch }: Seque
                 </button>
               </div>
  
-              {/* 🌟 أزرار الإجراءات (تنزل لسطر جديد في الموبايل) */}
+              {/* أزرار الإجراءات */}
               <div className="flex w-full sm:w-auto items-center justify-center sm:justify-end gap-2.5 sm:gap-5 flex-wrap sm:flex-nowrap">
-                
-                {/* زر طباعة PDF */}
                 <button
                   onClick={handleExportPDF}
                   disabled={isExporting}
@@ -334,10 +331,8 @@ export default function SequenceModal({ isOpen, onClose, onSelectBranch }: Seque
                   )}
                 </button>
 
-                {/* فاصل عمودي */}
                 <div className="h-7 w-[1.5px] rounded-full bg-gold-deep/20 dark:bg-white/10 hidden sm:block"></div>
 
-                {/* أزرار التبديل (مخطط / قائمة) */}
                 <div className="flex shrink-0 items-center rounded-full border border-gold-deep/15 bg-gray-50/80 p-1 shadow-inner dark:border-white/10 dark:bg-black/30">
                   <button
                     onClick={() => setViewMode('diagram')}
@@ -361,10 +356,8 @@ export default function SequenceModal({ isOpen, onClose, onSelectBranch }: Seque
                   </button>
                 </div>
  
-                {/* فاصل عمودي */}
                 <div className="h-7 w-[1.5px] rounded-full bg-gold-deep/20 dark:bg-white/10 hidden sm:block ml-1"></div>
 
-                {/* زر الإغلاق الدائري - يظهر هنا فقط في الشاشات الكبيرة */}
                 <button 
                   onClick={onClose} 
                   className="hidden sm:flex cursor-pointer group h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gold-deep/20 bg-white text-[#7c6c53] shadow-sm transition-all duration-300 hover:border-red-300 hover:bg-red-50 hover:text-red-500 hover:shadow-md dark:border-white/10 dark:bg-[#1c1915] dark:text-gray-400 dark:hover:border-red-500/40 dark:hover:bg-red-500/10 dark:hover:text-red-400"
@@ -393,8 +386,7 @@ export default function SequenceModal({ isOpen, onClose, onSelectBranch }: Seque
                   isExporting
                     ? 'w-max min-w-full overflow-visible bg-[#fffdf8] p-24 dark:bg-[#161411]'
                     : viewMode === 'diagram'
-                    // 🌟 التعديل هنا: يبدأ من اليمين للموبايل، ويتوسط في الشاشات الكبيرة
-                    ? 'flex w-full justify-start md:justify-center py-8 px-4 sm:px-8'
+                    ? 'w-max min-w-full mx-auto py-8 px-4 sm:px-8'
                     : 'w-full max-w-2xl pb-10 px-4 mx-auto'
                 }`}
               >
@@ -449,55 +441,7 @@ export default function SequenceModal({ isOpen, onClose, onSelectBranch }: Seque
                       transformOrigin: 'top center', 
                       transition: 'transform 0.25s ease' 
                     }}
-                    // 🌟 حذفنا mx-auto من هنا ليعود للوضع الطبيعي
-                    className="gen-org-tree relative z-10"
-                  >
-                    {renderDiagramNode(sequenceData)}
-                  </ul>
-                ) : (
-                  <div className={`relative z-10 w-fit mx-auto ${isExporting ? 'scale-125 origin-top mt-10 mb-20' : 'rounded-2xl border border-gold-deep/10 bg-white/60 p-6 shadow-sm dark:border-[#d6b877]/10 dark:bg-black/20'}`}>
-                    {renderListNode(sequenceData)}
-                  </div>
-                )}
-
-                {/* الشجرة */}
-                {viewMode === 'diagram' ? (
-                  <style>{`
-                    .gen-org-tree, .gen-org-tree ul { list-style:none; margin:0; padding:0; display:flex; justify-content:center; }
-                    .gen-org-tree { width:max-content; --tree-line: rgba(138,95,46,0.5); }
-                    .dark .gen-org-tree { --tree-line: rgba(214,184,119,0.4); }
-                    .gen-org-tree li {
-                      position:relative; display:flex; flex-direction:column; align-items:center;
-                      padding:32px 16px 0; text-align:center;
-                    }
-                    .gen-org-tree > li { padding-top:0; }
-                    .gen-org-tree li::before, .gen-org-tree li::after {
-                      content:''; position:absolute; top:0; width:50%; height:26px;
-                      border-top:2.5px solid var(--tree-line);
-                    }
-                    .gen-org-tree li::before { inset-inline-end:50%; border-inline-end:2.5px solid var(--tree-line); border-top-right-radius: 12px; }
-                    .gen-org-tree li::after { inset-inline-start:50%; border-inline-start:2.5px solid var(--tree-line); border-top-left-radius: 12px;}
-                    .gen-org-tree > li::before, .gen-org-tree > li::after { display:none; }
-                    .gen-org-tree li:only-child::before, .gen-org-tree li:only-child::after { display:none; }
-                    .gen-org-tree li:first-child::before { border-color:transparent; }
-                    .gen-org-tree li:last-child::after { border-color:transparent; }
-                    .gen-org-tree li > ul { position:relative; padding-top:26px; }
-                    .gen-org-tree li > ul::before {
-                      content:''; position:absolute; top:0; inset-inline-start:50%; width:0; height:26px;
-                      border-inline-start:2.5px solid var(--tree-line);
-                    }
-                  `}</style>
-                ) : null}
-
-                {viewMode === 'diagram' ? (
-                  <ul
-                    ref={treeContentRef}
-                    style={{ 
-                      transform: isExporting ? 'scale(1)' : `scale(${scale})`, 
-                      transformOrigin: 'top center', 
-                      transition: 'transform 0.25s ease' 
-                    }}
-                    className="gen-org-tree relative z-10"
+                    className="gen-org-tree relative z-10 mx-auto"
                   >
                     {renderDiagramNode(sequenceData)}
                   </ul>
@@ -529,20 +473,20 @@ export default function SequenceModal({ isOpen, onClose, onSelectBranch }: Seque
                   <button
                     onClick={zoomOut}
                     aria-label="تصغير"
-                    className="flex h-8 w-8 items-center justify-center rounded-full text-lg font-bold text-gold-deep transition-colors hover:bg-gold-deep/10 dark:text-[#d6b877] dark:hover:bg-white/10"
+                    className="cursor-pointer flex h-8 w-8 items-center justify-center rounded-full text-lg font-bold text-gold-deep transition-colors hover:bg-gold-deep/10 dark:text-[#d6b877] dark:hover:bg-white/10"
                   >
                     −
                   </button>
                   <button
                     onClick={computeFit}
-                    className="rounded-full px-3 py-1.5 font-cairo text-[12px] font-bold text-gold-deep transition-colors hover:bg-gold-deep/10 dark:text-[#d6b877] dark:hover:bg-white/10"
+                    className="cursor-pointer rounded-full px-3 py-1.5 font-cairo text-[12px] font-bold text-gold-deep transition-colors hover:bg-gold-deep/10 dark:text-[#d6b877] dark:hover:bg-white/10"
                   >
                     ⤢ ملاءمة الشاشة
                   </button>
                   <button
                     onClick={zoomIn}
                     aria-label="تكبير"
-                    className="flex h-8 w-8 items-center justify-center rounded-full text-lg font-bold text-gold-deep transition-colors hover:bg-gold-deep/10 dark:text-[#d6b877] dark:hover:bg-white/10"
+                    className="cursor-pointer flex h-8 w-8 items-center justify-center rounded-full text-lg font-bold text-gold-deep transition-colors hover:bg-gold-deep/10 dark:text-[#d6b877] dark:hover:bg-white/10"
                   >
                     +
                   </button>

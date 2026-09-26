@@ -1,8 +1,6 @@
-// FeaturesMenuModal.tsx
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-
 
 interface FeaturesMenuModalProps {
   isOpen: boolean;
@@ -12,10 +10,21 @@ interface FeaturesMenuModalProps {
   onOpenEditRequest?: () => void;
   onOpenAddMember?: () => void;
   onOpenAbout?: () => void; 
-  onOpenComplaints?: () => void; // 👈 ضفنا هاد السطر
+  onOpenComplaints?: () => void;
+  onOpenPoster?: () => void; // 🌟 الخاصية الجديدة لفتح نافذة البوستر
 }
 
-export default function FeaturesMenuModal({ isOpen, onClose, onOpenKinship, onOpenStats, onOpenEditRequest, onOpenAddMember,onOpenAbout,onOpenComplaints}: FeaturesMenuModalProps) {
+export default function FeaturesMenuModal({
+  isOpen,
+  onClose,
+  onOpenKinship,
+  onOpenStats,
+  onOpenEditRequest,
+  onOpenAddMember,
+  onOpenAbout,
+  onOpenComplaints,
+  onOpenPoster,
+}: FeaturesMenuModalProps) {
   return (
     <AnimatePresence>
       {isOpen && (
@@ -37,12 +46,12 @@ export default function FeaturesMenuModal({ isOpen, onClose, onOpenKinship, onOp
           >
             <button 
               onClick={onClose} 
-              className="absolute left-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors dark:bg-[#2b261f] dark:text-gray-400 dark:hover:bg-red-900/30 dark:hover:text-red-400"
+              className="absolute left-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors border-none outline-none focus:outline-none focus:ring-0 dark:bg-[#2b261f] dark:text-gray-400 dark:hover:bg-red-900/30 dark:hover:text-red-400"
             >
               ✕
             </button>
 
-            <div className="mb-8">
+            <div className="mb-6">
               <span className="text-4xl mb-3 block opacity-90">🌳</span>
               <h2 className="text-2xl font-bold text-[#8a5f2e] font-ruqaa mb-1 dark:text-[#d6b877]">والمزيد من</h2>
               <h2 className="text-3xl font-bold text-[#8a5f2e] font-ruqaa dark:text-[#d6b877]">المزايا</h2>
@@ -52,10 +61,20 @@ export default function FeaturesMenuModal({ isOpen, onClose, onOpenKinship, onOp
               <FeatureButton title="كاشف القرابة" onClick={onOpenKinship} />
               <FeatureButton title="الإحصائيات" onClick={onOpenStats} />
               <FeatureButton title="نبذة عن العائلة" onClick={onOpenAbout} />
-              {/* 👇 ضفنا الزر الجديد هون */}
               <FeatureButton title="طلب إضافة فرد" onClick={onOpenAddMember} />
               <FeatureButton title="طلبات التعديل" onClick={onOpenEditRequest} />
               <FeatureButton title="الشكاوى" onClick={onOpenComplaints} />
+
+              {/* 🌟 زر طباعة بوستر الفخذ (يمتد على كامل العرض بلمسة مميزة) */}
+              <div className="col-span-2 mt-1">
+                <button
+                  onClick={onOpenPoster}
+                  className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-[#c9974f]/50 bg-gradient-to-r from-[#c9974f]/15 via-[#c9974f]/10 to-[#c9974f]/15 text-[13.5px] font-extrabold text-[#8a5f2e] shadow-sm transition-all hover:bg-[#c9974f]/25 hover:border-[#c9974f]/80 active:scale-95 dark:border-[#d6b877]/40 dark:from-[#d6b877]/10 dark:via-[#d6b877]/5 dark:to-[#d6b877]/10 dark:text-[#d6b877]"
+                >
+                  <span>🖨️</span>
+                  <span>طباعة بوستر الفخذ (svg)</span>
+                </button>
+              </div>
             </div>
           </motion.div>
         </div>

@@ -60,6 +60,10 @@ export default function ComplaintsModal({ isOpen, onClose }: ComplaintsModalProp
       setErrorMsg("رقم الهاتف مطلوب للتواصل!");
       return;
     }
+    if (!/^[0-9]{9}$/.test(phone.trim())) {
+      setErrorMsg("رقم الهاتف يجب أن يتكون من 9 أرقام بالضبط (بدون الصفر الأول أو رمز الدولة).");
+      return;
+    }
 
     if (messageText.length > 100) {
       setErrorMsg("لا يمكن إرسال الطلب لأن الرسالة تجاوزت 100 حرف.");
@@ -70,7 +74,7 @@ export default function ComplaintsModal({ isOpen, onClose }: ComplaintsModalProp
 
     // 🌟 عنوان موحّد وواضح للطلب بلوحة Netlify
     const messageType = (formData.get("message_type") as string) || "رسالة";
-    formData.set("name", `${messageType} - ${senderName}`);
+    formData.set("name", `📩 ${messageType} | ${senderName}`);
 
     const data = new URLSearchParams(formData as any).toString();
 
@@ -105,7 +109,7 @@ export default function ComplaintsModal({ isOpen, onClose }: ComplaintsModalProp
             className="relative w-full max-w-md overflow-hidden rounded-3xl bg-[#fdfbf7] border border-[#c9974f]/30 shadow-2xl dark:bg-[#1c1915] dark:border-[#d6b877]/20 flex flex-col max-h-[90vh]"
           >
             <div className="relative pt-6 pb-2 shrink-0 z-10 bg-[#fdfbf7] dark:bg-[#1c1915] rounded-t-3xl px-6 border-b border-[#c9974f]/10 dark:border-[#d6b877]/10">
-              <button onClick={onClose} className="absolute left-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors dark:bg-[#2b261f] dark:text-gray-400 dark:hover:bg-red-900/30">✕</button>
+              <button onClick={onClose} className="absolute left-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors border-none outline-none focus:outline-none focus:ring-0 dark:bg-[#2b261f] dark:text-gray-400 dark:hover:bg-red-900/30">✕</button>
               <div className="text-center mb-2">
                 <span className="text-3xl mb-1 block">✉️</span>
                 <h2 className="text-2xl font-bold text-[#8a5f2e] font-ruqaa dark:text-[#d6b877]">الشكاوى والاقتراحات</h2>
@@ -202,8 +206,9 @@ export default function ComplaintsModal({ isOpen, onClose }: ComplaintsModalProp
 <input
   type="tel"
   value={phone}
-  onChange={(e) => setPhone(e.target.value)}
-  placeholder="790 000 000"
+  onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, "").slice(0, 9))}
+  placeholder="791234567"
+  maxLength={9}
   className="w-full flex-1 p-3 rounded-xl border border-[#d6b877]/60..." /* بقية الكلاسات اللي عندك */
   dir="ltr"
 />

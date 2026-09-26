@@ -18,9 +18,18 @@ import ComplaintsModal from './ComplaintsModal';
 import EditRequestModal from './EditRequestModal';
 import SequenceModal from './SequenceModal';
 import IosInstallPrompt from "./IosInstallPrompt";
+import BranchPosterModal from './BranchPosterModal';
 
 const VIRTUAL_ROOT_ID = 941;
 const tree = treeDataRaw as unknown as FamilyNode;
+
+// --- تحكم مؤقت بعرض بعض العناصر ---
+// لإعادة إظهار أي عنصر: غيّر قيمته إلى true. لا يتم حذف أي كود، فقط إخفاء مؤقت.
+const SHOW_FULL_SEQUENCE_BUTTON = false; // زر "عرض التسلسل الكامل لشجرة العائلة" + نافذة SequenceModal
+const SHOW_BRANCH_CARDS = true; // بطاقات اختيار الفخوذ (الشبكة)
+// أي فخوذ تظهر ضمن البطاقات. الباقي يبقى موجود بالكود (BRANCHES) بدون حذف، فقط غير معروض حالياً.
+// لإعادة إظهار الكل: خليها VISIBLE_BRANCH_IDS = BRANCHES.map(b => b.id)
+const VISIBLE_BRANCH_IDS = ["dawoud"];
 
 const BRANCHES = [
   { id: "dawoud", label: "فخذ داوود" },
@@ -129,6 +138,8 @@ export default function PublicTreeView() {
   const [isComplaintsOpen, setIsComplaintsOpen] = useState(false);
   const [isEditRequestOpen, setIsEditRequestOpen] = useState(false);
   const [isSequenceOpen, setIsSequenceOpen] = useState(false);
+
+  const [isPosterOpen, setIsPosterOpen] = useState(false);
 
   const prevDepthRef = useRef(0);
   const suppressPopRef = useRef(false);
@@ -328,24 +339,66 @@ export default function PublicTreeView() {
         <motion.div key="branchSelect" id="branchSelect" className="screen visible dark:bg-[#12100e] transition-colors duration-500" variants={pageVariants} initial="initial" animate="animate" exit="exit" transition={pageTransition}>
           <div className="branch-select-inner mx-auto max-w-6xl px-4">
             <h2 className="branch-title !mb-6 text-center dark:text-[#d6b877]">اختر الفخذ</h2>
-            <div className="flex justify-center mb-10">
-              <motion.button onClick={() => setIsSequenceOpen(true)} whileHover={{ scale: 1.03, boxShadow: "0 12px 26px rgba(138,95,46,0.4)" }} whileTap={{ scale: 0.96 }} className="flex items-center gap-2 rounded-full border border-gold-deep/20 bg-gradient-to-b from-white to-[#fdfbf7] px-6 py-3 font-cairo text-[15px] font-bold text-gold-deep shadow-[0_8px_20px_rgba(138,95,46,0.15)] transition-all dark:border-[#d6b877]/20 dark:from-[#1c1915] dark:to-[#1a1713] dark:text-[#d6b877]">
-                <span className="text-[18px]">🌳</span><span>عرض التسلسل الكامل لشجرة العائلة</span>
-              </motion.button>
-            </div>
-            <motion.div className="grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4" variants={gridContainerVariants} initial="hidden" animate="visible">
-              {BRANCHES.map((b) => (
-                <motion.div key={b.id} variants={gridItemVariants} onClick={() => handleSelectBranch(b)} whileHover={{ y: -8 }} whileTap={{ scale: 0.97 }} className="group relative flex cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border border-gold-deep/20 bg-gradient-to-b from-white to-[#fcf9f2] p-6 shadow-[0_8px_20px_rgba(138,95,46,0.06)] hover:border-gold-deep/60 hover:shadow-[0_15px_35px_rgba(138,95,46,0.18)] dark:border-[#d6b877]/20 dark:from-[#1c1915] dark:to-[#1a1713] dark:hover:border-[#d6b877]/60">
-                  <div className="absolute left-0 top-0 h-1 w-full scale-x-0 bg-gradient-to-r from-transparent via-gold-deep to-transparent opacity-0 transition-all duration-500 group-hover:scale-x-100 group-hover:opacity-100" />
-                  <span className="mb-3 text-[28px] opacity-20 grayscale transition-all duration-300 group-hover:scale-110 group-hover:opacity-100 group-hover:grayscale-0">🌿</span>
-                  <div className="font-cairo text-[18px] font-extrabold text-[#5c4a38] transition-colors duration-300 group-hover:text-gold-deep dark:text-[#f3ede1] dark:group-hover:text-[#d6b877]">{b.label}</div>
-                  <div className="absolute bottom-[-20px] text-xs font-bold text-gold-deep/60 dark:text-[#d6b877]/60 opacity-0 transition-all duration-300 group-hover:bottom-2 group-hover:opacity-100">دخول ⟵</div>
+
+            {SHOW_FULL_SEQUENCE_BUTTON && (
+              <div className="flex justify-center mb-10">
+                <motion.button onClick={() => setIsSequenceOpen(true)} whileHover={{ scale: 1.03, boxShadow: "0 12px 26px rgba(138,95,46,0.4)" }} whileTap={{ scale: 0.96 }} className="flex items-center gap-2 rounded-full border border-gold-deep/20 bg-gradient-to-b from-white to-[#fdfbf7] px-6 py-3 font-cairo text-[15px] font-bold text-gold-deep shadow-[0_8px_20px_rgba(138,95,46,0.15)] transition-all dark:border-[#d6b877]/20 dark:from-[#1c1915] dark:to-[#1a1713] dark:text-[#d6b877]">
+                  <span className="text-[18px]">🌳</span><span>عرض التسلسل الكامل لشجرة العائلة</span>
+                </motion.button>
+              </div>
+            )}
+
+            {SHOW_BRANCH_CARDS ? (
+              <>
+                <motion.div className="flex flex-wrap justify-center gap-5" variants={gridContainerVariants} initial="hidden" animate="visible">
+                  {BRANCHES.filter((b) => VISIBLE_BRANCH_IDS.includes(b.id)).map((b) => (
+                    <motion.div key={b.id} variants={gridItemVariants} onClick={() => handleSelectBranch(b)} whileHover={{ y: -8 }} whileTap={{ scale: 0.97 }} className="group relative flex w-full max-w-[280px] sm:w-[240px] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border border-gold-deep/20 bg-gradient-to-b from-white to-[#fcf9f2] p-6 shadow-[0_8px_20px_rgba(138,95,46,0.06)] hover:border-gold-deep/60 hover:shadow-[0_15px_35px_rgba(138,95,46,0.18)] dark:border-[#d6b877]/20 dark:from-[#1c1915] dark:to-[#1a1713] dark:hover:border-[#d6b877]/60">
+                      <div className="absolute left-0 top-0 h-1 w-full scale-x-0 bg-gradient-to-r from-transparent via-gold-deep to-transparent opacity-0 transition-all duration-500 group-hover:scale-x-100 group-hover:opacity-100" />
+                      <span className="mb-3 text-[28px] opacity-20 grayscale transition-all duration-300 group-hover:scale-110 group-hover:opacity-100 group-hover:grayscale-0">🌿</span>
+                      <div className="font-cairo text-[18px] font-extrabold text-[#5c4a38] transition-colors duration-300 group-hover:text-gold-deep dark:text-[#f3ede1] dark:group-hover:text-[#d6b877]">{b.label}</div>
+                      <div className="absolute bottom-[-20px] text-xs font-bold text-gold-deep/60 dark:text-[#d6b877]/60 opacity-0 transition-all duration-300 group-hover:bottom-2 group-hover:opacity-100">دخول ⟵</div>
+                    </motion.div>
+                  ))}
                 </motion.div>
-              ))}
-            </motion.div>
-            <p className="branch-note !mt-12 text-center dark:text-gray-400">الأفخاذ الجاهزة تفتح تلقائياً، وغير المكتملة تظهر لك رسالة قيد الإعداد.</p>
+                <p className="branch-note !mt-12 text-center dark:text-gray-400">الفخوذ الاخرى يتم انشائها عند الطلب</p>
+              </>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="relative mx-auto flex max-w-2xl flex-col items-center overflow-hidden rounded-3xl border border-gold-deep/20 bg-gradient-to-b from-white to-[#fcf9f2] px-8 py-14 text-center shadow-[0_15px_40px_rgba(138,95,46,0.1)] dark:border-[#d6b877]/20 dark:from-[#1c1915] dark:to-[#1a1713]"
+              >
+                <div className="pointer-events-none absolute inset-0 opacity-[0.06] dark:opacity-[0.08]" style={{ backgroundImage: "radial-gradient(currentColor 1.5px, transparent 1.5px)", backgroundSize: "22px 22px", color: "#8a5f2e" }} />
+                <motion.span
+                  className="relative mb-4 text-[46px]"
+                  initial={{ scale: 0.7, rotate: -10, opacity: 0 }}
+                  animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                  transition={{ type: "spring", damping: 10, stiffness: 100, delay: 0.15 }}
+                >
+                  🌳
+                </motion.span>
+                <h3 className="relative font-ruqaa text-[26px] text-[#8a5f2e] dark:text-[#d6b877]">عائلة القواسمي</h3>
+                <p className="relative mt-2 max-w-md font-cairo text-[14px] leading-relaxed text-[#7c6c53] dark:text-gray-400">
+                  جذور ممتدة عبر الأجيال، وأفخاذ عديدة تجمعها شجرة نسب واحدة.
+                </p>
+                <div className="relative mt-8 flex items-center gap-8">
+                  <div className="text-center">
+                    <div className="font-cairo text-[24px] font-extrabold text-[#5c4a38] dark:text-[#f3ede1]">{totalPeopleCount}</div>
+                    <div className="mt-1 text-[11px] font-bold text-gold-deep dark:text-[#d6b877]/80">فرداً في الشجرة</div>
+                  </div>
+                  <div className="h-10 w-px bg-gold-deep/20 dark:bg-[#d6b877]/20" />
+                  <div className="text-center">
+                    <div className="font-cairo text-[24px] font-extrabold text-[#5c4a38] dark:text-[#f3ede1]">{BRANCHES.length}</div>
+                    <div className="mt-1 text-[11px] font-bold text-gold-deep dark:text-[#d6b877]/80">فخذاً</div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
           </div>
-          <SequenceModal isOpen={isSequenceOpen} onClose={() => setIsSequenceOpen(false)} onSelectBranch={(branchId) => { setIsSequenceOpen(false); const branch = BRANCHES.find(b => b.id === branchId); if (branch) handleSelectBranch(branch); }} />
+          {SHOW_FULL_SEQUENCE_BUTTON && (
+            <SequenceModal isOpen={isSequenceOpen} onClose={() => setIsSequenceOpen(false)} onSelectBranch={(branchId) => { setIsSequenceOpen(false); const branch = BRANCHES.find(b => b.id === branchId); if (branch) handleSelectBranch(branch); }} />
+          )}
         </motion.div>
       </AnimatePresence>
     );
@@ -414,7 +467,7 @@ export default function PublicTreeView() {
 
       <Header
         title={currentPathNodes.length > 1 ? currentPathNodes[1].name.replace('فخذ ', '').trim() : "عائلة القواسمي"}
-        branches={BRANCHES}
+        branches={BRANCHES.filter((b) => VISIBLE_BRANCH_IDS.includes(b.id))}
         onNavigateHome={goToBranchSelect}
         onSelectBranch={(branchId) => {
           const branch = BRANCHES.find(b => b.id === branchId);
@@ -667,15 +720,16 @@ export default function PublicTreeView() {
       <VisualTreeModal isOpen={visualTreeRoot !== null} rootNode={visualTreeRoot} onClose={() => setVisualTreeRoot(null)} />
       
       <FeaturesMenuModal 
-        isOpen={isFeaturesMenuOpen} 
-        onClose={() => setIsFeaturesMenuOpen(false)} 
-        onOpenKinship={() => { setIsFeaturesMenuOpen(false); setTimeout(() => setIsKinshipOpen(true), 150); }}
-        onOpenAddMember={() => { setIsFeaturesMenuOpen(false); setTimeout(() => setIsAddModalOpen(true), 150); }}
-        onOpenStats={() => { setIsFeaturesMenuOpen(false); setTimeout(() => setIsStatsOpen(true), 150); }}
-        onOpenAbout={() => { setIsFeaturesMenuOpen(false); setTimeout(() => setIsAboutOpen(true), 150); }}
-        onOpenComplaints={() => { setIsFeaturesMenuOpen(false); setTimeout(() => setIsComplaintsOpen(true), 150); }}
-        onOpenEditRequest={() => { setIsFeaturesMenuOpen(false); setTimeout(() => setIsEditRequestOpen(true), 150); }}
-      />
+  isOpen={isFeaturesMenuOpen} 
+  onClose={() => setIsFeaturesMenuOpen(false)} 
+  onOpenKinship={() => { setIsFeaturesMenuOpen(false); setTimeout(() => setIsKinshipOpen(true), 150); }}
+  onOpenAddMember={() => { setIsFeaturesMenuOpen(false); setTimeout(() => setIsAddModalOpen(true), 150); }}
+  onOpenStats={() => { setIsFeaturesMenuOpen(false); setTimeout(() => setIsStatsOpen(true), 150); }}
+  onOpenAbout={() => { setIsFeaturesMenuOpen(false); setTimeout(() => setIsAboutOpen(true), 150); }}
+  onOpenComplaints={() => { setIsFeaturesMenuOpen(false); setTimeout(() => setIsComplaintsOpen(true), 150); }}
+  onOpenEditRequest={() => { setIsFeaturesMenuOpen(false); setTimeout(() => setIsEditRequestOpen(true), 150); }}
+  onOpenPoster={() => { setIsFeaturesMenuOpen(false); setTimeout(() => setIsPosterOpen(true), 150); }} // 🌟 هذا السطر
+/>
 
       <KinshipModal isOpen={isKinshipOpen} onClose={() => setIsKinshipOpen(false)} people={flatPeople} />
       <StatisticsModal isOpen={isStatsOpen} onClose={() => setIsStatsOpen(false)} />
@@ -685,6 +739,7 @@ export default function PublicTreeView() {
 
       <AnimatePresence>
         {isAddModalOpen && <AddMemberModal key="add-member" onClose={() => setIsAddModalOpen(false)} />}
+          <BranchPosterModal isOpen={isPosterOpen} onClose={() => setIsPosterOpen(false)} treeData={treeDataRaw} />
       </AnimatePresence>
 
       {/* 🌟 نافذة الآيفون المنبثقة 🌟 */}

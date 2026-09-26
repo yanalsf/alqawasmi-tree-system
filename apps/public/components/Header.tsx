@@ -262,7 +262,7 @@ export default function Header({
 
         <div className="mt-auto pt-4 border-t border-[#c9974f]/20 dark:border-[#d6b877]/20 text-center">
           <p className="text-[11px] font-bold text-gray-400 dark:text-gray-500">
-            الإصدار 1.2.0 • شجرة عائلة القواسمي
+            الإصدار 1.3.0 • شجرة عائلة القواسمي
           </p>
         </div>
       </motion.aside>
