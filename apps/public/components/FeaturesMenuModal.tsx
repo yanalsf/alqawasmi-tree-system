@@ -69,7 +69,7 @@ export default function FeaturesMenuModal({
               <div className="col-span-2 mt-1">
                 <button
                   onClick={onOpenPoster}
-                  className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-[#c9974f]/50 bg-gradient-to-r from-[#c9974f]/15 via-[#c9974f]/10 to-[#c9974f]/15 text-[13.5px] font-extrabold text-[#8a5f2e] shadow-sm transition-all hover:bg-[#c9974f]/25 hover:border-[#c9974f]/80 active:scale-95 dark:border-[#d6b877]/40 dark:from-[#d6b877]/10 dark:via-[#d6b877]/5 dark:to-[#d6b877]/10 dark:text-[#d6b877]"
+                  className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-[#c9974f]/50 bg-[#c9974f]/10 text-[13.5px] font-extrabold text-[#8a5f2e] shadow-sm transition-all hover:bg-[#c9974f]/20 hover:border-[#c9974f]/80 active:scale-95 dark:border-[#d6b877]/40 dark:bg-[#d6b877]/10 dark:text-[#d6b877] dark:hover:bg-[#d6b877]/20"
                 >
                   <span>🖨️</span>
                   <span>طباعة بوستر الفخذ (svg)</span>

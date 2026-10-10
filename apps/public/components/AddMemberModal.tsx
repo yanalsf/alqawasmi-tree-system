@@ -28,6 +28,12 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
     "فخذ محمد علي", "فخذ ابو بيض", "فخذ الخضير", "فخذ عبد الحق"
   ];
 
+  // 🌟 إخفاء مؤقت لبعض الأفخاذ من القائمة (بدون حذفها من branchList).
+  // لإعادة إظهار فخذ معيّن: ضيف اسمه بالضبط لهاي المصفوفة.
+  // لإعادة إظهار الكل: خليها VISIBLE_BRANCH_NAMES = branchList
+  const VISIBLE_BRANCH_NAMES = ["فخذ داوود"];
+  const visibleBranchList = branchList.filter((item) => VISIBLE_BRANCH_NAMES.includes(item));
+
   const handleNoEnglishInput = (value: string, setter: (val: string) => void) => {
     if (/[a-zA-Z]/.test(value)) {
       setter(value.replace(/[a-zA-Z]/g, ''));
@@ -203,7 +209,7 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
                       {isBranchOpen && (
                         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="absolute top-[100%] left-0 w-full mt-1 bg-white border border-[#d6b877] rounded-xl shadow-lg z-50 max-h-60 overflow-y-auto dark:bg-[#1c1915] dark:border-[#d6b877]/30">
                           <div onClick={() => { setBranch(""); setIsBranchOpen(false); }} className="p-3 text-center cursor-pointer hover:bg-[#f3ede1] text-gray-500 text-sm border-b dark:hover:bg-white/5 dark:border-[#d6b877]/10">-- اختر الفخذ --</div>
-                          {branchList.map((item) => (
+                          {visibleBranchList.map((item) => (
                             <div key={item} onClick={() => { setBranch(item); setIsBranchOpen(false); }} className="p-3 text-center cursor-pointer hover:bg-[#f3ede1] hover:text-[#8a5f2e] text-gray-800 font-bold text-sm border-b last:border-none dark:hover:bg-white/5 dark:hover:text-[#d6b877] dark:text-gray-200 dark:border-[#d6b877]/10">{item}</div>
                           ))}
                         </motion.div>
