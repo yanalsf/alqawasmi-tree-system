@@ -1,6 +1,7 @@
+// components/KinshipModal.tsx
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import treeDataRaw from "@/data/tree.json";
 import type { FamilyNode } from "@/lib/constants";
@@ -45,47 +46,59 @@ export default function KinshipModal({ isOpen, onClose, people }: KinshipModalPr
   const [person2, setPerson2] = useState<PersonObj | null>(null);
   const [search1, setSearch1] = useState("");
   const [search2, setSearch2] = useState("");
-  
+
   const [result, setResult] = useState<{
     lcaName: string;
     relationText: string;
     path1: string[];
     path2: string[];
+    d1: number;
+    d2: number;
   } | null>(null);
 
-  // دالة البحث الذكية المتطورة للشخص الأول
-  const results1 = useMemo(() => {
-    if (!search1 || person1) return [];
-    const keys = normalizeArabic(search1).split(" ").filter(w => w.length > 0);
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape" && isOpen) onClose();
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
+  const filterPeople = (query: string, selected: PersonObj | null) => {
+    if (!query || selected) return [];
+    const keys = normalizeArabic(query)
+      .split(" ")
+      .filter((w) => w.length > 0);
     if (keys.length === 0) return [];
 
-    return people.filter(p => {
-      const cleanName = normalizeArabic(p.name).replace(/\b(ابن|بن)\b/g, "");
-      const fatherObj = p.father ? people.find(item => item.name === p.father) : null;
-      const fatherName = fatherObj ? normalizeArabic(fatherObj.name) : (p.father ? normalizeArabic(p.father) : "");
-      const fullContext = `${cleanName} ${fatherName}`;
-      
-      const firstWordMatch = cleanName.includes(keys[0]);
-      return firstWordMatch && keys.every(k => fullContext.includes(k));
-    }).slice(0, 15);
-  }, [search1, people, person1]);
+    return people
+      .filter((p) => {
+        const cleanName = normalizeArabic(p.name).replace(/\b(ابن|بن)\b/g, "");
+        const fatherObj = p.father ? people.find((item) => item.name === p.father) : null;
+        const fatherName = fatherObj
+          ? normalizeArabic(fatherObj.name)
+          : p.father
+          ? normalizeArabic(p.father)
+          : "";
+        const fullContext = `${cleanName} ${fatherName}`;
 
-  // دالة البحث الذكية المتطورة للشخص الثاني
-  const results2 = useMemo(() => {
-    if (!search2 || person2) return [];
-    const keys = normalizeArabic(search2).split(" ").filter(w => w.length > 0);
-    if (keys.length === 0) return [];
+        const firstWordMatch = cleanName.includes(keys[0]);
+        return firstWordMatch && keys.every((k) => fullContext.includes(k));
+      })
+      .slice(0, 15);
+  };
 
-    return people.filter(p => {
-      const cleanName = normalizeArabic(p.name).replace(/\b(ابن|بن)\b/g, "");
-      const fatherObj = p.father ? people.find(item => item.name === p.father) : null;
-      const fatherName = fatherObj ? normalizeArabic(fatherObj.name) : (p.father ? normalizeArabic(p.father) : "");
-      const fullContext = `${cleanName} ${fatherName}`;
-      
-      const firstWordMatch = cleanName.includes(keys[0]);
-      return firstWordMatch && keys.every(k => fullContext.includes(k));
-    }).slice(0, 15);
-  }, [search2, people, person2]);
+  const results1 = useMemo(() => filterPeople(search1, person1), [search1, people, person1]);
+  const results2 = useMemo(() => filterPeople(search2, person2), [search2, people, person2]);
+
+  const handleSwapPeople = () => {
+    const tempP = person1;
+    const tempS = search1;
+    setPerson1(person2);
+    setSearch1(search2);
+    setPerson2(tempP);
+    setSearch2(tempS);
+  };
 
   const calculateKinship = () => {
     if (!person1 || !person2) return;
@@ -99,10 +112,11 @@ export default function KinshipModal({ isOpen, onClose, people }: KinshipModalPr
     const reversedP2 = [...p2Path].reverse();
 
     let lcaNode: FamilyNode | null = null;
-    let d1 = -1, d2 = -1;
+    let d1 = -1,
+      d2 = -1;
 
     for (let i = 0; i < reversedP1.length; i++) {
-      const foundIdx = reversedP2.findIndex(n => n.id === reversedP1[i].id);
+      const foundIdx = reversedP2.findIndex((n) => n.id === reversedP1[i].id);
       if (foundIdx !== -1) {
         lcaNode = reversedP1[i];
         d1 = i;
@@ -123,108 +137,191 @@ export default function KinshipModal({ isOpen, onClose, people }: KinshipModalPr
     else if (d1 === 3 && d2 === 3) relationText = "أبناء عمومة (درجة ثانية)";
 
     setResult({
-      lcaName: lcaNode.name.replace('فخذ ', ''),
+      lcaName: lcaNode.name.replace("فخذ ", ""),
       relationText,
-      path1: reversedP1.slice(0, d1 + 1).map(n => n.name.replace('فخذ ', '')),
-      path2: reversedP2.slice(0, d2 + 1).map(n => n.name.replace('فخذ ', ''))
+      path1: reversedP1.slice(0, d1 + 1).map((n) => n.name.replace("فخذ ", "")),
+      path2: reversedP2.slice(0, d2 + 1).map((n) => n.name.replace("فخذ ", "")),
+      d1,
+      d2,
     });
   };
 
   const reset = () => {
-    setPerson1(null); setPerson2(null);
-    setSearch1(""); setSearch2("");
+    setPerson1(null);
+    setPerson2(null);
+    setSearch1("");
+    setSearch2("");
     setResult(null);
   };
 
   const renderSearchResult = (p: PersonObj, onSelect: () => void) => {
     const isRoot = !p.father || p.father === "System_Root";
-    const fatherDisplay = isRoot ? "الجد الأعلى" : `ابن ${p.father?.replace('فخذ ', '')}`;
-    const nameDisplay = p.name.replace('فخذ ', '');
+    const fatherDisplay = isRoot ? "الجد الأعلى" : `ابن ${p.father?.replace("فخذ ", "")}`;
+    const nameDisplay = p.name.replace("فخذ ", "");
 
     return (
-      <button 
-        key={p.id} 
-        onClick={onSelect} 
-        className="group w-full flex items-center justify-between text-right px-4 py-3 hover:bg-gradient-to-l hover:from-[#c9974f]/10 hover:to-transparent border-b last:border-0 border-[#c9974f]/10 dark:border-white/5 transition-all duration-300"
+      <button
+        type="button"
+        key={p.id}
+        onClick={onSelect}
+        className="cursor-pointer group w-full flex items-center justify-between text-right px-4 py-3 hover:bg-gradient-to-l hover:from-[#c9974f]/15 hover:to-transparent border-b last:border-0 border-[#c9974f]/10 dark:border-white/5 transition-all duration-200"
       >
         <div className="flex items-center gap-3">
-          <span className="flex items-center justify-center w-9 h-9 rounded-full bg-[#c9974f]/10 dark:bg-[#d6b877]/10 text-[#8a5f2e] dark:text-[#d6b877] text-[16px] group-hover:scale-110 group-hover:bg-[#c9974f]/20 transition-all shadow-sm">
+          <span className="flex items-center justify-center w-9 h-9 rounded-xl bg-[#c9974f]/10 dark:bg-[#d6b877]/10 text-[#8a5f2e] dark:text-[#d6b877] text-[15px] group-hover:scale-110 group-hover:bg-[#c9974f]/25 transition-all shadow-sm">
             🌿
           </span>
           <div className="flex flex-col">
-            <span className="text-[14.5px] font-extrabold text-[#5c4a38] dark:text-[#f3ede1] transition-colors group-hover:text-[#8a5f2e] dark:group-hover:text-[#d6b877]">
+            <span className="text-[14px] font-extrabold text-[#5c4a38] dark:text-[#f3ede1] transition-colors group-hover:text-[#8a5f2e] dark:group-hover:text-[#d6b877]">
               {nameDisplay}
             </span>
-            <span className="text-[12px] font-bold text-gray-500/90 dark:text-[#9a8c78]/80 mt-0.5">
+            <span className="text-[11.5px] font-bold text-gray-400 dark:text-[#9a8c78] mt-0.5">
               {fatherDisplay}
             </span>
           </div>
         </div>
-        <span className="opacity-0 group-hover:opacity-100 text-[#c9974f] transform translate-x-2 group-hover:translate-x-0 transition-all duration-300 text-lg">
-          👈
+        <span className="rounded-lg bg-[#8a5f2e]/10 px-2.5 py-1 text-[11px] font-bold text-[#8a5f2e] opacity-0 group-hover:opacity-100 transition-all dark:bg-[#d6b877]/15 dark:text-[#d6b877]">
+          اختيار ⟵
         </span>
       </button>
     );
   };
 
- return (
+  return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-black/50 backdrop-blur-md" />
-          
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 font-cairo">
           <motion.div
-            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="cursor-pointer absolute inset-0 bg-black/55 backdrop-blur-md"
+          />
+
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0, y: 24 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            // 🌟 التعديل هنا: تحديد أقصى ارتفاع (max-h-[90vh]) وجعل النافذة مقسمة لترويسة ومحتوى
-            className="relative w-full max-w-lg flex flex-col max-h-[90vh] overflow-hidden rounded-3xl bg-[#fdfbf7] border border-[#c9974f]/30 shadow-2xl dark:bg-[#1c1915] dark:border-[#d6b877]/20"
+            exit={{ scale: 0.92, opacity: 0, y: 16 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="relative w-full max-w-lg flex flex-col max-h-[90vh] overflow-hidden rounded-[32px] bg-[#fdfbf7] border border-[#c9974f]/35 shadow-[0_25px_70px_rgba(0,0,0,0.3)] dark:bg-[#191612] dark:border-[#d6b877]/25"
           >
-            {/* 🌟 الترويسة العلوية (ثابتة لا تتحرك مع السحب) */}
-            <div className="relative pt-5 pb-3 shrink-0 z-20 bg-[#fdfbf7] dark:bg-[#1c1915] px-6 border-b border-[#c9974f]/10 dark:border-[#d6b877]/10 flex flex-col items-center">
-              <button onClick={onClose} className="absolute left-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors border-none outline-none focus:outline-none focus:ring-0 dark:bg-[#2b261f] dark:text-gray-400 dark:hover:bg-red-900/30">✕</button>
-              <span className="text-3xl mb-1 block">🧬</span>
-              <h2 className="text-2xl font-bold text-[#8a5f2e] font-ruqaa dark:text-[#d6b877]">كاشف القرابة</h2>
+            {/* الترويسة العلوية الثابتة */}
+            <div className="relative pt-5 pb-4 shrink-0 z-20 bg-gradient-to-b from-white via-[#fdfbf7] to-[#fdfbf7] dark:from-[#221e18] dark:to-[#191612] px-6 border-b border-[#c9974f]/15 dark:border-[#d6b877]/15 flex flex-col items-center">
+              <motion.button
+                type="button"
+                onClick={onClose}
+                whileHover={{ scale: 1.1, rotate: 90 }}
+                whileTap={{ scale: 0.9 }}
+                className="cursor-pointer absolute left-4 top-4 flex h-9 w-9 items-center justify-center rounded-full border border-[#c9974f]/25 bg-white text-gray-500 hover:bg-red-50 hover:text-red-500 hover:border-red-300 transition-colors dark:bg-[#2b261f] dark:border-[#d6b877]/20 dark:text-gray-400"
+              >
+                ✕
+              </motion.button>
+
+              <div className="mb-1.5 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#c9974f]/12 text-2xl shadow-inner dark:bg-[#d6b877]/10">
+                🧬
+              </div>
+              <h2 className="text-2xl font-bold text-[#8a5f2e] font-ruqaa dark:text-[#d6b877]">
+                كاشف صلة القرابة
+              </h2>
+              <p className="mt-0.5 text-[11.5px] font-bold text-gray-400 dark:text-gray-500">
+                استكشف الجد الجامع ومسار النسب بين أي فردين في الشجرة
+              </p>
             </div>
 
-            {/* 🌟 المحتوى الداخلي (قابل للسحب عند الحاجة) */}
+            {/* المحتوى الداخلي */}
             <div className="p-6 overflow-y-auto sidebar-scroll flex-1">
-              
-              <div className="text-center mb-6">
-                <div className="inline-block bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-900/40 rounded-xl px-4 py-2">
-                  <p className="text-[11.5px] font-bold text-orange-700 dark:text-orange-400 m-0 leading-relaxed">
-                    ⚠️ ملاحظة: يقوم النظام باحتساب صلة القرابة بناءً على شجرة العائلة <span className="underline underline-offset-4">من جهة الأب فقط</span>.
-                  </p>
-                </div>
+              {/* تنبيه احتساب النسب */}
+              <div className="mb-5 flex items-center justify-center gap-2 rounded-2xl border border-amber-300/60 bg-amber-50/80 px-4 py-2.5 text-center dark:border-amber-800/40 dark:bg-amber-950/25">
+                <span className="text-base">💡</span>
+                <p className="text-[11.5px] font-bold text-amber-800 dark:text-amber-300/90 m-0 leading-relaxed">
+                  يتم احتساب صلة القرابة والجد المشترك بناءً على تسلسل الآباء في الشجرة.
+                </p>
               </div>
 
               {!result ? (
-                <div className="space-y-5">
+                <div className="space-y-3">
+                  {/* حقل الشخص الأول */}
                   <div className="relative">
-                    <label className="block text-[13px] font-bold text-[#8a5f2e] mb-2 pr-2 dark:text-[#d6b877]">الشخص الأول:</label>
+                    <label className="flex items-center gap-1.5 text-[12.5px] font-extrabold text-[#8a5f2e] mb-1.5 pr-1 dark:text-[#d6b877]">
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#8a5f2e] text-[10px] text-white dark:bg-[#d6b877] dark:text-[#1c1915]">
+                        1
+                      </span>
+                      <span>الطرف الأول:</span>
+                    </label>
+
                     {person1 ? (
-                      <div className="flex items-center justify-between bg-gradient-to-l from-[#c9974f]/10 to-transparent p-3.5 rounded-2xl border border-[#c9974f]/40 dark:from-[#d6b877]/10 dark:border-[#d6b877]/40 shadow-sm">
+                      <motion.div
+                        initial={{ scale: 0.96, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="flex items-center justify-between bg-gradient-to-l from-[#c9974f]/15 via-white to-white p-3.5 rounded-2xl border-2 border-[#c9974f]/50 dark:from-[#d6b877]/15 dark:via-[#231f1a] dark:to-[#231f1a] dark:border-[#d6b877]/45 shadow-sm"
+                      >
                         <div className="flex items-center gap-3">
-                          <span className="flex items-center justify-center w-10 h-10 rounded-full bg-white dark:bg-[#2b261f] text-[#8a5f2e] dark:text-[#d6b877] shadow-sm text-xl">👤</span>
-                          <div className="flex flex-col">
-                            <span className="font-extrabold text-[#5c4a38] dark:text-[#f3ede1] text-[15px]">{person1.name.replace('فخذ ', '')}</span>
-                            <span className="text-[12px] font-bold text-[#8a5f2e] dark:text-[#d6b877]/80">{!person1.father || person1.father === "System_Root" ? "الجد الأعلى" : `ابن ${person1.father.replace('فخذ ', '')}`}</span>
+                          <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-[#8a5f2e] text-white dark:bg-[#d6b877] dark:text-[#1c1915] shadow-sm text-lg font-bold">
+                            ✓
+                          </span>
+                          <div className="flex flex-col text-right">
+                            <span className="font-extrabold text-[#5c4a38] dark:text-[#f3ede1] text-[15px]">
+                              {person1.name.replace("فخذ ", "")}
+                            </span>
+                            <span className="text-[11.5px] font-bold text-[#8a5f2e] dark:text-[#d6b877]/85">
+                              {!person1.father || person1.father === "System_Root"
+                                ? "الجد الأعلى"
+                                : `ابن ${person1.father.replace("فخذ ", "")}`}
+                            </span>
                           </div>
                         </div>
-                        <button onClick={() => { setPerson1(null); setSearch1(""); }} className="text-[12px] text-red-500 hover:text-white hover:bg-red-500 font-bold bg-white dark:bg-[#2b261f] px-3 py-1.5 rounded-xl shadow-sm border border-red-100 dark:border-red-900/30 transition-all">تغيير</button>
-                      </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPerson1(null);
+                            setSearch1("");
+                          }}
+                          className="cursor-pointer text-[12px] text-red-500 hover:text-white hover:bg-red-500 font-bold bg-red-50 dark:bg-red-950/40 px-3 py-1.5 rounded-xl border border-red-200 dark:border-red-900/40 transition-all"
+                        >
+                          تغيير
+                        </button>
+                      </motion.div>
                     ) : (
                       <>
                         <div className="relative z-20">
-                          <input type="text" value={search1} onChange={(e) => setSearch1(e.target.value)} placeholder="اكتب اسم الشخص الأول..." className="w-full bg-white border border-[#c9974f]/30 rounded-2xl px-10 py-3.5 text-[14px] font-bold focus:border-[#c9974f] focus:ring-4 focus:ring-[#c9974f]/10 outline-none transition-all shadow-sm dark:bg-[#24201a] dark:border-[#d6b877]/30 dark:text-white dark:focus:ring-[#d6b877]/10 placeholder-gray-400" />
+                          <input
+                            type="text"
+                            value={search1}
+                            onChange={(e) => setSearch1(e.target.value)}
+                            placeholder="ابحث عن اسم الشخص الأول (مثال: أحمد محمد)..."
+                            className="w-full bg-white border border-[#c9974f]/35 rounded-2xl pr-10 pl-4 py-3.5 text-[13.5px] font-bold focus:border-[#8a5f2e] focus:ring-4 focus:ring-[#c9974f]/15 outline-none transition-all shadow-sm dark:bg-[#231f1a] dark:border-[#d6b877]/25 dark:text-white dark:focus:ring-[#d6b877]/15 placeholder:text-gray-400"
+                          />
                           <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="18"
+                              height="18"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <circle cx="11" cy="11" r="8"></circle>
+                              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
                           </span>
                         </div>
                         <AnimatePresence>
                           {results1.length > 0 && (
-                            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="relative mt-2 w-full bg-[#fdfbf7] border border-[#c9974f]/30 rounded-2xl z-10 max-h-56 overflow-y-auto sidebar-scroll dark:bg-[#1c1915] dark:border-[#d6b877]/30 shadow-inner">
-                              {results1.map(p => renderSearchResult(p, () => { setPerson1(p); setSearch1(p.name.replace('فخذ ', '')); }))}
+                            <motion.div
+                              initial={{ opacity: 0, y: -8 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -8 }}
+                              className="relative mt-2 w-full bg-white border border-[#c9974f]/35 rounded-2xl z-10 max-h-52 overflow-y-auto sidebar-scroll dark:bg-[#231f1a] dark:border-[#d6b877]/30 shadow-lg"
+                            >
+                              {results1.map((p) =>
+                                renderSearchResult(p, () => {
+                                  setPerson1(p);
+                                  setSearch1(p.name.replace("فخذ ", ""));
+                                })
+                              )}
                             </motion.div>
                           )}
                         </AnimatePresence>
@@ -232,31 +329,104 @@ export default function KinshipModal({ isOpen, onClose, people }: KinshipModalPr
                     )}
                   </div>
 
+                  {/* فاصل مع زر التبديل السريع */}
+                  <div className="relative flex items-center justify-center py-1">
+                    <div className="h-[1px] w-full bg-gradient-to-r from-transparent via-[#c9974f]/30 to-transparent dark:via-[#d6b877]/20" />
+                    <motion.button
+                      type="button"
+                      onClick={handleSwapPeople}
+                      whileHover={{ rotate: 180, scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      transition={{ duration: 0.3 }}
+                      title="تبديل الطرفين"
+                      className="cursor-pointer absolute flex h-8 w-8 items-center justify-center rounded-full border border-[#c9974f]/35 bg-white text-xs text-[#8a5f2e] shadow-sm hover:border-[#8a5f2e] dark:border-[#d6b877]/30 dark:bg-[#25211b] dark:text-[#d6b877]"
+                    >
+                      ⇅
+                    </motion.button>
+                  </div>
+
+                  {/* حقل الشخص الثاني */}
                   <div className="relative">
-                    <label className="block text-[13px] font-bold text-[#8a5f2e] mb-2 pr-2 dark:text-[#d6b877]">الشخص الثاني:</label>
+                    <label className="flex items-center gap-1.5 text-[12.5px] font-extrabold text-[#8a5f2e] mb-1.5 pr-1 dark:text-[#d6b877]">
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#8a5f2e] text-[10px] text-white dark:bg-[#d6b877] dark:text-[#1c1915]">
+                        2
+                      </span>
+                      <span>الطرف الثاني:</span>
+                    </label>
+
                     {person2 ? (
-                      <div className="flex items-center justify-between bg-gradient-to-l from-[#c9974f]/10 to-transparent p-3.5 rounded-2xl border border-[#c9974f]/40 dark:from-[#d6b877]/10 dark:border-[#d6b877]/40 shadow-sm">
+                      <motion.div
+                        initial={{ scale: 0.96, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="flex items-center justify-between bg-gradient-to-l from-[#c9974f]/15 via-white to-white p-3.5 rounded-2xl border-2 border-[#c9974f]/50 dark:from-[#d6b877]/15 dark:via-[#231f1a] dark:to-[#231f1a] dark:border-[#d6b877]/45 shadow-sm"
+                      >
                         <div className="flex items-center gap-3">
-                          <span className="flex items-center justify-center w-10 h-10 rounded-full bg-white dark:bg-[#2b261f] text-[#8a5f2e] dark:text-[#d6b877] shadow-sm text-xl">👤</span>
-                          <div className="flex flex-col">
-                            <span className="font-extrabold text-[#5c4a38] dark:text-[#f3ede1] text-[15px]">{person2.name.replace('فخذ ', '')}</span>
-                            <span className="text-[12px] font-bold text-[#8a5f2e] dark:text-[#d6b877]/80">{!person2.father || person2.father === "System_Root" ? "الجد الأعلى" : `ابن ${person2.father.replace('فخذ ', '')}`}</span>
+                          <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-[#8a5f2e] text-white dark:bg-[#d6b877] dark:text-[#1c1915] shadow-sm text-lg font-bold">
+                            ✓
+                          </span>
+                          <div className="flex flex-col text-right">
+                            <span className="font-extrabold text-[#5c4a38] dark:text-[#f3ede1] text-[15px]">
+                              {person2.name.replace("فخذ ", "")}
+                            </span>
+                            <span className="text-[11.5px] font-bold text-[#8a5f2e] dark:text-[#d6b877]/85">
+                              {!person2.father || person2.father === "System_Root"
+                                ? "الجد الأعلى"
+                                : `ابن ${person2.father.replace("فخذ ", "")}`}
+                            </span>
                           </div>
                         </div>
-                        <button onClick={() => { setPerson2(null); setSearch2(""); }} className="text-[12px] text-red-500 hover:text-white hover:bg-red-500 font-bold bg-white dark:bg-[#2b261f] px-3 py-1.5 rounded-xl shadow-sm border border-red-100 dark:border-red-900/30 transition-all">تغيير</button>
-                      </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPerson2(null);
+                            setSearch2("");
+                          }}
+                          className="cursor-pointer text-[12px] text-red-500 hover:text-white hover:bg-red-500 font-bold bg-red-50 dark:bg-red-950/40 px-3 py-1.5 rounded-xl border border-red-200 dark:border-red-900/40 transition-all"
+                        >
+                          تغيير
+                        </button>
+                      </motion.div>
                     ) : (
                       <>
                         <div className="relative z-20">
-                          <input type="text" value={search2} onChange={(e) => setSearch2(e.target.value)} placeholder="اكتب اسم الشخص الثاني..." className="w-full bg-white border border-[#c9974f]/30 rounded-2xl px-10 py-3.5 text-[14px] font-bold focus:border-[#c9974f] focus:ring-4 focus:ring-[#c9974f]/10 outline-none transition-all shadow-sm dark:bg-[#24201a] dark:border-[#d6b877]/30 dark:text-white dark:focus:ring-[#d6b877]/10 placeholder-gray-400" />
+                          <input
+                            type="text"
+                            value={search2}
+                            onChange={(e) => setSearch2(e.target.value)}
+                            placeholder="ابحث عن اسم الشخص الثاني..."
+                            className="w-full bg-white border border-[#c9974f]/35 rounded-2xl pr-10 pl-4 py-3.5 text-[13.5px] font-bold focus:border-[#8a5f2e] focus:ring-4 focus:ring-[#c9974f]/15 outline-none transition-all shadow-sm dark:bg-[#231f1a] dark:border-[#d6b877]/25 dark:text-white dark:focus:ring-[#d6b877]/15 placeholder:text-gray-400"
+                          />
                           <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="18"
+                              height="18"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <circle cx="11" cy="11" r="8"></circle>
+                              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
                           </span>
                         </div>
                         <AnimatePresence>
                           {results2.length > 0 && (
-                            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="relative mt-2 w-full bg-[#fdfbf7] border border-[#c9974f]/30 rounded-2xl z-10 max-h-56 overflow-y-auto sidebar-scroll dark:bg-[#1c1915] dark:border-[#d6b877]/30 shadow-inner">
-                              {results2.map(p => renderSearchResult(p, () => { setPerson2(p); setSearch2(p.name.replace('فخذ ', '')); }))}
+                            <motion.div
+                              initial={{ opacity: 0, y: -8 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -8 }}
+                              className="relative mt-2 w-full bg-white border border-[#c9974f]/35 rounded-2xl z-10 max-h-52 overflow-y-auto sidebar-scroll dark:bg-[#231f1a] dark:border-[#d6b877]/30 shadow-lg"
+                            >
+                              {results2.map((p) =>
+                                renderSearchResult(p, () => {
+                                  setPerson2(p);
+                                  setSearch2(p.name.replace("فخذ ", ""));
+                                })
+                              )}
                             </motion.div>
                           )}
                         </AnimatePresence>
@@ -264,80 +434,141 @@ export default function KinshipModal({ isOpen, onClose, people }: KinshipModalPr
                     )}
                   </div>
 
-                  <button
+                  {/* زر الحساب */}
+                  <motion.button
+                    type="button"
                     disabled={!person1 || !person2}
                     onClick={calculateKinship}
-                    className="w-full mt-4 bg-gradient-to-l from-[#8a5f2e] to-[#c9974f] text-white font-bold py-4 text-[15px] rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:shadow-[0_10px_25px_rgba(138,95,46,0.3)] hover:scale-[1.01] active:scale-[0.98] dark:from-[#1f3d1f] dark:to-[#2d4a25] dark:text-[#d6b877] dark:border dark:border-[#d6b877]/20"
+                    whileHover={!person1 || !person2 ? undefined : { scale: 1.01, y: -2 }}
+                    whileTap={!person1 || !person2 ? undefined : { scale: 0.98 }}
+                    className="cursor-pointer w-full mt-5 bg-gradient-to-l from-[#8a5f2e] via-[#a8793d] to-[#c9974f] text-white font-extrabold py-4 text-[15px] rounded-2xl disabled:opacity-45 disabled:cursor-not-allowed transition-all shadow-[0_10px_25px_rgba(138,95,46,0.25)] hover:shadow-[0_15px_30px_rgba(138,95,46,0.35)] dark:from-[#243d21] dark:to-[#35592b] dark:text-[#d6b877] dark:border dark:border-[#d6b877]/25"
                   >
-                     اكشف صلة القرابة
-                  </button>
+                    🔍 اكشف صلة القرابة الآن
+                  </motion.button>
                 </div>
               ) : (
-                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center space-y-6 w-full">
-                  
-                  <div className="bg-gradient-to-b from-[#c9974f]/10 to-[#c9974f]/5 p-6 rounded-3xl border border-[#c9974f]/30 dark:from-[#d6b877]/10 dark:to-transparent dark:border-[#d6b877]/20 shadow-inner overflow-hidden">
-                    <h3 className="text-[22px] font-extrabold text-[#8a5f2e] dark:text-[#d6b877] mb-2">{result.relationText}</h3>
-                    
+                /* شاشة عرض النتيجة التفاعلية */
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="text-center space-y-5 w-full"
+                >
+                  <div className="relative bg-gradient-to-b from-[#c9974f]/15 via-[#fdfbf7] to-white p-5 sm:p-6 rounded-3xl border border-[#c9974f]/40 dark:from-[#d6b877]/12 dark:via-[#1f1b16] dark:to-[#191612] dark:border-[#d6b877]/25 shadow-inner overflow-hidden">
+                    <span className="inline-block rounded-full bg-[#8a5f2e]/10 px-3 py-0.5 text-[11px] font-extrabold text-[#8a5f2e] dark:bg-[#d6b877]/15 dark:text-[#d6b877]">
+                      نتيجة صلة النسب
+                    </span>
+                    <h3 className="mt-1 text-[24px] font-extrabold text-[#8a5f2e] dark:text-[#d6b877]">
+                      {result.relationText}
+                    </h3>
+
+                    {result.relationText !== "نفس الشخص!" && (
+                      <div className="mt-2 flex items-center justify-center gap-2 text-[11.5px] font-bold text-gray-500 dark:text-gray-400">
+                        <span>بعد الطرف الأول: {result.d1} أجيال</span>
+                        <span>•</span>
+                        <span>بعد الطرف الثاني: {result.d2} أجيال</span>
+                      </div>
+                    )}
+
                     {result.relationText === "نفس الشخص!" ? (
-                      <p className="text-[14px] font-bold text-gray-600 dark:text-gray-400 mt-4">لقد قمت باختيار نفس الشخص مرتين.</p>
+                      <p className="text-[14px] font-bold text-gray-600 dark:text-gray-400 mt-4">
+                        لقد قمت باختيار نفس الشخص في كلا الحقلين.
+                      </p>
                     ) : (
-                      <div className="relative mt-12 pt-2 w-full">
-                        <div className="absolute top-[28px] left-[25%] right-[25%] h-[2px] bg-[#c9974f] dark:bg-[#d6b877]/80 shadow-[0_0_8px_rgba(201,151,79,0.3)]" />
-                        
-                        <div className="flex justify-between items-start text-center relative w-full">
-                          
+                      <div className="relative mt-8 pt-2 w-full">
+                        {/* الجد المشترك في القمة */}
+                        <motion.div
+                          initial={{ scale: 0.8, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                          className="relative z-20 mx-auto w-fit min-w-[155px] bg-gradient-to-b from-[#8a5f2e] to-[#b58242] text-white px-5 py-3 rounded-2xl font-bold shadow-[0_10px_25px_rgba(138,95,46,0.35)] border-2 border-[#fffdf8] dark:border-[#2b261f]"
+                        >
+                          <span className="block text-[10.5px] text-[#fff8ec]/90 mb-0.5 tracking-wider">
+                             الجد المشترك (الجامع)
+                          </span>
+                          <span className="block text-[16.5px] font-extrabold">
+                            {result.lcaName}
+                          </span>
+                        </motion.div>
+
+                        {/* خط التفرع الأفقي تحت الجد المشترك */}
+                        <div className="mx-auto h-4 w-[2px] bg-[#c9974f] dark:bg-[#d6b877]" />
+                        <div className="mx-auto w-[54%] h-[2px] bg-[#c9974f] dark:bg-[#d6b877] shadow-sm" />
+
+                        <div className="flex justify-between items-start text-center relative w-full gap-2">
                           {/* مسار الشخص الأول */}
                           <div className="flex flex-col items-center flex-1 z-10">
-                            {result.path1.slice(0, -1).reverse().map((name, i, arr) => {
-                              const isTarget = i === arr.length - 1;
-                              return (
-                                <div key={`p1-${i}`} className="flex flex-col items-center w-full">
-                                  <div className="h-7 w-[2px] bg-[#c9974f] dark:bg-[#d6b877]/80" />
-                                  <div className={`px-2 py-2.5 rounded-xl font-bold text-[13px] w-[95%] max-w-[140px] leading-tight transition-all relative ${
-                                    isTarget 
-                                      ? "bg-gradient-to-b from-[#4c7a3f] to-[#2d4a25] text-white border-2 border-[#fffdf8] dark:border-[#1c1915] shadow-lg scale-105 z-10" 
-                                      : "bg-white dark:bg-[#2b261f] border border-[#c9974f]/40 dark:border-[#d6b877]/40 text-[#5c4a38] dark:text-[#f3ede1] shadow-sm"
-                                  }`}>
-                                    {name}
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-
-                          {/* الجد المشترك بالوسط */}
-                          <div className="relative z-20 -mt-5 bg-gradient-to-b from-[#8a5f2e] to-[#c9974f] text-white px-5 py-3 rounded-xl font-bold shadow-xl border-[3px] border-[#fdfbf7] dark:border-[#1c1915] shrink-0 max-w-[150px]">
-                            <span className="block text-[10px] text-white/90 mb-1 tracking-wider">الجد المشترك</span>
-                            <span className="block text-[16px]">{result.lcaName}</span>
+                            {result.path1
+                              .slice(0, -1)
+                              .reverse()
+                              .map((name, i, arr) => {
+                                const isTarget = i === arr.length - 1;
+                                return (
+                                  <motion.div
+                                    key={`p1-${i}`}
+                                    initial={{ opacity: 0, y: -10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.1 + i * 0.08 }}
+                                    className="flex flex-col items-center w-full"
+                                  >
+                                    <div className="h-5 w-[2px] bg-[#c9974f] dark:bg-[#d6b877]/80" />
+                                    <div
+                                      className={`px-2.5 py-2 rounded-xl font-bold text-[12.5px] w-[95%] max-w-[145px] leading-tight transition-all relative ${
+                                        isTarget
+                                          ? "bg-gradient-to-b from-[#4c7a3f] to-[#2d4a25] text-white border-2 border-[#fffdf8] dark:border-[#2b261f] shadow-md scale-105 z-10"
+                                          : "bg-white dark:bg-[#25211b] border border-[#c9974f]/40 dark:border-[#d6b877]/35 text-[#5c4a38] dark:text-[#f3ede1] shadow-sm"
+                                      }`}
+                                    >
+                                      {name}
+                                    </div>
+                                  </motion.div>
+                                );
+                              })}
                           </div>
 
                           {/* مسار الشخص الثاني */}
                           <div className="flex flex-col items-center flex-1 z-10">
-                            {result.path2.slice(0, -1).reverse().map((name, i, arr) => {
-                              const isTarget = i === arr.length - 1;
-                              return (
-                                <div key={`p2-${i}`} className="flex flex-col items-center w-full">
-                                  <div className="h-7 w-[2px] bg-[#c9974f] dark:bg-[#d6b877]/80" />
-                                  <div className={`px-2 py-2.5 rounded-xl font-bold text-[13px] w-[95%] max-w-[140px] leading-tight transition-all relative ${
-                                    isTarget 
-                                      ? "bg-gradient-to-b from-[#4c7a3f] to-[#2d4a25] text-white border-2 border-[#fffdf8] dark:border-[#1c1915] shadow-lg scale-105 z-10" 
-                                      : "bg-white dark:bg-[#2b261f] border border-[#c9974f]/40 dark:border-[#d6b877]/40 text-[#5c4a38] dark:text-[#f3ede1] shadow-sm"
-                                  }`}>
-                                    {name}
-                                  </div>
-                                </div>
-                              );
-                            })}
+                            {result.path2
+                              .slice(0, -1)
+                              .reverse()
+                              .map((name, i, arr) => {
+                                const isTarget = i === arr.length - 1;
+                                return (
+                                  <motion.div
+                                    key={`p2-${i}`}
+                                    initial={{ opacity: 0, y: -10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.1 + i * 0.08 }}
+                                    className="flex flex-col items-center w-full"
+                                  >
+                                    <div className="h-5 w-[2px] bg-[#c9974f] dark:bg-[#d6b877]/80" />
+                                    <div
+                                      className={`px-2.5 py-2 rounded-xl font-bold text-[12.5px] w-[95%] max-w-[145px] leading-tight transition-all relative ${
+                                        isTarget
+                                          ? "bg-gradient-to-b from-[#4c7a3f] to-[#2d4a25] text-white border-2 border-[#fffdf8] dark:border-[#2b261f] shadow-md scale-105 z-10"
+                                          : "bg-white dark:bg-[#25211b] border border-[#c9974f]/40 dark:border-[#d6b877]/35 text-[#5c4a38] dark:text-[#f3ede1] shadow-sm"
+                                      }`}
+                                    >
+                                      {name}
+                                    </div>
+                                  </motion.div>
+                                );
+                              })}
                           </div>
-                          
                         </div>
                       </div>
                     )}
                   </div>
 
-                  <button onClick={reset} className="inline-flex items-center justify-center gap-2 text-[14.5px] font-bold text-gray-500 hover:text-[#8a5f2e] dark:text-gray-400 dark:hover:text-[#d6b877] transition-all bg-gray-50 hover:bg-[#c9974f]/10 dark:bg-white/5 dark:hover:bg-[#d6b877]/10 px-6 py-2.5 rounded-full shadow-sm border border-transparent hover:border-[#c9974f]/20 mb-4">
-                     إجراء بحث جديد
-                  </button>
+                  <motion.button
+                    type="button"
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={reset}
+                    className="cursor-pointer inline-flex items-center justify-center gap-2 text-[14px] font-extrabold text-[#8a5f2e] dark:text-[#d6b877] transition-all bg-[#c9974f]/12 hover:bg-[#c9974f]/25 dark:bg-[#d6b877]/10 dark:hover:bg-[#d6b877]/20 px-6 py-3 rounded-full shadow-sm border border-[#c9974f]/30 mb-2"
+                  >
+                    <span>🔄</span>
+                    <span>إجراء مقارنة جديدة</span>
+                  </motion.button>
                 </motion.div>
               )}
             </div>

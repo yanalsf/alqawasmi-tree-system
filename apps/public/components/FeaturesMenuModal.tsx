@@ -1,6 +1,8 @@
+// components/FeaturesMenuModal.tsx
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { useEffect } from "react";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
 
 interface FeaturesMenuModalProps {
   isOpen: boolean;
@@ -9,10 +11,31 @@ interface FeaturesMenuModalProps {
   onOpenStats?: () => void;
   onOpenEditRequest?: () => void;
   onOpenAddMember?: () => void;
-  onOpenAbout?: () => void; 
+  onOpenAbout?: () => void;
   onOpenComplaints?: () => void;
-  onOpenPoster?: () => void; // 🌟 الخاصية الجديدة لفتح نافذة البوستر
+  onOpenPoster?: () => void;
 }
+
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.05,
+      delayChildren: 0.08,
+    },
+  },
+};
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 15, scale: 0.95 },
+  show: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { type: "spring", damping: 22, stiffness: 300 },
+  },
+};
 
 export default function FeaturesMenuModal({
   isOpen,
@@ -25,71 +48,189 @@ export default function FeaturesMenuModal({
   onOpenComplaints,
   onOpenPoster,
 }: FeaturesMenuModalProps) {
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape" && isOpen) onClose();
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
+  const features = [
+    {
+      title: "كاشف القرابة",
+      subtitle: "اعرف صلة النسب بين شخصين",
+      icon: "🧬",
+      onClick: onOpenKinship,
+      accent: "from-amber-500/15 to-transparent",
+    },
+    {
+      title: "الإحصائيات",
+      subtitle: "أرقام وأجيال الشجرة",
+      icon: "📊",
+      onClick: onOpenStats,
+      accent: "from-emerald-500/15 to-transparent",
+    },
+    {
+      title: "نبذة عن العائلة",
+      subtitle: "تاريخ وجذور القواسمي",
+      icon: "📜",
+      onClick: onOpenAbout,
+      accent: "from-yellow-600/15 to-transparent",
+    },
+    {
+      title: "طلب إضافة فرد",
+      subtitle: "تسجيل مولود أو فرع جديد",
+      icon: "👤",
+      onClick: onOpenAddMember,
+      accent: "from-teal-500/15 to-transparent",
+    },
+    {
+      title: "طلبات التعديل",
+      subtitle: "تصحيح اسم أو تاريخ",
+      icon: "✏️",
+      onClick: onOpenEditRequest,
+      accent: "from-blue-500/15 to-transparent",
+    },
+    {
+      title: "الشكاوى والمقترحات",
+      subtitle: "تواصل مع إدارة الشجرة",
+      icon: "💬",
+      onClick: onOpenComplaints,
+      accent: "from-rose-500/15 to-transparent",
+    },
+  ];
+
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 font-cairo">
+          {/* خلفية زجاجية معتمة */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
             onClick={onClose}
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            className="cursor-pointer absolute inset-0 bg-black/50 backdrop-blur-md"
           />
 
+          {/* البطاقة الرئيسية */}
           <motion.div
-            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            initial={{ scale: 0.9, opacity: 0, y: 24 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="relative w-full max-w-sm overflow-hidden rounded-3xl bg-[#fdfbf7] border border-[#c9974f]/30 p-8 shadow-2xl text-center dark:bg-[#1c1915] dark:border-[#d6b877]/20"
+            exit={{ scale: 0.92, opacity: 0, y: 16 }}
+            transition={{ type: "spring", damping: 26, stiffness: 320 }}
+            className="relative w-full max-w-md overflow-hidden rounded-[32px] border border-[#c9974f]/35 bg-[#fdfbf7] p-6 sm:p-7 shadow-[0_25px_70px_rgba(0,0,0,0.25)] text-center dark:bg-[#191612] dark:border-[#d6b877]/25 max-h-[92vh] overflow-y-auto sidebar-scroll"
           >
-            <button 
-              onClick={onClose} 
-              className="absolute left-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors border-none outline-none focus:outline-none focus:ring-0 dark:bg-[#2b261f] dark:text-gray-400 dark:hover:bg-red-900/30 dark:hover:text-red-400"
+            {/* هالة إضاءة علوية */}
+            <div className="pointer-events-none absolute -top-20 left-1/2 -translate-x-1/2 h-40 w-64 rounded-full bg-[#c9974f]/20 blur-3xl dark:bg-[#d6b877]/10" />
+
+            {/* زر الإغلاق */}
+            <motion.button
+              type="button"
+              onClick={onClose}
+              whileHover={{ scale: 1.1, rotate: 90 }}
+              whileTap={{ scale: 0.9 }}
+              className="cursor-pointer absolute left-4 top-4 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-[#c9974f]/25 bg-white text-gray-500 shadow-sm hover:border-red-300 hover:bg-red-50 hover:text-red-500 transition-colors outline-none dark:bg-[#25211b] dark:border-[#d6b877]/20 dark:text-gray-400 dark:hover:text-red-400"
+              aria-label="إغلاق"
             >
               ✕
-            </button>
+            </motion.button>
 
-            <div className="mb-6">
-              <span className="text-4xl mb-3 block opacity-90">🌳</span>
-              <h2 className="text-2xl font-bold text-[#8a5f2e] font-ruqaa mb-1 dark:text-[#d6b877]">والمزيد من</h2>
-              <h2 className="text-3xl font-bold text-[#8a5f2e] font-ruqaa dark:text-[#d6b877]">المزايا</h2>
+            {/* الترويسة */}
+            <div className="relative z-10 mb-6 flex flex-col items-center">
+              <motion.div
+                initial={{ scale: 0.5, rotate: -15 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ type: "spring", damping: 14, stiffness: 200, delay: 0.05 }}
+                className="mb-3 flex h-16 w-16 items-center justify-center rounded-2xl border border-[#c9974f]/30 bg-gradient-to-br from-white via-[#fdfbf7] to-[#f3e6ce] text-3xl shadow-[0_8px_20px_rgba(138,95,46,0.12)] dark:border-[#d6b877]/25 dark:from-[#2b261f] dark:to-[#1a1713]"
+              >
+                🌳
+              </motion.div>
+
+              <span className="text-[11px] font-extrabold tracking-widest text-[#c9974f] dark:text-[#d6b877]/80 uppercase">
+                الخدمات الإلكترونية
+              </span>
+              <h2 className="mt-0.5 text-3xl font-bold text-[#8a5f2e] font-ruqaa dark:text-[#d6b877]">
+                مزايا وخدمات الشجرة
+              </h2>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <FeatureButton title="كاشف القرابة" onClick={onOpenKinship} />
-              <FeatureButton title="الإحصائيات" onClick={onOpenStats} />
-              <FeatureButton title="نبذة عن العائلة" onClick={onOpenAbout} />
-              <FeatureButton title="طلب إضافة فرد" onClick={onOpenAddMember} />
-              <FeatureButton title="طلبات التعديل" onClick={onOpenEditRequest} />
-              <FeatureButton title="الشكاوى" onClick={onOpenComplaints} />
-
-              {/* 🌟 زر طباعة بوستر الفخذ (يمتد على كامل العرض بلمسة مميزة) */}
-              <div className="col-span-2 mt-1">
-                <button
-                  onClick={onOpenPoster}
-                  className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-[#c9974f]/50 bg-[#c9974f]/10 text-[13.5px] font-extrabold text-[#8a5f2e] shadow-sm transition-all hover:bg-[#c9974f]/20 hover:border-[#c9974f]/80 active:scale-95 dark:border-[#d6b877]/40 dark:bg-[#d6b877]/10 dark:text-[#d6b877] dark:hover:bg-[#d6b877]/20"
+            {/* شبكة الأزرار التفاعلية */}
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              animate="show"
+              className="relative z-10 grid grid-cols-2 gap-3"
+            >
+              {features.map((item) => (
+                <motion.button
+                  key={item.title}
+                  type="button"
+                  variants={itemVariants}
+                  whileHover={{ y: -4, scale: 1.02 }}
+                  whileTap={{ scale: 0.96 }}
+                  onClick={item.onClick}
+                  className="cursor-pointer group relative flex flex-col items-start justify-between overflow-hidden rounded-2xl border border-[#c9974f]/25 bg-white p-3.5 text-right shadow-[0_4px_14px_rgba(138,95,46,0.05)] transition-all hover:border-[#8a5f2e]/60 hover:shadow-[0_12px_24px_rgba(138,95,46,0.14)] dark:border-[#d6b877]/15 dark:bg-[#231f1a] dark:hover:border-[#d6b877]/55"
                 >
-                  <span>🖨️</span>
-                  <span>طباعة بوستر الفخذ (svg)</span>
-                </button>
-              </div>
-            </div>
+                  {/* تدرج لوني خفيف بالخلفية عند التمرير */}
+                  <div
+                    className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${item.accent} opacity-0 transition-opacity duration-300 group-hover:opacity-100`}
+                  />
+
+                  <div className="relative z-10 flex w-full items-center justify-between mb-2">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#fdf8ef] border border-[#c9974f]/20 text-xl shadow-inner transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 dark:bg-[#191612] dark:border-[#d6b877]/15">
+                      {item.icon}
+                    </span>
+                    <span className="text-xs font-bold text-[#c9974f] opacity-0 -translate-x-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0 dark:text-[#d6b877]">
+                      ⟵
+                    </span>
+                  </div>
+
+                  <div className="relative z-10">
+                    <div className="text-[13.5px] font-extrabold text-[#5c4a38] group-hover:text-[#8a5f2e] transition-colors dark:text-[#f3ede1] dark:group-hover:text-[#d6b877]">
+                      {item.title}
+                    </div>
+                    <div className="mt-0.5 text-[10.5px] font-semibold text-gray-400 dark:text-[#9a8c78] line-clamp-1">
+                      {item.subtitle}
+                    </div>
+                  </div>
+                </motion.button>
+              ))}
+
+              {/* زر طباعة بوستر الفخذ المميز */}
+              <motion.div variants={itemVariants} className="col-span-2 mt-1">
+                <motion.button
+                  type="button"
+                  onClick={onOpenPoster}
+                  whileHover={{ y: -3, scale: 1.01 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="cursor-pointer group relative flex w-full items-center justify-between overflow-hidden rounded-2xl border border-[#8a5f2e]/40 bg-gradient-to-l from-[#8a5f2e] via-[#a6763b] to-[#c9974f] p-4 text-right text-white shadow-[0_10px_25px_rgba(138,95,46,0.28)] transition-all hover:shadow-[0_15px_32px_rgba(138,95,46,0.4)] dark:border-[#d6b877]/40 dark:from-[#243d21] dark:via-[#2d4a25] dark:to-[#1f351c]"
+                >
+                  <div className="flex items-center gap-3.5">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/15 text-2xl backdrop-blur-md transition-transform duration-300 group-hover:scale-110">
+                      🖨️
+                    </span>
+                    <div className="flex flex-col">
+                      <span className="text-[14.5px] font-extrabold text-white dark:text-[#f3ede1]">
+                        طباعة بوستر الفخذ (SVG)
+                      </span>
+                      <span className="text-[11px] font-semibold text-white/85 dark:text-[#d6b877]/90">
+                        تصميم جداري عالي الدقة قابل للطباعة والتحميل
+                      </span>
+                    </div>
+                  </div>
+
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-sm font-bold text-white transition-transform duration-300 group-hover:-translate-x-1">
+                    ⟵
+                  </span>
+                </motion.button>
+              </motion.div>
+            </motion.div>
           </motion.div>
         </div>
       )}
     </AnimatePresence>
-  );
-}
-
-function FeatureButton({ title, onClick }: { title: string; onClick?: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      className="flex h-12 w-full items-center justify-center rounded-2xl border border-[#c9974f]/40 bg-[#c9974f]/5 text-[13px] font-bold text-[#8a5f2e] transition-all hover:bg-[#c9974f]/15 hover:border-[#c9974f]/60 active:scale-95 dark:border-[#d6b877]/30 dark:bg-[#d6b877]/5 dark:text-[#d6b877] dark:hover:bg-[#d6b877]/10"
-    >
-      {title}
-    </button>
   );
 }
