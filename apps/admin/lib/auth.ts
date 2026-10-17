@@ -10,7 +10,7 @@ import { NextRequest, NextResponse } from "next/server";
 export function requireEditorPassword(req: NextRequest): NextResponse | null {
   const provided = req.headers.get("x-editor-password") ?? "";
   const expected = process.env.EDITOR_PASSWORD ?? "";
-
+  console.log("provided:", JSON.stringify(provided), "| expected set:", !!expected);
   if (!expected || provided !== expected) {
     return NextResponse.json({ error: "كلمة المرور غير صحيحة" }, { status: 401 });
   }

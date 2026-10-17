@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
+import { useT } from "../lib/i18n";
 interface BranchPosterModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -10,27 +11,28 @@ interface BranchPosterModalProps {
 }
 
 export default function BranchPosterModal({ isOpen, onClose, treeData }: BranchPosterModalProps) {
+  const { t, nm } = useT();
   const [selectedBranchId, setSelectedBranchId] = useState<string>("");
   const [isExporting, setIsExporting] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const printAreaRef = useRef<HTMLDivElement>(null);
 
   const ALL_BRANCHES = [
-    { id: "dawoud", label: "فخذ داوود" },
-    { id: "abu_nawara", label: "فخذ ابو نواره" },
-    { id: "al_sous", label: "فخذ الصوص" },
-    { id: "abdullah", label: "فخذ عبدالله" },
-    { id: "al_jadaa", label: "فخذ الجدع" },
-    { id: "mohammed_sulaiman", label: "فخذ محمد سليمان" },
-    { id: "younes", label: "فخذ يونس" },
-    { id: "al_badawi", label: "فخذ البدوي" },
-    { id: "mohammed_ali", label: "فخذ محمد علي" },
-    { id: "abu_baid", label: "فخذ ابو بيض" },
-    { id: "al_khudair", label: "فخذ الخضير" },
-    { id: "abdulhaq", label: "فخذ عبد الحق" },
+    { id: "dawoud", label: t("فخذ داوود") },
+    { id: "abu_nawara", label: t("فخذ ابو نواره") },
+    { id: "al_sous", label: t("فخذ الصوص") },
+    { id: "abdullah", label: t("فخذ عبدالله") },
+    { id: "al_jadaa", label: t("فخذ الجدع") },
+    { id: "mohammed_sulaiman", label: t("فخذ محمد سليمان") },
+    { id: "younes", label: t("فخذ يونس") },
+    { id: "al_badawi", label: t("فخذ البدوي") },
+    { id: "mohammed_ali", label: t("فخذ محمد علي") },
+    { id: "abu_baid", label: t("فخذ ابو بيض") },
+    { id: "al_khudair", label: t("فخذ الخضير") },
+    { id: "abdulhaq", label: t("فخذ عبد الحق") },
   ];
   
-  const VISIBLE_BRANCH_IDS = ["dawoud"];
+  const VISIBLE_BRANCH_IDS = ALL_BRANCHES.map(b => b.id);
   const branchesList = ALL_BRANCHES.filter(b => VISIBLE_BRANCH_IDS.includes(b.id));
 
   const findBranchNode = (node: any, keyword: string): any => {
@@ -64,8 +66,8 @@ export default function BranchPosterModal({ isOpen, onClose, treeData }: BranchP
             ? "bg-gradient-to-b from-[#8a5f2e] to-[#c9974f] text-white border-white/20 scale-110 mb-2" 
             : "bg-white border-[#c9974f]/40 text-[#5c4a38]"
         }`}>
-          <span className={`font-bold ${isRoot ? 'text-[20px]' : 'text-[16px]'}`}>{node.name.replace('فخذ ', '')}</span>
-          {node.death_date && <span className="text-[12px] opacity-80 mt-1 font-ruqaa">رحمه الله</span>}
+          <span className={`font-bold ${isRoot ? 'text-[20px]' : 'text-[16px]'}`}>{nm(node.name.replace('فخذ ', ''))}</span>
+          {node.death_date && <span className="text-[12px] opacity-80 mt-1 font-ruqaa">{t("رحمه الله")}</span>}
         </div>
         {node.children && node.children.length > 0 && (
           <ul>
@@ -98,14 +100,14 @@ export default function BranchPosterModal({ isOpen, onClose, treeData }: BranchP
         });
 
         const link = document.createElement('a');
-        const branchName = branchesList.find(b => b.id === selectedBranchId)?.label || 'الفخذ';
+        const branchName = branchesList.find(b => b.id === selectedBranchId)?.label || t("الفخذ");
         link.download = `شجرة_${branchName.replace(/\s+/g, '_')}_القواسمي.svg`;
         link.href = dataUrl;
         link.click();
         
       } catch (err) {
         console.error("Error exporting SVG:", err);
-        alert("حدث خطأ أثناء تصدير البوستر. يرجى المحاولة مرة أخرى.");
+        alert(t("حدث خطأ أثناء تصدير البوستر. يرجى المحاولة مرة أخرى."));
       } finally {
         setIsExporting(false);
       }
@@ -131,7 +133,7 @@ export default function BranchPosterModal({ isOpen, onClose, treeData }: BranchP
               
               <div className="flex items-center gap-2">
                 <span className="text-3xl">🖨️</span>
-                <h2 className="text-2xl font-bold text-[#8a5f2e] dark:text-[#d6b877] font-ruqaa">طباعة بوستر الفخذ</h2>
+                <h2 className="text-2xl font-bold text-[#8a5f2e] dark:text-[#d6b877] font-ruqaa">{t("طباعة بوستر الفخذ")}</h2>
               </div>
 
               <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto relative z-50">
@@ -143,7 +145,7 @@ export default function BranchPosterModal({ isOpen, onClose, treeData }: BranchP
                     className="w-full flex items-center justify-between !bg-white dark:!bg-[#24201a] !border-2 !border-[#c9974f]/40 dark:!border-[#d6b877]/30 !text-[#8a5f2e] dark:!text-[#d6b877] font-bold px-4 py-2.5 rounded-xl outline-none shadow-sm transition-all hover:!border-[#c9974f]/70 dark:hover:!border-[#d6b877]/60 relative z-10"
                   >
                     <span className="text-[14.5px]">
-                      {selectedBranchId ? branchesList.find(b => b.id === selectedBranchId)?.label : "-- اختر الفخذ --"}
+                      {selectedBranchId ? t(branchesList.find(b => b.id === selectedBranchId)?.label ?? "") : t("-- اختر الفخذ --")}
                     </span>
                     <span className={`text-[12px] transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`}>▼</span>
                   </button>
@@ -167,11 +169,11 @@ export default function BranchPosterModal({ isOpen, onClose, treeData }: BranchP
                                   : '!bg-transparent !text-[#5c4a38] dark:!text-[#f3ede1]'
                               }`}
                             >
-                              {b.label}
+                              {t(b.label)}
                             </button>
                           ))
                         ) : (
-                          <div className="!bg-transparent px-4 py-3 text-[13px] !text-gray-400 dark:!text-gray-500 font-bold text-center">لا يوجد فخوذ متاحة</div>
+                          <div className="!bg-transparent px-4 py-3 text-[13px] !text-gray-400 dark:!text-gray-500 font-bold text-center">{t("لا يوجد فخوذ متاحة")}</div>
                         )}
                       </motion.div>
                     )}
@@ -183,7 +185,7 @@ export default function BranchPosterModal({ isOpen, onClose, treeData }: BranchP
                   onClick={handleExport}
                   className="flex items-center justify-center gap-2 bg-gradient-to-l from-[#8a5f2e] to-[#c9974f] dark:from-[#4a3a1e] dark:to-[#8a6a2e] text-white dark:text-[#f3ede1] dark:border dark:border-[#d6b877]/30 font-bold px-6 py-2.5 rounded-xl disabled:opacity-50 transition-all hover:shadow-lg dark:hover:shadow-[0_10px_25px_rgba(214,184,119,0.15)] shrink-0 w-full md:w-56"
                 >
-                  {isExporting ? "⏳ جاري التجهيز..." : "تنزيل بوستر (SVG)"}
+                  {isExporting ? t("⏳ جاري التجهيز...") : t("تنزيل بوستر (SVG)")}
                 </button>
               </div>
             </div>
@@ -193,7 +195,7 @@ export default function BranchPosterModal({ isOpen, onClose, treeData }: BranchP
               {!targetNode ? (
                 <div className="h-full flex flex-col items-center justify-center text-[#8a5f2e]/60 dark:text-[#d6b877]/60 font-bold opacity-70">
                   <span className="text-5xl mb-4">📜</span>
-                  <p>الرجاء اختيار الفخذ من القائمة بالأعلى لمعاينة البوستر</p>
+                  <p>{t("الرجاء اختيار الفخذ من القائمة بالأعلى لمعاينة البوستر")}</p>
                 </div>
               ) : (
                 <div 
@@ -206,8 +208,8 @@ export default function BranchPosterModal({ isOpen, onClose, treeData }: BranchP
                   <div className="absolute inset-4 border-[4px] border-[#c9974f]/30 pointer-events-none rounded-2xl"></div>
 
                   <div className="relative z-10 mb-16 text-center border-b-[3px] border-[#c9974f]/30 pb-8 px-16 mx-auto w-max">
-                    <h1 className="font-ruqaa text-5xl text-[#8a5f2e] mb-4">شجرة {branchesList.find(b => b.id === selectedBranchId)?.label}</h1>
-                    <h2 className="font-cairo text-2xl text-[#7c6c53] font-bold">عائلة القواسمي</h2>
+                    <h1 className="font-ruqaa text-5xl text-[#8a5f2e] mb-4">{t("شجرة")} {t(branchesList.find(b => b.id === selectedBranchId)?.label ?? "")}</h1>
+                    <h2 className="font-cairo text-2xl text-[#7c6c53] font-bold">{t("عائلة القواسمي")}</h2>
                   </div>
 
                   <style>{`
@@ -231,8 +233,8 @@ export default function BranchPosterModal({ isOpen, onClose, treeData }: BranchP
                   </ul>
 
                   <div className="relative z-10 mt-20 pt-8 border-t-[2px] border-[#c9974f]/20 text-center w-full mx-auto max-w-lg">
-                    <p className="font-cairo text-xl text-[#8a5f2e] font-bold">تطبيق شجرة عائلة القواسمي</p>
-                    <p className="font-cairo text-sm text-gray-500 mt-2">تاريخ الإصدار: {new Date().toLocaleDateString('ar-JO')}</p>
+                    <p className="font-cairo text-xl text-[#8a5f2e] font-bold">{t("تطبيق شجرة عائلة القواسمي")}</p>
+                    <p className="font-cairo text-sm text-gray-500 mt-2">{t("تاريخ الإصدار:")} {new Date().toLocaleDateString('ar-JO')}</p>
                   </div>
                 </div>
               )}

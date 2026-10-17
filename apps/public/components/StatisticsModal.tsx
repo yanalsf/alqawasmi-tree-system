@@ -3,17 +3,21 @@
 import { useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import treeDataRaw from "@/data/tree.json";
-import type { FamilyNode } from "@/lib/constants";
+import type { FamilyNode } from "../lib/constants";
 
+import { useT } from "../lib/i18n";
 const tree = treeDataRaw as unknown as FamilyNode;
 const VIRTUAL_ROOT_ID = 941; 
 
 interface StatisticsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /** الشجرة التي تُحسب منها الأرقام (الفخذ الحالي). إن لم تُمرَّر تُحسب كل العائلة. */
+  root?: FamilyNode;
 }
 
-export default function StatisticsModal({ isOpen, onClose }: StatisticsModalProps) {
+export default function StatisticsModal({ isOpen, onClose, root }: StatisticsModalProps) {
+  const { t } = useT();
   const stats = useMemo(() => {
     let total = 0;
     let dead = 0;
@@ -40,7 +44,7 @@ export default function StatisticsModal({ isOpen, onClose }: StatisticsModalProp
       }
     }
 
-    walk(tree, 1); 
+    walk(root ?? tree, 1); 
 
     const alive = total - dead;
 
@@ -56,10 +60,10 @@ export default function StatisticsModal({ isOpen, onClose }: StatisticsModalProp
       .slice(0, 4); 
 
     return { total, dead, alive, generations: genArray, maxGenCount, topNames };
-  }, []);
+  }, [root]);
 
   const getGenName = (num: number) => {
-    const names = ["", "الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس", "السابع", "الثامن", "التاسع", "العاشر", "الحادي عشر", "الثاني عشر"];
+    const names = ["", t("الأول"), t("الثاني"), t("الثالث"), t("الرابع"), t("الخامس"), t("السادس"), t("السابع"), t("الثامن"), t("التاسع"), t("العاشر"), t("الحادي عشر"), t("الثاني عشر")];
     return names[num] || num.toString();
   };
 
@@ -73,7 +77,7 @@ export default function StatisticsModal({ isOpen, onClose }: StatisticsModalProp
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            className="relative w-full max-w-md max-h-[85vh] flex flex-col overflow-hidden rounded-3xl bg-[#fdfbf7] border border-[#c9974f]/30 shadow-2xl dark:bg-[#1c1915] dark:border-[#d6b877]/20"
+            className="relative w-full max-w-md max-h-[85vh] flex flex-col overflow-hidden rounded-3xl bg-[#fdfbf7] border border-[rgb(var(--b-mid-rgb)/0.3)] shadow-2xl dark:bg-[#1c1915] dark:border-[rgb(var(--b-lite-rgb)/0.2)]"
           >
             {/* الجزء العلوي الثابت */}
             <div className="relative pt-6 pb-2 shrink-0 z-10 bg-[#fdfbf7] dark:bg-[#1c1915] rounded-t-3xl">
@@ -81,7 +85,7 @@ export default function StatisticsModal({ isOpen, onClose }: StatisticsModalProp
               
               <div className="text-center">
                 <span className="text-3xl mb-2 block">📊</span>
-                <h2 className="text-2xl font-bold text-[#8a5f2e] font-ruqaa dark:text-[#d6b877]">الإحصائيات</h2>
+                <h2 className="text-2xl font-bold text-[rgb(var(--b-deep-rgb)/1)] font-ruqaa dark:text-[rgb(var(--b-lite-rgb)/1)]">{t("الإحصائيات")}</h2>
               </div>
             </div>
 
@@ -90,17 +94,17 @@ export default function StatisticsModal({ isOpen, onClose }: StatisticsModalProp
               
               {/* قسم الأرقام */}
               <div className="grid grid-cols-3 gap-3">
-                <div className="bg-gradient-to-b from-[#c9974f]/10 to-[#c9974f]/5 dark:from-[#d6b877]/10 dark:to-transparent p-3 rounded-2xl text-center border border-[#c9974f]/30 dark:border-[#d6b877]/20 shadow-sm">
+                <div className="bg-gradient-to-b from-[rgb(var(--b-mid-rgb)/0.1)] to-[rgb(var(--b-mid-rgb)/0.05)] dark:from-[rgb(var(--b-lite-rgb)/0.1)] dark:to-transparent p-3 rounded-2xl text-center border border-[rgb(var(--b-mid-rgb)/0.3)] dark:border-[rgb(var(--b-lite-rgb)/0.2)] shadow-sm">
                   <div className="text-[22px] font-extrabold text-[#5c4a38] dark:text-[#f3ede1]">{stats.total}</div>
-                  <div className="text-[11px] font-bold text-[#8a5f2e] dark:text-[#d6b877]/80 mt-1">عدد الأفراد</div>
+                  <div className="text-[11px] font-bold text-[rgb(var(--b-deep-rgb)/1)] dark:text-[rgb(var(--b-lite-rgb)/0.8)] mt-1">{t("عدد الأفراد")}</div>
                 </div>
                 <div className="bg-gradient-to-b from-green-50 to-white dark:from-green-900/20 dark:to-[#1c1915] p-3 rounded-2xl text-center border border-green-200 dark:border-green-900/30 shadow-sm">
                   <div className="text-[22px] font-extrabold text-green-700 dark:text-green-400">{stats.alive}</div>
-                  <div className="text-[11px] font-bold text-green-600 dark:text-green-500/80 mt-1">عدد الأحياء</div>
+                  <div className="text-[11px] font-bold text-green-600 dark:text-green-500/80 mt-1">{t("عدد الأحياء")}</div>
                 </div>
                 <div className="bg-gradient-to-b from-gray-100 to-white dark:from-gray-800/40 dark:to-[#1c1915] p-3 rounded-2xl text-center border border-gray-200 dark:border-gray-700/50 shadow-sm">
                   <div className="text-[22px] font-extrabold text-gray-600 dark:text-gray-300">{stats.dead}</div>
-                  <div className="text-[11px] font-bold text-gray-500 dark:text-gray-400 mt-1">عدد الأموات</div>
+                  <div className="text-[11px] font-bold text-gray-500 dark:text-gray-400 mt-1">{t("عدد الأموات")}</div>
                 </div>
               </div>
 
@@ -108,12 +112,12 @@ export default function StatisticsModal({ isOpen, onClose }: StatisticsModalProp
               <div className="mt-2 flex items-start gap-2 bg-orange-50/80 dark:bg-orange-900/10 border border-orange-200/60 dark:border-orange-900/30 rounded-xl px-4 py-3">
                 <span className="text-orange-500 text-[14px]">⚠️</span>
                 <p className="text-[11px] font-bold text-orange-700/80 dark:text-orange-400/80 m-0 leading-relaxed text-right">
-                  <span className="font-extrabold">ملاحظة:</span> أرقام الأحياء والأموات تقريبية، حيث أن تواريخ الوفاة لبعض الأفراد (خاصة من الأجيال القديمة) قد لا تكون متوفرة أو موثقة بالكامل في النظام.
+                  <span className="font-extrabold">{t("ملاحظة:")}</span>  {t("أرقام الأحياء والأموات تقريبية، حيث أن تواريخ الوفاة لبعض الأفراد (خاصة من الأجيال القديمة) قد لا تكون متوفرة أو موثقة بالكامل في النظام.")}
                 </p>
               </div>
 
-              <div className="bg-white dark:bg-[#24201a] p-4 rounded-2xl border border-[#c9974f]/20 dark:border-[#d6b877]/20 shadow-sm">
-                <h3 className="text-[13px] font-bold text-[#8a5f2e] dark:text-[#d6b877] mb-5 text-center">عدد الأفراد لكل جيل</h3>
+              <div className="bg-white dark:bg-[#24201a] p-4 rounded-2xl border border-[rgb(var(--b-mid-rgb)/0.2)] dark:border-[rgb(var(--b-lite-rgb)/0.2)] shadow-sm">
+                <h3 className="text-[13px] font-bold text-[rgb(var(--b-deep-rgb)/1)] dark:text-[rgb(var(--b-lite-rgb)/1)] mb-5 text-center">{t("عدد الأفراد لكل جيل")}</h3>
                 <div className="flex items-end justify-center gap-1.5 h-32 mt-2 px-1">
                   {stats.generations.map((gen) => {
                     const heightPercent = (gen.count / stats.maxGenCount) * 100;
@@ -124,7 +128,7 @@ export default function StatisticsModal({ isOpen, onClose }: StatisticsModalProp
                           initial={{ height: 0 }}
                           animate={{ height: `${heightPercent}%` }}
                           transition={{ duration: 0.8, type: "spring", bounce: 0.3 }}
-                          className="w-full max-w-[28px] min-w-[12px] bg-gradient-to-t from-[#c9974f] to-[#e4c08a] dark:from-[#2d4a25] dark:to-[#4c7a3f] rounded-t-lg opacity-85 group-hover:opacity-100 transition-opacity shadow-sm"
+                          className="w-full max-w-[28px] min-w-[12px] bg-gradient-to-t from-[rgb(var(--b-mid-rgb)/1)] to-[rgb(var(--b-soft-rgb)/1)] dark:from-[rgb(var(--b-ink-rgb)/1)] dark:to-[rgb(var(--b-strong-rgb)/1)] rounded-t-lg opacity-85 group-hover:opacity-100 transition-opacity shadow-sm"
                         />
                         <span className="text-[9.5px] sm:text-[10px] font-bold text-[#5c4a38] dark:text-[#9a8c78] mt-2 block whitespace-nowrap">{getGenName(gen.depth)}</span>
                       </div>
@@ -133,16 +137,16 @@ export default function StatisticsModal({ isOpen, onClose }: StatisticsModalProp
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-[#24201a] p-4 rounded-2xl border border-[#c9974f]/20 dark:border-[#d6b877]/20 shadow-sm">
-                <h3 className="text-[13px] font-bold text-[#8a5f2e] dark:text-[#d6b877] mb-3 text-center">أكثر الأسماء تكراراً</h3>
+              <div className="bg-white dark:bg-[#24201a] p-4 rounded-2xl border border-[rgb(var(--b-mid-rgb)/0.2)] dark:border-[rgb(var(--b-lite-rgb)/0.2)] shadow-sm">
+                <h3 className="text-[13px] font-bold text-[rgb(var(--b-deep-rgb)/1)] dark:text-[rgb(var(--b-lite-rgb)/1)] mb-3 text-center">{t("أكثر الأسماء تكراراً")}</h3>
                 <div className="flex flex-col gap-2">
                   {stats.topNames.map(([name, count], index) => (
                     <div key={name} className="flex items-center justify-between bg-gray-50 dark:bg-white/5 p-2 rounded-xl">
                       <div className="flex items-center gap-2">
-                        <span className="flex items-center justify-center w-5 h-5 rounded-full bg-[#c9974f]/20 dark:bg-[#d6b877]/20 text-[#8a5f2e] dark:text-[#d6b877] text-[10px] font-bold">{index + 1}</span>
+                        <span className="flex items-center justify-center w-5 h-5 rounded-full bg-[rgb(var(--b-mid-rgb)/0.2)] dark:bg-[rgb(var(--b-lite-rgb)/0.2)] text-[rgb(var(--b-deep-rgb)/1)] dark:text-[rgb(var(--b-lite-rgb)/1)] text-[10px] font-bold">{index + 1}</span>
                         <span className="text-[13px] font-bold text-[#5c4a38] dark:text-[#f3ede1]">{name}</span>
                       </div>
-                      <span className="text-[12px] font-bold text-[#8a5f2e] dark:text-[#d6b877] bg-[#c9974f]/10 dark:bg-[#d6b877]/10 px-2.5 py-0.5 rounded-md">{count}</span>
+                      <span className="text-[12px] font-bold text-[rgb(var(--b-deep-rgb)/1)] dark:text-[rgb(var(--b-lite-rgb)/1)] bg-[rgb(var(--b-mid-rgb)/0.1)] dark:bg-[rgb(var(--b-lite-rgb)/0.1)] px-2.5 py-0.5 rounded-md">{count}</span>
                     </div>
                   ))}
                 </div>

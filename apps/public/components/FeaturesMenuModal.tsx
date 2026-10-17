@@ -4,6 +4,7 @@
 import { useEffect } from "react";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 
+import { useT } from "../lib/i18n";
 interface FeaturesMenuModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -48,6 +49,7 @@ export default function FeaturesMenuModal({
   onOpenComplaints,
   onOpenPoster,
 }: FeaturesMenuModalProps) {
+  const { t } = useT();
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape" && isOpen) onClose();
@@ -58,43 +60,43 @@ export default function FeaturesMenuModal({
 
   const features = [
     {
-      title: "كاشف القرابة",
-      subtitle: "اعرف صلة النسب بين شخصين",
+      title: t("كاشف القرابة"),
+      subtitle: t("اعرف صلة النسب بين شخصين"),
       icon: "🧬",
       onClick: onOpenKinship,
       accent: "from-amber-500/15 to-transparent",
     },
     {
-      title: "الإحصائيات",
-      subtitle: "أرقام وأجيال الشجرة",
+      title: t("الإحصائيات"),
+      subtitle: t("أرقام وأجيال الشجرة"),
       icon: "📊",
       onClick: onOpenStats,
       accent: "from-emerald-500/15 to-transparent",
     },
     {
-      title: "نبذة عن العائلة",
-      subtitle: "تاريخ وجذور القواسمي",
+      title: t("نبذة عن العائلة"),
+      subtitle: t("تاريخ وجذور القواسمي"),
       icon: "📜",
       onClick: onOpenAbout,
       accent: "from-yellow-600/15 to-transparent",
     },
     {
-      title: "طلب إضافة فرد",
-      subtitle: "تسجيل مولود أو فرع جديد",
+      title: t("طلب إضافة فرد"),
+      subtitle: t("تسجيل مولود أو فرع جديد"),
       icon: "👤",
       onClick: onOpenAddMember,
       accent: "from-teal-500/15 to-transparent",
     },
     {
-      title: "طلبات التعديل",
-      subtitle: "تصحيح اسم أو تاريخ",
+      title: t("طلبات التعديل"),
+      subtitle: t("تصحيح اسم أو تاريخ"),
       icon: "✏️",
       onClick: onOpenEditRequest,
       accent: "from-blue-500/15 to-transparent",
     },
     {
-      title: "الشكاوى والمقترحات",
-      subtitle: "تواصل مع إدارة الشجرة",
+      title: t("الشكاوى والمقترحات"),
+      subtitle: t("تواصل مع إدارة الشجرة"),
       icon: "💬",
       onClick: onOpenComplaints,
       accent: "from-rose-500/15 to-transparent",
@@ -121,10 +123,10 @@ export default function FeaturesMenuModal({
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.92, opacity: 0, y: 16 }}
             transition={{ type: "spring", damping: 26, stiffness: 320 }}
-            className="relative w-full max-w-md overflow-hidden rounded-[32px] border border-[#c9974f]/35 bg-[#fdfbf7] p-6 sm:p-7 shadow-[0_25px_70px_rgba(0,0,0,0.25)] text-center dark:bg-[#191612] dark:border-[#d6b877]/25 max-h-[92vh] overflow-y-auto sidebar-scroll"
+            className="relative w-full max-w-md overflow-hidden rounded-[32px] border border-[rgb(var(--b-mid-rgb)/0.35)] bg-[#fdfbf7] p-6 sm:p-7 shadow-[0_25px_70px_rgba(0,0,0,0.25)] text-center dark:bg-[#191612] dark:border-[rgb(var(--b-lite-rgb)/0.25)] max-h-[92vh] overflow-y-auto sidebar-scroll"
           >
             {/* هالة إضاءة علوية */}
-            <div className="pointer-events-none absolute -top-20 left-1/2 -translate-x-1/2 h-40 w-64 rounded-full bg-[#c9974f]/20 blur-3xl dark:bg-[#d6b877]/10" />
+            <div className="pointer-events-none absolute -top-20 left-1/2 -translate-x-1/2 h-40 w-64 rounded-full bg-[rgb(var(--b-mid-rgb)/0.2)] blur-3xl dark:bg-[rgb(var(--b-lite-rgb)/0.1)]" />
 
             {/* زر الإغلاق */}
             <motion.button
@@ -132,8 +134,8 @@ export default function FeaturesMenuModal({
               onClick={onClose}
               whileHover={{ scale: 1.1, rotate: 90 }}
               whileTap={{ scale: 0.9 }}
-              className="cursor-pointer absolute left-4 top-4 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-[#c9974f]/25 bg-white text-gray-500 shadow-sm hover:border-red-300 hover:bg-red-50 hover:text-red-500 transition-colors outline-none dark:bg-[#25211b] dark:border-[#d6b877]/20 dark:text-gray-400 dark:hover:text-red-400"
-              aria-label="إغلاق"
+              className="cursor-pointer absolute left-4 top-4 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-[rgb(var(--b-mid-rgb)/0.25)] bg-white text-gray-500 shadow-sm hover:border-red-300 hover:bg-red-50 hover:text-red-500 transition-colors outline-none dark:bg-[#25211b] dark:border-[rgb(var(--b-lite-rgb)/0.2)] dark:text-gray-400 dark:hover:text-red-400"
+              aria-label={t("إغلاق")}
             >
               ✕
             </motion.button>
@@ -144,16 +146,18 @@ export default function FeaturesMenuModal({
                 initial={{ scale: 0.5, rotate: -15 }}
                 animate={{ scale: 1, rotate: 0 }}
                 transition={{ type: "spring", damping: 14, stiffness: 200, delay: 0.05 }}
-                className="mb-3 flex h-16 w-16 items-center justify-center rounded-2xl border border-[#c9974f]/30 bg-gradient-to-br from-white via-[#fdfbf7] to-[#f3e6ce] text-3xl shadow-[0_8px_20px_rgba(138,95,46,0.12)] dark:border-[#d6b877]/25 dark:from-[#2b261f] dark:to-[#1a1713]"
+                className="mb-3 flex h-16 w-16 items-center justify-center rounded-2xl border border-[rgb(var(--b-mid-rgb)/0.3)] bg-gradient-to-br from-white via-[#fdfbf7] to-[#f3e6ce] text-3xl shadow-[0_8px_20px_rgba(138,95,46,0.12)] dark:border-[rgb(var(--b-lite-rgb)/0.25)] dark:from-[#2b261f] dark:to-[#1a1713]"
               >
                 🌳
               </motion.div>
 
-              <span className="text-[11px] font-extrabold tracking-widest text-[#c9974f] dark:text-[#d6b877]/80 uppercase">
-                الخدمات الإلكترونية
+              <span className="text-[11px] font-extrabold tracking-widest text-[rgb(var(--b-mid-rgb)/1)] dark:text-[rgb(var(--b-lite-rgb)/0.8)] uppercase">
+                
+                {t("الخدمات الإلكترونية")}
               </span>
-              <h2 className="mt-0.5 text-3xl font-bold text-[#8a5f2e] font-ruqaa dark:text-[#d6b877]">
-                مزايا وخدمات الشجرة
+              <h2 className="mt-0.5 text-3xl font-bold text-[rgb(var(--b-deep-rgb)/1)] font-ruqaa dark:text-[rgb(var(--b-lite-rgb)/1)]">
+                
+                {t("مزايا وخدمات الشجرة")}
               </h2>
             </div>
 
@@ -172,7 +176,7 @@ export default function FeaturesMenuModal({
                   whileHover={{ y: -4, scale: 1.02 }}
                   whileTap={{ scale: 0.96 }}
                   onClick={item.onClick}
-                  className="cursor-pointer group relative flex flex-col items-start justify-between overflow-hidden rounded-2xl border border-[#c9974f]/25 bg-white p-3.5 text-right shadow-[0_4px_14px_rgba(138,95,46,0.05)] transition-all hover:border-[#8a5f2e]/60 hover:shadow-[0_12px_24px_rgba(138,95,46,0.14)] dark:border-[#d6b877]/15 dark:bg-[#231f1a] dark:hover:border-[#d6b877]/55"
+                  className="cursor-pointer group relative flex flex-col items-start justify-between overflow-hidden rounded-2xl border border-[rgb(var(--b-mid-rgb)/0.25)] bg-white p-3.5 text-right shadow-[0_4px_14px_rgba(138,95,46,0.05)] transition-all hover:border-[rgb(var(--b-deep-rgb)/0.6)] hover:shadow-[0_12px_24px_rgba(138,95,46,0.14)] dark:border-[rgb(var(--b-lite-rgb)/0.15)] dark:bg-[#231f1a] dark:hover:border-[rgb(var(--b-lite-rgb)/0.55)]"
                 >
                   {/* تدرج لوني خفيف بالخلفية عند التمرير */}
                   <div
@@ -180,16 +184,16 @@ export default function FeaturesMenuModal({
                   />
 
                   <div className="relative z-10 flex w-full items-center justify-between mb-2">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#fdf8ef] border border-[#c9974f]/20 text-xl shadow-inner transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 dark:bg-[#191612] dark:border-[#d6b877]/15">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#fdf8ef] border border-[rgb(var(--b-mid-rgb)/0.2)] text-xl shadow-inner transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 dark:bg-[#191612] dark:border-[rgb(var(--b-lite-rgb)/0.15)]">
                       {item.icon}
                     </span>
-                    <span className="text-xs font-bold text-[#c9974f] opacity-0 -translate-x-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0 dark:text-[#d6b877]">
+                    <span className="text-xs font-bold text-[rgb(var(--b-mid-rgb)/1)] opacity-0 -translate-x-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0 dark:text-[rgb(var(--b-lite-rgb)/1)]">
                       ⟵
                     </span>
                   </div>
 
                   <div className="relative z-10">
-                    <div className="text-[13.5px] font-extrabold text-[#5c4a38] group-hover:text-[#8a5f2e] transition-colors dark:text-[#f3ede1] dark:group-hover:text-[#d6b877]">
+                    <div className="text-[13.5px] font-extrabold text-[#5c4a38] group-hover:text-[rgb(var(--b-deep-rgb)/1)] transition-colors dark:text-[#f3ede1] dark:group-hover:text-[rgb(var(--b-lite-rgb)/1)]">
                       {item.title}
                     </div>
                     <div className="mt-0.5 text-[10.5px] font-semibold text-gray-400 dark:text-[#9a8c78] line-clamp-1">
@@ -206,7 +210,7 @@ export default function FeaturesMenuModal({
                   onClick={onOpenPoster}
                   whileHover={{ y: -3, scale: 1.01 }}
                   whileTap={{ scale: 0.98 }}
-                  className="cursor-pointer group relative flex w-full items-center justify-between overflow-hidden rounded-2xl border border-[#8a5f2e]/40 bg-gradient-to-l from-[#8a5f2e] via-[#a6763b] to-[#c9974f] p-4 text-right text-white shadow-[0_10px_25px_rgba(138,95,46,0.28)] transition-all hover:shadow-[0_15px_32px_rgba(138,95,46,0.4)] dark:border-[#d6b877]/40 dark:from-[#243d21] dark:via-[#2d4a25] dark:to-[#1f351c]"
+                  className="cursor-pointer group relative flex w-full items-center justify-between overflow-hidden rounded-2xl border border-[rgb(var(--b-deep-rgb)/0.4)] bg-gradient-to-l from-[rgb(var(--b-deep-rgb)/1)] via-[#a6763b] to-[rgb(var(--b-mid-rgb)/1)] p-4 text-right text-white shadow-[0_10px_25px_rgba(138,95,46,0.28)] transition-all hover:shadow-[0_15px_32px_rgba(138,95,46,0.4)] dark:border-[rgb(var(--b-lite-rgb)/0.4)] dark:from-[#243d21] dark:via-[rgb(var(--b-ink-rgb)/1)] dark:to-[#1f351c]"
                 >
                   <div className="flex items-center gap-3.5">
                     <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/15 text-2xl backdrop-blur-md transition-transform duration-300 group-hover:scale-110">
@@ -214,10 +218,12 @@ export default function FeaturesMenuModal({
                     </span>
                     <div className="flex flex-col">
                       <span className="text-[14.5px] font-extrabold text-white dark:text-[#f3ede1]">
-                        طباعة بوستر الفخذ (SVG)
+                        
+                        {t("طباعة بوستر الفخذ (SVG)")}
                       </span>
-                      <span className="text-[11px] font-semibold text-white/85 dark:text-[#d6b877]/90">
-                        تصميم جداري عالي الدقة قابل للطباعة والتحميل
+                      <span className="text-[11px] font-semibold text-white/85 dark:text-[rgb(var(--b-lite-rgb)/0.9)]">
+                        
+                        {t("تصميم جداري عالي الدقة قابل للطباعة والتحميل")}
                       </span>
                     </div>
                   </div>

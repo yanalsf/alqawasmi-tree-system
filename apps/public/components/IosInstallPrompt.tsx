@@ -3,7 +3,9 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
+import { useT } from "../lib/i18n";
 export default function IosInstallPrompt() {
+  const { t } = useT();
   const [showPrompt, setShowPrompt] = useState(false);
 
   useEffect(() => {
@@ -45,11 +47,13 @@ export default function IosInstallPrompt() {
           </button>
           
           <h3 className="text-[18px] font-bold text-[#8a5f2e] dark:text-[#d6b877] mb-1 font-ruqaa">
-            ثبّت التطبيق على جهازك
+            
+            {t("ثبّت التطبيق على جهازك")}
           </h3>
           
           <p className="text-[13px] font-bold text-[#5c4a38] dark:text-[#f3ede1] leading-relaxed">
-            للوصول السريع لشجرة العائلة في أي وقت، قم بتثبيت التطبيق على شاشة الآيفون:
+            
+            {t("للوصول السريع لشجرة العائلة في أي وقت، قم بتثبيت التطبيق على شاشة الآيفون:")}
           </p>
           
           <ol className="flex flex-col gap-2.5 mt-2 text-[13px] font-semibold text-[#5c4a38] dark:text-gray-300">
@@ -57,13 +61,13 @@ export default function IosInstallPrompt() {
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-500 shadow-sm">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
               </span>
-              <span>1. اضغط على زر <strong>المشاركة</strong> في أسفل شاشة المتصفح.</span>
+              <span>{t("1. اضغط على زر")} <strong>{t("المشاركة")}</strong>  {t("في أسفل شاشة المتصفح.")}</span>
             </li>
             <li className="flex items-center gap-3">
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gray-100 dark:bg-[#2b261f] text-gray-700 dark:text-gray-200 shadow-sm">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"></path></svg>
               </span>
-              <span>2. اختر <strong>إضافة إلى الشاشة الرئيسية</strong> (Add to Home Screen).</span>
+              <span>{t("2. اختر")} <strong>{t("إضافة إلى الشاشة الرئيسية")}</strong> (Add to Home Screen).</span>
             </li>
           </ol>
         </motion.div>

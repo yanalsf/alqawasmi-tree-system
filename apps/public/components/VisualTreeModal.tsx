@@ -5,17 +5,25 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import * as d3 from "d3";
-import type { FamilyNode } from "@/lib/constants";
+import type { FamilyNode } from "../lib/constants";
 
+import { useT } from "../lib/i18n";
 interface VisualTreeModalProps {
   isOpen: boolean;
   rootNode: FamilyNode | null;
   onClose: () => void;
 }
 
+// يقرأ لون الفخذ الحالي (المتغيرات التي يضعها applyBranchTheme على <body>)
+function branchColor(name: string, fallback: string): string {
+  if (typeof window === "undefined") return fallback;
+  return getComputedStyle(document.body).getPropertyValue(name).trim() || fallback;
+}
+
 const LEAF_PATH = "M0,20 C-25,10 -30,-20 0,-40 C30,-20 25,10 0,20 Z";
 
 export default function VisualTreeModal({ isOpen, rootNode, onClose }: VisualTreeModalProps) {
+  const { t, nm, lang } = useT();
   const hostRef = useRef<HTMLDivElement>(null);
   const miniMapRef = useRef<HTMLDivElement>(null);
   const zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
@@ -97,8 +105,8 @@ export default function VisualTreeModal({ isOpen, rootNode, onClose }: VisualTre
       drawTreeInto(miniG, root, { rootScale: 1.6, childScale: 1.15, fontRoot: 0, fontChild: 0 }, true);
 
       const viewportRect = miniSvg.append("rect")
-        .attr("class", "viewport-rect").attr("fill", "rgba(138,95,46,0.15)")
-        .attr("stroke", "#8a5f2e").attr("stroke-width", 1.5).attr("pointer-events", "none");
+        .attr("class", "viewport-rect").attr("fill", branchColor("--b-deep", "#8a5f2e")).attr("fill-opacity", 0.15)
+        .attr("stroke", branchColor("--b-deep", "#8a5f2e")).attr("stroke-width", 1.5).attr("pointer-events", "none");
 
       miniSvg.on("click", (event) => {
         const [mx, my] = d3.pointer(event);
@@ -144,7 +152,7 @@ export default function VisualTreeModal({ isOpen, rootNode, onClose }: VisualTre
 
     try {
       const btn = document.getElementById("pdf-btn");
-      if (btn) btn.innerHTML = "⏳ جاري التجهيز...";
+      if (btn) btn.innerHTML = t("⏳ جاري التجهيز...");
 
       const { root, childScale, fontChild, rootScale, fontRoot, maxNameLen, x0: tx0, x1: tx1, y0: ty0, y1: ty1 } =
         buildRadialLayout(rootNode, {
@@ -162,7 +170,7 @@ export default function VisualTreeModal({ isOpen, rootNode, onClose }: VisualTre
 
       const totalMembersCount = root.descendants().length;
       
-      const printDate = new Date().toLocaleDateString('ar-JO', { 
+      const printDate = new Date().toLocaleDateString(lang === 'en' ? 'en-GB' : 'ar-JO', { 
         year: 'numeric', 
         month: 'long', 
         day: 'numeric' 
@@ -214,7 +222,7 @@ export default function VisualTreeModal({ isOpen, rootNode, onClose }: VisualTre
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${dynamicWidth} ${dynamicHeight}" width="100%" height="100%" data-print-width-mm="${widthMm}" data-print-height-mm="${heightMm}" style="background-color: #fffdf8;">
           <defs>
             <pattern id="bg-pattern" x="0" y="0" width="${100 * hs}" height="${100 * hs}" patternUnits="userSpaceOnUse">
-              <path d="M${50 * hs} 0 L${100 * hs} ${50 * hs} L${50 * hs} ${100 * hs} L0 ${50 * hs} Z" fill="none" stroke="#d6b877" stroke-width="${1 * hs}" opacity="0.15"/>
+              <path d="M${50 * hs} 0 L${100 * hs} ${50 * hs} L${50 * hs} ${100 * hs} L0 ${50 * hs} Z" fill="none" stroke="${branchColor("--b-mid", "#d6b877")}" stroke-width="${1 * hs}" opacity="0.15"/>
             </pattern>
             <!-- 🌟 قوس خفيف لرسم الآية عليه بانحناء أنيق -->
             <path id="ayah-curve" fill="none"
@@ -244,8 +252,8 @@ export default function VisualTreeModal({ isOpen, rootNode, onClose }: VisualTre
 
           <!-- ================= الإطارات المتداخلة ================= -->
           <rect x="${margin}" y="${margin}" width="${dynamicWidth - 2*margin}" height="${dynamicHeight - 2*margin}" fill="none" stroke="#2b1d12" stroke-width="${14 * hs}" />
-          <rect x="${margin + 24*hs}" y="${margin + 24*hs}" width="${dynamicWidth - 2*(margin + 24*hs)}" height="${dynamicHeight - 2*(margin + 24*hs)}" fill="none" stroke="#d4af37" stroke-width="${4 * hs}" />
-          <rect x="${margin + 36*hs}" y="${margin + 36*hs}" width="${dynamicWidth - 2*(margin + 36*hs)}" height="${dynamicHeight - 2*(margin + 36*hs)}" fill="none" stroke="#8a5f2e" stroke-width="${2 * hs}" />
+          <rect x="${margin + 24*hs}" y="${margin + 24*hs}" width="${dynamicWidth - 2*(margin + 24*hs)}" height="${dynamicHeight - 2*(margin + 24*hs)}" fill="none" stroke="${branchColor("--b-mid", "#d4af37")}" stroke-width="${4 * hs}" />
+          <rect x="${margin + 36*hs}" y="${margin + 36*hs}" width="${dynamicWidth - 2*(margin + 36*hs)}" height="${dynamicHeight - 2*(margin + 36*hs)}" fill="none" stroke="${branchColor("--b-deep", "#8a5f2e")}" stroke-width="${2 * hs}" />
 
           <!-- ================= زوايا الإطار الهندسية ================= -->
           ${[
@@ -257,7 +265,7 @@ export default function VisualTreeModal({ isOpen, rootNode, onClose }: VisualTre
             <g transform="translate(${cx}, ${cy})">
               <rect x="${-35 * hs}" y="${-35 * hs}" width="${70 * hs}" height="${70 * hs}" fill="#fffdf8" />
               <rect x="${-24 * hs}" y="${-24 * hs}" width="${48 * hs}" height="${48 * hs}" fill="#2b1d12" />
-              <rect x="${-12 * hs}" y="${-12 * hs}" width="${24 * hs}" height="${24 * hs}" fill="none" stroke="#d4af37" stroke-width="${3 * hs}" />
+              <rect x="${-12 * hs}" y="${-12 * hs}" width="${24 * hs}" height="${24 * hs}" fill="none" stroke="${branchColor("--b-mid", "#d4af37")}" stroke-width="${3 * hs}" />
               <circle cx="0" cy="0" r="${5 * hs}" fill="#fffdf8" />
             </g>
           `).join('')}
@@ -268,9 +276,9 @@ export default function VisualTreeModal({ isOpen, rootNode, onClose }: VisualTre
             <textPath href="#ayah-curve" startOffset="50%">وَهُوَ الَّذِي خَلَقَ مِنَ الْمَاءِ بَشَرًا فَجَعَلَهُ نَسَبًا وَصِهْرًا ۗ وَكَانَ رَبُّكَ قَدِيرًا</textPath>
           </text>
 
-          <text class="title" x="${dynamicWidth / 2}" y="${1250 * hs}" text-anchor="middle" font-size="${220 * hs}" fill="#2b1d12" font-weight="900">شجرة عائلة القواسمي</text>
-          <line x1="${dynamicWidth / 2 - 500 * hs}" y1="${1330 * hs}" x2="${dynamicWidth / 2 + 500 * hs}" y2="${1330 * hs}" stroke="#d4af37" stroke-width="${4 * hs}" stroke-linecap="round" />
-          <text class="subtitle" x="${dynamicWidth / 2}" y="${1470 * hs}" text-anchor="middle" font-size="${100 * hs}" fill="#8a5f2e" font-weight="bold">فرع: ${rootNode.name.replace("فخذ ", "")}</text>
+          <text class="title" x="${dynamicWidth / 2}" y="${1250 * hs}" text-anchor="middle" font-size="${220 * hs}" fill="#2b1d12" font-weight="900">${t("شجرة عائلة القواسمي")}</text>
+          <line x1="${dynamicWidth / 2 - 500 * hs}" y1="${1330 * hs}" x2="${dynamicWidth / 2 + 500 * hs}" y2="${1330 * hs}" stroke="${branchColor("--b-mid", "#d4af37")}" stroke-width="${4 * hs}" stroke-linecap="round" />
+          <text class="subtitle" x="${dynamicWidth / 2}" y="${1470 * hs}" text-anchor="middle" font-size="${100 * hs}" fill="${branchColor("--b-deep", "#8a5f2e")}" font-weight="bold">${t("فرع:")} ${rootNode.name.replace("فخذ ", "")}</text>
           
           <!-- ================= الشجرة ================= -->
           <g transform="translate(${translateX}, ${translateY})">
@@ -280,12 +288,12 @@ export default function VisualTreeModal({ isOpen, rootNode, onClose }: VisualTre
           <!-- ================= تذييل الوثيقة (معلومات الطباعة) ================= -->
           <!-- 🌟 التعديل 2: تم تغيير الخط ليكون أردني رسمي وتصغير الحجم بشكل مريح 🌟 -->
           <text font-family="'Amiri', serif" x="${dynamicWidth / 2}" y="${dynamicHeight - margin - 220 * hs}" text-anchor="middle" font-size="${50 * hs}" fill="#5c4a38" font-weight="bold">
-            عدد الأفراد في هذا التسلسل: ${totalMembersCount} فرداً   |   تاريخ الإصدار: ${printDate}
+            ${t("عدد الأفراد في هذا التسلسل:")} ${totalMembersCount} ${t("فرداً")}   |   ${t("تاريخ الإصدار:")} ${printDate}
           </text>
 
           <!-- 🌟 توقيع صانع الشجرة: سطر صغير وأنيق أسفل عدد الأفراد والتاريخ 🌟 -->
-          <text class="subtitle" x="${dynamicWidth / 2}" y="${dynamicHeight - margin - 150 * hs}" text-anchor="middle" font-size="${34 * hs}" fill="#8a5f2e" font-style="italic" opacity="0.85">
-            تم الإنشاء بواسطة ينال سفيان ربحي القواسمي
+          <text class="subtitle" x="${dynamicWidth / 2}" y="${dynamicHeight - margin - 150 * hs}" text-anchor="middle" font-size="${34 * hs}" fill="${branchColor("--b-deep", "#8a5f2e")}" font-style="italic" opacity="0.85">
+            ${t("تم الإنشاء بواسطة")} ${nm("ينال سفيان ربحي القواسمي")}
           </text>
         </svg>
       `;
@@ -294,17 +302,17 @@ export default function VisualTreeModal({ isOpen, rootNode, onClose }: VisualTre
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `شجرة_عائلة_القواسمي_فرع_${rootNode.name.replace("فخذ ", "")}.svg`;
+      link.download = lang === "en" ? `Al-Qawasmi_Family_Tree_${rootNode.name.replace("فخذ ", "").replace(/\s+/g, "_")}.svg` : `شجرة_عائلة_القواسمي_فرع_${rootNode.name.replace("فخذ ", "")}.svg`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
 
-      if (btn) btn.innerHTML = "🖨️ طباعة / حفظ SVG";
+      if (btn) btn.innerHTML = t("🖨️ طباعة / حفظ SVG");
     } catch (error) {
       console.error("خطأ أثناء التصدير:", error);
-      alert("حدث خطأ أثناء التصدير.");
+      alert(t("حدث خطأ أثناء التصدير."));
       const btn = document.getElementById("pdf-btn");
-      if (btn) btn.innerHTML = "🖨️ طباعة / حفظ SVG";
+      if (btn) btn.innerHTML = t("🖨️ طباعة / حفظ SVG");
     }
   };
 
@@ -435,7 +443,7 @@ export default function VisualTreeModal({ isOpen, rootNode, onClose }: VisualTre
   ) {
     g.append("g")
       .attr("fill", "none")
-      .attr("stroke", "#5c4a38") 
+      .attr("stroke", branchColor("--b-deep", "#5c4a38")) 
       .attr("stroke-width", miniature ? 0.6 : 1.2 * opts.childScale) 
       .selectAll("path")
       .data(root.links())
@@ -460,8 +468,8 @@ export default function VisualTreeModal({ isOpen, rootNode, onClose }: VisualTre
     rootNodes
       .append("circle")
       .attr("r", 22 * opts.rootScale) 
-      .attr("fill", "#a97d3f")
-      .attr("stroke", "#4a3320")
+      .attr("fill", branchColor("--b-mid", "#a97d3f"))
+      .attr("stroke", branchColor("--b-ink", "#4a3320"))
       .attr("stroke-width", miniature ? 1 : 1.5 * opts.rootScale)
       .style("filter", miniature ? "none" : "drop-shadow(0 4px 8px rgba(0,0,0,0.4))");
 
@@ -470,8 +478,8 @@ export default function VisualTreeModal({ isOpen, rootNode, onClose }: VisualTre
     childNodes
       .append("path")
       .attr("d", RADIAL_LEAF)
-      .attr("fill", "#2d4a25")
-      .attr("stroke", "#1f3d1f")
+      .attr("fill", branchColor("--b-ink", "#2d4a25"))
+      .attr("stroke", branchColor("--b-deep", "#1f3d1f"))
       .attr("stroke-width", miniature ? 0.5 : 2.5)
       .attr("transform", `scale(${opts.childScale})`)
       .style("filter", miniature ? "none" : "drop-shadow(0 3px 5px rgba(0,0,0,0.3))");
@@ -543,15 +551,17 @@ export default function VisualTreeModal({ isOpen, rootNode, onClose }: VisualTre
             exit={{ opacity: 0, scale: 0.96, y: 12 }}
             transition={{ type: "spring", damping: 28, stiffness: 320 }}
             onClick={(e) => e.stopPropagation()}
-            className="flex flex-col w-[94vw] h-[90vh] bg-[#fbfaf8] rounded-3xl shadow-2xl overflow-hidden border border-gold/20 dark:bg-[#161411] dark:border-[#d6b877]/20"
+            className="flex flex-col w-[94vw] h-[90vh] bg-[#fbfaf8] rounded-3xl shadow-2xl overflow-hidden border border-[rgb(var(--b-mid-rgb)/0.2)] dark:bg-[#161411] dark:border-[rgb(var(--b-lite-rgb)/0.2)]"
           >
-            <div className="p-5 bg-gradient-to-b from-panel to-white border-b border-gold/10 flex items-center justify-between dark:from-[#1c1915] dark:to-[#161411] dark:border-white/10">
+            <div className="p-5 bg-gradient-to-b from-panel to-white border-b border-[rgb(var(--b-mid-rgb)/0.1)] flex items-center justify-between dark:from-[#1c1915] dark:to-[#161411] dark:border-white/10">
               <div>
-                <h3 className="m-0 text-[20px] font-extrabold text-gold-deep font-ruqaa dark:text-[#d6b877]">
-                  الشجرة الرقمية: {displayNode.name.replace("فخذ ", "")}
+                <h3 className="m-0 text-[20px] font-extrabold text-[rgb(var(--b-deep-rgb)/1)] font-ruqaa dark:text-[rgb(var(--b-lite-rgb)/1)]">
+                  
+                  {t("الشجرة الرقمية:")} {displayNode.name.replace("فخذ ", "")}
                 </h3>
                 <p className="m-0 text-[12px] text-ink-soft dark:text-gray-400">
-                  مرر واسحب للتنقل، استخدم عجلة الفأرة للتكبير
+                  
+                  {t("مرر واسحب للتنقل، استخدم عجلة الفأرة للتكبير")}
                 </p>
               </div>
               <div className="flex gap-2">
@@ -561,18 +571,20 @@ export default function VisualTreeModal({ isOpen, rootNode, onClose }: VisualTre
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.96 }}
                   onClick={handleExportSVG}
-                  className="rounded-xl bg-gradient-to-b from-[#4c7a3f] to-[#3a5c30] px-5 py-2 font-bold text-white text-[13.5px] shadow-md border border-[#2d4a25]"
+                  className="rounded-xl bg-gradient-to-b from-[rgb(var(--b-strong-rgb)/1)] to-[rgb(var(--b-ink-rgb)/1)] px-5 py-2 font-bold text-white text-[13.5px] shadow-md border border-[rgb(var(--b-ink-rgb)/1)]"
                 >
-                  🖨️ طباعة / حفظ SVG
+                  
+                  {t("🖨️ طباعة / حفظ SVG")}
                 </motion.button>
                 <motion.button
                   type="button"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.96 }}
                   onClick={onClose}
-                  className="rounded-xl bg-[#f8f9fa] border border-gold-deep/30 px-5 py-2 font-bold text-[#7c6c53] text-[13.5px] hover:bg-gray-100 transition-colors dark:bg-[#24201a] dark:border-[#d6b877]/20 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-[#d6b877]"
+                  className="rounded-xl bg-[#f8f9fa] border border-[rgb(var(--b-deep-rgb)/0.3)] px-5 py-2 font-bold text-[#7c6c53] text-[13.5px] hover:bg-gray-100 transition-colors dark:bg-[#24201a] dark:border-[rgb(var(--b-lite-rgb)/0.2)] dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-[rgb(var(--b-lite-rgb)/1)]"
                 >
-                  ✕ إغلاق
+                  
+                  {t("✕ إغلاق")}
                 </motion.button>
               </div>
             </div>
@@ -581,14 +593,14 @@ export default function VisualTreeModal({ isOpen, rootNode, onClose }: VisualTre
               initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.1, duration: 0.35 }}
-              className="relative flex-1 overflow-hidden bg-[#8a5f2e] p-2 m-4 rounded-xl shadow-inner"
+              className="relative flex-1 overflow-hidden bg-[rgb(var(--b-deep-rgb)/1)] p-2 m-4 rounded-xl shadow-inner"
             >
               <div className="relative h-full w-full overflow-hidden rounded-lg border-2 border-[#f3ede1]/80 p-[4px]">
-                <div id="tree-capture-area" className="relative h-full w-full overflow-hidden rounded-md border-[1.5px] border-[#d6b877] bg-[#fffdf8] dark:bg-[#161411] dark:border-[#d6b877]/30">
+                <div id="tree-capture-area" className="relative h-full w-full overflow-hidden rounded-md border-[1.5px] border-[rgb(var(--b-lite-rgb)/1)] bg-[#fffdf8] dark:bg-[#161411] dark:border-[rgb(var(--b-lite-rgb)/0.3)]">
                   <div ref={hostRef} className="h-full w-full touch-none select-none outline-none" />
 
-                  <div className="absolute bottom-4 left-4 overflow-hidden rounded-xl border-2 border-[#8a5f2e]/60 bg-white shadow-lg z-10 dark:bg-[#1c1915] dark:border-[#d6b877]/40">
-                    <div className="bg-[#8a5f2e] px-3 py-1.5 text-[12px] font-bold text-white text-center">خريطة الشجرة</div>
+                  <div className="absolute bottom-4 left-4 overflow-hidden rounded-xl border-2 border-[rgb(var(--b-deep-rgb)/0.6)] bg-white shadow-lg z-10 dark:bg-[#1c1915] dark:border-[rgb(var(--b-lite-rgb)/0.4)]">
+                    <div className="bg-[rgb(var(--b-deep-rgb)/1)] px-3 py-1.5 text-[12px] font-bold text-white text-center">{t("خريطة الشجرة")}</div>
                     <div ref={miniMapRef} className="cursor-pointer bg-[#fffdf8] dark:bg-[#161411]" />
                   </div>
                 </div>

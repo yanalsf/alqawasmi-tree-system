@@ -1,95 +1,85 @@
 "use client";
+import React, { useState } from "react";
 
-import React from "react";
-
+// إضافة parent_id كخاصية ممررة للمكون لمعرفة مكان إضافة الشخص في الشجرة
 interface AddMemberModalProps {
   onClose: () => void;
+  parentId: number; 
 }
 
-export default function AddMemberModal({ onClose }: AddMemberModalProps) {
+export default function AddMemberModal({ onClose, parentId }: AddMemberModalProps) {
+  const [name, setName] = useState("");
+  const [birthYear, setBirthYear] = useState("");
+  const [deathYear, setDeathYear] = useState("");
+
+ const handleSubmit = async () => {
+  try {
+    // جلب كلمة المرور من sessionStorage (تأكد من اسم المفتاح الصحيح المستخدم في مشروعك)
+    const editorPassword = sessionStorage.getItem("editor_password") || ""; 
+
+    const response = await fetch("/api/person", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        // إضافة ترويسة المصادقة التي يطلبها الخادم
+        "x-editor-password": editorPassword 
+      },
+      body: JSON.stringify({
+        parent_id: parentId, // تأكد من تمرير parentId
+        name_text: name,
+        birth_date: birthYear || null,
+        death_date: deathYear || null,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "فشلت الإضافة - تأكد من صلاحياتك");
+    }
+
+    const data = await response.json();
+    alert("تمت الإضافة بنجاح!");
+    onClose(); 
+  } catch (error) {
+    alert(error instanceof Error ? error.message : "حدث خطأ غير متوقع");
+  }
+};
+
   return (
-    <div 
-      className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/60 font-cairo p-4 backdrop-blur-sm" 
-      onClick={onClose}
-      dir="rtl"
-    >
-      <div 
-        onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-lg bg-[#fffdf8] rounded-2xl shadow-2xl overflow-hidden border border-[#d6b877] flex flex-col max-h-[90vh]"
-      >
-        {/* الترويسة (Header) */}
-        <div className="p-4 bg-gradient-to-b from-[#f3ede1] to-[#fffdf8] border-b border-[#d6b877]/50 flex items-center justify-between">
-           <h3 className="text-xl font-bold text-[#8a5f2e] flex items-center gap-2">
-             إضافة فرد جديد 📝
-           </h3>
-           <button onClick={onClose} className="text-gray-500 hover:text-red-600 transition">
-             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-           </button>
-        </div>
+    <div className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/60 p-4" onClick={onClose} dir="rtl">
+      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-lg bg-[#fffdf8] rounded-2xl shadow-2xl flex flex-col p-6 gap-5">
+        
+        {/* حقل الاسم */}
+        <input 
+          type="text" 
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="الاسم الخماسي" 
+          className="w-full p-2.5 border rounded-lg" 
+        />
 
-        {/* الحقول (Body) */}
-        <div className="p-6 overflow-y-auto flex flex-col gap-5">
-          
-          {/* الاسم الخماسي */}
-          <div className="flex flex-col gap-1.5">
-            <label className="font-bold text-[#7c6c53] text-sm">الاسم الخماسي:</label>
-            <input 
-              type="text" 
-              placeholder="مثال: ينال سفيان ربي عبد الله القواسمي" 
-              className="w-full p-2.5 rounded-lg border border-[#d6b877]/60 bg-[#fdfbf7] focus:outline-none focus:border-[#8a5f2e] text-sm" 
-            />
-          </div>
+        {/* حقل سنة الولادة */}
+        <input 
+          type="number" 
+          value={birthYear}
+          onChange={(e) => setBirthYear(e.target.value)}
+          placeholder="سنة الولادة" 
+          className="w-full p-2.5 border rounded-lg" 
+        />
 
-          {/* الفخذ */}
-          <div className="flex flex-col gap-1.5">
-            <label className="font-bold text-[#7c6c53] text-sm">الفخذ:</label>
-            <select className="w-full p-2.5 rounded-lg border border-[#d6b877]/60 bg-[#fdfbf7] focus:outline-none focus:border-[#8a5f2e] text-sm text-gray-600">
-              <option value="">-- اختر الفخذ --</option>
-              <option value="عبدالعفو">عبدالعفو</option>
-              <option value="عبدالرزاق">عبدالرزاق</option>
-              {/* بتقدر تضيف باقي الفخوذ هون */}
-            </select>
-          </div>
+        {/* حقل سنة الوفاة */}
+        <input 
+          type="number" 
+          value={deathYear}
+          onChange={(e) => setDeathYear(e.target.value)}
+          placeholder="سنة الوفاة" 
+          className="w-full p-2.5 border rounded-lg" 
+        />
 
-          {/* سنة الولادة */}
-          <div className="flex flex-col gap-1.5">
-            <label className="font-bold text-[#7c6c53] text-sm">سنة الولادة:</label>
-            <input 
-              type="number" 
-              placeholder="مثال: 1990" 
-              className="w-full p-2.5 rounded-lg border border-[#d6b877]/60 bg-[#fdfbf7] focus:outline-none focus:border-[#8a5f2e] text-sm" 
-            />
-          </div>
-
-          {/* سنة الوفاة */}
-          <div className="flex flex-col gap-1.5">
-            <label className="font-bold text-[#7c6c53] text-sm">سنة الوفاة (إن وجد):</label>
-            <input 
-              type="number" 
-              placeholder="مثال: 2020 (اتركها فارغة إن كان على قيد الحياة)" 
-              className="w-full p-2.5 rounded-lg border border-[#d6b877]/60 bg-[#fdfbf7] focus:outline-none focus:border-[#8a5f2e] text-sm" 
-            />
-          </div>
-
-          {/* مكان الإقامة */}
-          <div className="flex flex-col gap-1.5">
-            <label className="font-bold text-[#7c6c53] text-sm">مكان الإقامة:</label>
-            <select className="w-full p-2.5 rounded-lg border border-[#d6b877]/60 bg-[#fdfbf7] focus:outline-none focus:border-[#8a5f2e] text-sm text-gray-600">
-              <option value="">-- اختر مكان الإقامة --</option>
-              <option value="عمان">عمان</option>
-              <option value="الخليل">الخليل</option>
-              {/* بتقدر تضيف باقي المدن هون */}
-            </select>
-          </div>
-
-        </div>
-
-        {/* زر الإرسال */}
-        <div className="p-4 border-t border-[#d6b877]/50 bg-[#fdfbf7] flex justify-end">
-          <button className="bg-gradient-to-b from-[#4c7a3f] to-[#3a5c30] hover:scale-105 text-white font-bold py-2.5 px-6 rounded-xl transition-transform text-sm w-full shadow-md border border-[#2d4a25]">
-            إرسال الطلب
-          </button>
-        </div>
+        {/* ربط دالة الإرسال بالزر */}
+        <button onClick={handleSubmit} className="bg-[#4c7a3f] text-white py-2.5 px-6 rounded-xl mt-4">
+          إرسال الطلب
+        </button>
       </div>
     </div>
   );

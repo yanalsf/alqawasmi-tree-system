@@ -1,0 +1,64 @@
+/* ============================================================================
+   ألوان الأفخاذ — يُستورد في layout.tsx بعد legacy.css
+
+   الفكرة: كل ألوان "الذهبي/الأخضر" في المكونات صارت تقرأ من متغيرات --b-*.
+   - هنا القيم الافتراضية (نفس الألوان القديمة) لشاشتي البداية واختيار الفخذ.
+   - عند فتح فخذ، lib/branches.ts يكتب قيم لون الفخذ على <body> فتتغير كل الصفحة.
+   ============================================================================ */
+
+:root {
+  --b-mid-rgb: 201 151 79;
+  --b-deep-rgb: 138 95 46;
+  --b-lite-rgb: 214 184 119;
+  --b-lite-dk-rgb: 182 141 64;
+  --b-soft-rgb: 228 192 138;
+  --b-strong-rgb: 76 122 63;
+  --b-ink-rgb: 45 74 37;
+  --b-leaf-rgb: 123 168 105;
+  --b-pale-rgb: 230 242 230;
+
+  --b-mid: #c9974f;
+  --b-deep: #8a5f2e;
+  --b-strong: #4c7a3f;
+  --b-ink: #2d4a25;
+  --b-soft: #e4c08a;
+
+  --focus-1: #d3a765;
+  --focus-2: #8a5f2e;
+}
+
+/* خلفية الصفحة: لمسة خفيفة من لون الفخذ بدل الذهبي/الأخضر الثابتين */
+body[data-branch] {
+  background:
+    radial-gradient(circle at 8% 6%, rgb(var(--b-mid-rgb) / 0.12), transparent 42%),
+    radial-gradient(circle at 94% 92%, rgb(var(--b-soft-rgb) / 0.14), transparent 42%),
+    var(--paper);
+}
+body.dark-mode[data-branch] {
+  background:
+    radial-gradient(circle at 8% 6%, rgb(var(--b-mid-rgb) / 0.08), transparent 42%),
+    radial-gradient(circle at 94% 92%, rgb(var(--b-soft-rgb) / 0.06), transparent 42%),
+    var(--paper);
+}
+
+/* بطاقة الفخذ/الشخص الحالي (كانت متدرجة ذهبية ثابتة في legacy.css) */
+.focus-card {
+  background: linear-gradient(160deg, var(--focus-1), var(--focus-2));
+  box-shadow: 0 10px 26px rgb(var(--b-deep-rgb) / 0.35);
+}
+
+/* ظلال بطاقات الأبناء بلون الفخذ */
+.child-card { box-shadow: 0 4px 12px rgb(var(--b-ink-rgb) / 0.3); }
+.child-card:hover { box-shadow: 0 10px 20px rgb(var(--b-ink-rgb) / 0.4); }
+
+/* شاشة "بيانات هذا الفخذ قيد الإعداد" والزر الرئيسي */
+body[data-branch] .screen {
+  background:
+    radial-gradient(circle at 12% 15%, rgb(var(--b-mid-rgb) / 0.14), transparent 45%),
+    radial-gradient(circle at 88% 85%, rgb(var(--b-soft-rgb) / 0.14), transparent 45%),
+    var(--paper);
+}
+body[data-branch] .btn.primary {
+  background: linear-gradient(180deg, var(--b-deep), var(--b-ink));
+  border-color: var(--b-ink);
+}

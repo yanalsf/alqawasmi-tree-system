@@ -3,11 +3,13 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
+import { useT } from "../lib/i18n";
 interface AddMemberModalProps {
   onClose: () => void;
 }
 
 export default function AddMemberModal({ onClose }: AddMemberModalProps) {
+  const { t } = useT();
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const [parentName, setParentName] = useState("");
@@ -23,21 +25,21 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
   const [childrenList, setChildrenList] = useState<{ name: string; birthYear: string; deathYear: string }[]>([]);
 
   const branchList = [
-    "فخذ داوود", "فخذ ابو نواره", "فخذ الصوص", "فخذ عبدالله", 
-    "فخذ الجدع", "فخذ محمد سليمان", "فخذ يونس", "فخذ البدوي", 
-    "فخذ محمد علي", "فخذ ابو بيض", "فخذ الخضير", "فخذ عبد الحق"
+    t("فخذ داوود"), t("فخذ ابو نواره"), t("فخذ الصوص"), t("فخذ عبدالله"), 
+    t("فخذ الجدع"), t("فخذ محمد سليمان"), t("فخذ يونس"), t("فخذ البدوي"), 
+    t("فخذ محمد علي"), t("فخذ ابو بيض"), t("فخذ الخضير"), t("فخذ عبد الحق")
   ];
 
   // 🌟 إخفاء مؤقت لبعض الأفخاذ من القائمة (بدون حذفها من branchList).
   // لإعادة إظهار فخذ معيّن: ضيف اسمه بالضبط لهاي المصفوفة.
   // لإعادة إظهار الكل: خليها VISIBLE_BRANCH_NAMES = branchList
-  const VISIBLE_BRANCH_NAMES = ["فخذ داوود"];
+  const VISIBLE_BRANCH_NAMES = branchList;
   const visibleBranchList = branchList.filter((item) => VISIBLE_BRANCH_NAMES.includes(item));
 
   const handleNoEnglishInput = (value: string, setter: (val: string) => void) => {
     if (/[a-zA-Z]/.test(value)) {
       setter(value.replace(/[a-zA-Z]/g, ''));
-      setErrorMsg("عذراً، ممنوع استخدام الحروف الإنجليزية!");
+      setErrorMsg(t("عذراً، ممنوع استخدام الحروف الإنجليزية!"));
     } else {
       setErrorMsg("");
       setter(value);
@@ -45,22 +47,22 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
   };
 
   const validatePersonData = (personName: string, bYear: string, dYear: string) => {
-    if (!personName) return "الاسم مطلوب (ممنوع تركه فارغاً).";
-    if (!bYear) return "سنة الولادة مطلوبة (ممنوع تركها فارغة).";
+    if (!personName) return t("الاسم مطلوب (ممنوع تركه فارغاً).");
+    if (!bYear) return t("سنة الولادة مطلوبة (ممنوع تركها فارغة).");
     
     const arabicRegex = /^[\u0600-\u06FF\s]+$/;
     if (!arabicRegex.test(personName)) {
-      return "الاسم يجب أن يكون باللغة العربية فقط وممنوع الإنجليزي أو الرموز.";
+      return t("الاسم يجب أن يكون باللغة العربية فقط وممنوع الإنجليزي أو الرموز.");
     }
 
     const wordCount = personName.trim().split(/\s+/).length;
     if (wordCount < 5) {
-      return "يجب إدخال الاسم الخماسي (5 مقاطع على الأقل).";
+      return t("يجب إدخال الاسم الخماسي (5 مقاطع على الأقل).");
     }
 
     if (bYear && dYear) {
       if (parseInt(dYear) < parseInt(bYear)) {
-        return "منطقياً، سنة الوفاة لا يمكن أن تكون قبل سنة الولادة!";
+        return t("منطقياً، سنة الوفاة لا يمكن أن تكون قبل سنة الولادة!");
       }
     }
     return null; 
@@ -71,7 +73,7 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
     
     if (field === "name" && /[a-zA-Z]/.test(value)) {
       updated[index] = { ...updated[index], [field]: value.replace(/[a-zA-Z]/g, '') };
-      setErrorMsg("عذراً، ممنوع استخدام الحروف الإنجليزية!");
+      setErrorMsg(t("عذراً، ممنوع استخدام الحروف الإنجليزية!"));
     } else {
       setErrorMsg("");
       updated[index] = { ...updated[index], [field]: value };
@@ -83,23 +85,23 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
   const handleSubmit = async () => {
     const parentError = validatePersonData(parentName, birthYear, deathYear);
     if (parentError) {
-      setErrorMsg("خطأ في بيانات الأب: " + parentError);
+      setErrorMsg(t("خطأ في بيانات الأب: ") + parentError);
       return;
     }
     if (!phone.trim()) {
-      setErrorMsg("رقم الهاتف مطلوب للتواصل وتدقيق الطلب!");
+      setErrorMsg(t("رقم الهاتف مطلوب للتواصل وتدقيق الطلب!"));
       return;
     }
     if (!/^[0-9]{9}$/.test(phone.trim())) {
-      setErrorMsg("رقم الهاتف يجب أن يتكون من 9 أرقام بالضبط (بدون الصفر الأول أو رمز الدولة).");
+      setErrorMsg(t("رقم الهاتف يجب أن يتكون من 9 أرقام بالضبط (بدون الصفر الأول أو رمز الدولة)."));
       return;
     }
     if (!branch) {
-      setErrorMsg("يجب اختيار الفخذ!");
+      setErrorMsg(t("يجب اختيار الفخذ!"));
       return;
     }
     if (!location) {
-      setErrorMsg("يجب اختيار مكان الإقامة!");
+      setErrorMsg(t("يجب اختيار مكان الإقامة!"));
       return;
     }
 
@@ -107,7 +109,7 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
       const child = childrenList[i];
       const childError = validatePersonData(child.name, child.birthYear, child.deathYear);
       if (childError) {
-        setErrorMsg(`خطأ في بيانات الابن رقم ${i + 1}: ` + childError);
+        setErrorMsg(t("خطأ في بيانات الابن رقم {num}: ", { num: i + 1 }) + childError);
         return;
       }
     }
@@ -137,11 +139,11 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
     } catch (error) {
       console.error(error);
       setStatus("error");
-      setErrorMsg("حدث خطأ أثناء الإرسال، يرجى المحاولة لاحقاً.");
+      setErrorMsg(t("حدث خطأ أثناء الإرسال، يرجى المحاولة لاحقاً."));
     }
   };
 
-  const inputStyles = "w-full p-3 rounded-xl border border-[#d6b877]/60 bg-white focus:outline-none focus:ring-2 focus:ring-[#8a5f2e]/20 focus:border-[#8a5f2e] text-sm transition-all shadow-sm dark:bg-[#24201a] dark:border-[#d6b877]/20 dark:text-[#f3ede1]";
+  const inputStyles = "w-full p-3 rounded-xl border border-[rgb(var(--b-lite-rgb)/0.6)] bg-white focus:outline-none focus:ring-2 focus:ring-[rgb(var(--b-deep-rgb)/0.2)] focus:border-[rgb(var(--b-deep-rgb)/1)] text-sm transition-all shadow-sm dark:bg-[#24201a] dark:border-[rgb(var(--b-lite-rgb)/0.2)] dark:text-[#f3ede1]";
 
   return (
     <motion.div 
@@ -158,17 +160,17 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
         exit={{ scale: 0.9, opacity: 0, y: 20 }}
         transition={{ type: "spring", damping: 25, stiffness: 300 }}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-lg bg-[#fffdf8] rounded-2xl shadow-2xl overflow-hidden border border-[#d6b877] flex flex-col max-h-[90vh] dark:bg-[#161411] dark:border-[#d6b877]/20"
+        className="w-full max-w-lg bg-[#fffdf8] rounded-2xl shadow-2xl overflow-hidden border border-[rgb(var(--b-lite-rgb)/1)] flex flex-col max-h-[90vh] dark:bg-[#161411] dark:border-[rgb(var(--b-lite-rgb)/0.2)]"
       >
-        <div className="p-4 bg-gradient-to-b from-[#f3ede1] to-[#fffdf8] border-b border-[#d6b877]/50 flex items-center justify-between dark:from-[#1c1915] dark:to-[#161411] dark:border-[#d6b877]/20">
-           <h3 className="text-xl font-bold text-[#8a5f2e] flex items-center gap-2 dark:text-[#d6b877]">
-             <span className="text-2xl">📝</span> طلب إضافة فرد جديد
+        <div className="p-4 bg-gradient-to-b from-[#f3ede1] to-[#fffdf8] border-b border-[rgb(var(--b-lite-rgb)/0.5)] flex items-center justify-between dark:from-[#1c1915] dark:to-[#161411] dark:border-[rgb(var(--b-lite-rgb)/0.2)]">
+           <h3 className="text-xl font-bold text-[rgb(var(--b-deep-rgb)/1)] flex items-center gap-2 dark:text-[rgb(var(--b-lite-rgb)/1)]">
+             <span className="text-2xl">📝</span>  {t("طلب إضافة فرد جديد")}
            </h3>
          <motion.button 
             whileHover={{ scale: 1.1, rotate: 90 }}
             whileTap={{ scale: 0.9 }}
             onClick={onClose} 
-            className="text-gray-400 hover:text-red-600 bg-white hover:bg-red-50 p-2 rounded-xl border border-[#d6b877]/30 hover:border-red-200 transition-colors shadow-sm flex items-center justify-center dark:bg-[#24201a] dark:text-gray-500 dark:border-[#d6b877]/20 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+            className="text-gray-400 hover:text-red-600 bg-white hover:bg-red-50 p-2 rounded-xl border border-[rgb(var(--b-lite-rgb)/0.3)] hover:border-red-200 transition-colors shadow-sm flex items-center justify-center dark:bg-[#24201a] dark:text-gray-500 dark:border-[rgb(var(--b-lite-rgb)/0.2)] dark:hover:bg-red-900/20 dark:hover:text-red-400"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M18 6L6 18M6 6l12 12"/>
@@ -180,37 +182,37 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
           {status === "success" ? (
             <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center py-10">
               <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-4xl mx-auto mb-5 border border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-900/30">✓</div>
-              <h3 className="text-2xl font-bold text-[#5c4a38] mb-3 dark:text-[#f3ede1]">تم إرسال البيانات بنجاح!</h3>
-              <p className="text-gray-500 font-bold dark:text-gray-400">سيتم مراجعتها من قبل إدارة الشجرة وإضافتها قريباً.</p>
-              <button onClick={onClose} className="mt-8 bg-[#d6b877]/20 text-[#8a5f2e] font-bold py-3 px-8 rounded-xl hover:bg-[#d6b877]/40 transition-colors dark:text-[#d6b877]">إغلاق النافذة</button>
+              <h3 className="text-2xl font-bold text-[#5c4a38] mb-3 dark:text-[#f3ede1]">{t("تم إرسال البيانات بنجاح!")}</h3>
+              <p className="text-gray-500 font-bold dark:text-gray-400">{t("سيتم مراجعتها من قبل إدارة الشجرة وإضافتها قريباً.")}</p>
+              <button onClick={onClose} className="mt-8 bg-[rgb(var(--b-lite-rgb)/0.2)] text-[rgb(var(--b-deep-rgb)/1)] font-bold py-3 px-8 rounded-xl hover:bg-[rgb(var(--b-lite-rgb)/0.4)] transition-colors dark:text-[rgb(var(--b-lite-rgb)/1)]">{t("إغلاق النافذة")}</button>
             </motion.div>
           ) : (
             <>
-              <div className="bg-gradient-to-b from-[#fdfbf7] to-white border border-[#d6b877]/40 p-5 rounded-2xl shadow-sm flex flex-col gap-5 dark:from-[#1c1915] dark:to-[#171411] dark:border-[#d6b877]/20">
+              <div className="bg-gradient-to-b from-[#fdfbf7] to-white border border-[rgb(var(--b-lite-rgb)/0.4)] p-5 rounded-2xl shadow-sm flex flex-col gap-5 dark:from-[#1c1915] dark:to-[#171411] dark:border-[rgb(var(--b-lite-rgb)/0.2)]">
                 <div className="flex flex-col">
-                  <label className="font-bold text-[#7c6c53] text-xs flex items-center gap-1.5 mb-1.5 dark:text-gray-400">الاسم الخماسي: </label>
+                  <label className="font-bold text-[#7c6c53] text-xs flex items-center gap-1.5 mb-1.5 dark:text-gray-400">{t("الاسم الخماسي:")} </label>
                   <input 
                     type="text" 
                     value={parentName}
                     onChange={(e) => handleNoEnglishInput(e.target.value, setParentName)}
-                    placeholder="مثال: ينال سفيان ربحي عبدالعفو القواسمي" 
+                    placeholder={t("مثال: ينال سفيان ربحي عبدالعفو القواسمي")} 
                     className={inputStyles} 
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col relative">
-                    <label className="font-bold text-[#7c6c53] text-xs flex items-center gap-1 mb-1.5 dark:text-gray-400">الفخذ: </label>
+                    <label className="font-bold text-[#7c6c53] text-xs flex items-center gap-1 mb-1.5 dark:text-gray-400">{t("الفخذ:")} </label>
                     <div onClick={() => setIsBranchOpen(!isBranchOpen)} className={`${inputStyles} text-gray-700 text-center font-bold cursor-pointer flex justify-between items-center dark:text-gray-300`}>
-                      <span className="flex-1 truncate">{branch || "-- اختر الفخذ --"}</span>
+                      <span className="flex-1 truncate">{branch || t("-- اختر الفخذ --")}</span>
                       <motion.svg animate={{ rotate: isBranchOpen ? 180 : 0 }} className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></motion.svg>
                     </div>
                     <AnimatePresence>
                       {isBranchOpen && (
-                        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="absolute top-[100%] left-0 w-full mt-1 bg-white border border-[#d6b877] rounded-xl shadow-lg z-50 max-h-60 overflow-y-auto dark:bg-[#1c1915] dark:border-[#d6b877]/30">
-                          <div onClick={() => { setBranch(""); setIsBranchOpen(false); }} className="p-3 text-center cursor-pointer hover:bg-[#f3ede1] text-gray-500 text-sm border-b dark:hover:bg-white/5 dark:border-[#d6b877]/10">-- اختر الفخذ --</div>
+                        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="absolute top-[100%] left-0 w-full mt-1 bg-white border border-[rgb(var(--b-lite-rgb)/1)] rounded-xl shadow-lg z-50 max-h-60 overflow-y-auto dark:bg-[#1c1915] dark:border-[rgb(var(--b-lite-rgb)/0.3)]">
+                          <div onClick={() => { setBranch(""); setIsBranchOpen(false); }} className="p-3 text-center cursor-pointer hover:bg-[#f3ede1] text-gray-500 text-sm border-b dark:hover:bg-white/5 dark:border-[rgb(var(--b-lite-rgb)/0.1)]">{t("-- اختر الفخذ --")}</div>
                           {visibleBranchList.map((item) => (
-                            <div key={item} onClick={() => { setBranch(item); setIsBranchOpen(false); }} className="p-3 text-center cursor-pointer hover:bg-[#f3ede1] hover:text-[#8a5f2e] text-gray-800 font-bold text-sm border-b last:border-none dark:hover:bg-white/5 dark:hover:text-[#d6b877] dark:text-gray-200 dark:border-[#d6b877]/10">{item}</div>
+                            <div key={item} onClick={() => { setBranch(item); setIsBranchOpen(false); }} className="p-3 text-center cursor-pointer hover:bg-[#f3ede1] hover:text-[rgb(var(--b-deep-rgb)/1)] text-gray-800 font-bold text-sm border-b last:border-none dark:hover:bg-white/5 dark:hover:text-[rgb(var(--b-lite-rgb)/1)] dark:text-gray-200 dark:border-[rgb(var(--b-lite-rgb)/0.1)]">{item}</div>
                           ))}
                         </motion.div>
                       )}
@@ -218,17 +220,17 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
                   </div>
 
                   <div className="flex flex-col relative">
-                    <label className="font-bold text-[#7c6c53] text-xs flex items-center gap-1 mb-1.5 dark:text-gray-400">الإقامة: </label>
+                    <label className="font-bold text-[#7c6c53] text-xs flex items-center gap-1 mb-1.5 dark:text-gray-400">{t("الإقامة:")} </label>
                     <div onClick={() => setIsLocationOpen(!isLocationOpen)} className={`${inputStyles} text-gray-700 text-center font-bold cursor-pointer flex justify-between items-center dark:text-gray-300`}>
-                      <span className="flex-1 truncate">{location || "-- اختر الإقامة --"}</span>
+                      <span className="flex-1 truncate">{location || t("-- اختر الإقامة --")}</span>
                       <motion.svg animate={{ rotate: isLocationOpen ? 180 : 0 }} className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></motion.svg>
                     </div>
                     <AnimatePresence>
                       {isLocationOpen && (
-                        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="absolute top-[100%] left-0 w-full mt-1 bg-white border border-[#d6b877] rounded-xl shadow-lg z-50 dark:bg-[#1c1915] dark:border-[#d6b877]/30">
-                          <div onClick={() => { setLocation(""); setIsLocationOpen(false); }} className="p-3 text-center cursor-pointer hover:bg-[#f3ede1] text-gray-500 text-sm border-b dark:hover:bg-white/5 dark:border-[#d6b877]/10">-- اختر الإقامة --</div>
-                          {["الأردن", "فلسطين", "غير ذلك"].map((loc) => (
-                            <div key={loc} onClick={() => { setLocation(loc); setIsLocationOpen(false); }} className="p-3 text-center cursor-pointer hover:bg-[#f3ede1] hover:text-[#8a5f2e] text-gray-800 font-bold text-sm border-b last:border-none dark:hover:bg-white/5 dark:hover:text-[#d6b877] dark:text-gray-200 dark:border-[#d6b877]/10">{loc}</div>
+                        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="absolute top-[100%] left-0 w-full mt-1 bg-white border border-[rgb(var(--b-lite-rgb)/1)] rounded-xl shadow-lg z-50 dark:bg-[#1c1915] dark:border-[rgb(var(--b-lite-rgb)/0.3)]">
+                          <div onClick={() => { setLocation(""); setIsLocationOpen(false); }} className="p-3 text-center cursor-pointer hover:bg-[#f3ede1] text-gray-500 text-sm border-b dark:hover:bg-white/5 dark:border-[rgb(var(--b-lite-rgb)/0.1)]">{t("-- اختر الإقامة --")}</div>
+                          {[t("الأردن"), t("فلسطين"), t("غير ذلك")].map((loc) => (
+                            <div key={loc} onClick={() => { setLocation(loc); setIsLocationOpen(false); }} className="p-3 text-center cursor-pointer hover:bg-[#f3ede1] hover:text-[rgb(var(--b-deep-rgb)/1)] text-gray-800 font-bold text-sm border-b last:border-none dark:hover:bg-white/5 dark:hover:text-[rgb(var(--b-lite-rgb)/1)] dark:text-gray-200 dark:border-[rgb(var(--b-lite-rgb)/0.1)]">{loc}</div>
                           ))}
                         </motion.div>
                       )}
@@ -238,19 +240,20 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col">
-                    <label className="font-bold text-[#7c6c53] text-xs flex items-center gap-1 mb-1.5 dark:text-gray-400">سنة الولادة:</label>
-                    <input type="number" value={birthYear} onChange={(e) => setBirthYear(e.target.value)} placeholder="مثال: 1990" className={inputStyles} />
+                    <label className="font-bold text-[#7c6c53] text-xs flex items-center gap-1 mb-1.5 dark:text-gray-400">{t("سنة الولادة:")}</label>
+                    <input type="number" value={birthYear} onChange={(e) => setBirthYear(e.target.value)} placeholder={t("مثال: 1990")} className={inputStyles} />
                   </div>
                   <div className="flex flex-col">
-                    <label className="font-bold text-[#7c6c53] text-xs flex items-center gap-1 mb-1.5 dark:text-gray-400">سنة الوفاة: </label>
-                    <input type="number" value={deathYear} onChange={(e) => setDeathYear(e.target.value)} placeholder="اتركها فارغة للأحياء" className={inputStyles} />
+                    <label className="font-bold text-[#7c6c53] text-xs flex items-center gap-1 mb-1.5 dark:text-gray-400">{t("سنة الوفاة:")} </label>
+                    <input type="number" value={deathYear} onChange={(e) => setDeathYear(e.target.value)} placeholder={t("اتركها فارغة للأحياء")} className={inputStyles} />
                   </div>
                 </div>
 
                 {/* 🌟 تم تمديد خانة الهاتف للخارج لتاخذ العرض كامل */}
                 <div className="flex flex-col w-full">
                   <label className="font-bold text-[#7c6c53] text-xs flex items-center gap-1 mb-1.5 dark:text-gray-400">
-                    رقم الهاتف (للتواصل وتدقيق الطلب): <span className="text-red-500">*</span>
+                    
+                    {t("رقم الهاتف (للتواصل وتدقيق الطلب):")} <span className="text-red-500">*</span>
                   </label>
                   <div className="flex gap-3 w-full" dir="ltr">
                     
@@ -258,12 +261,12 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
                     <div className="relative w-[130px] shrink-0">
                       <div 
                         onClick={() => setIsCountryOpen(!isCountryOpen)} 
-                        className="w-full h-full p-3 rounded-xl border border-[#d6b877]/60 bg-gradient-to-b from-[#fffdf8] to-white focus:outline-none focus:ring-2 focus:ring-[#8a5f2e]/20 text-sm shadow-sm cursor-pointer flex justify-between items-center font-bold text-[#8a5f2e] transition-all hover:border-[#8a5f2e] dark:from-[#1c1915] dark:to-[#171411] dark:text-[#d6b877] dark:border-[#d6b877]/20"
+                        className="w-full h-full p-3 rounded-xl border border-[rgb(var(--b-lite-rgb)/0.6)] bg-gradient-to-b from-[#fffdf8] to-white focus:outline-none focus:ring-2 focus:ring-[rgb(var(--b-deep-rgb)/0.2)] text-sm shadow-sm cursor-pointer flex justify-between items-center font-bold text-[rgb(var(--b-deep-rgb)/1)] transition-all hover:border-[rgb(var(--b-deep-rgb)/1)] dark:from-[#1c1915] dark:to-[#171411] dark:text-[rgb(var(--b-lite-rgb)/1)] dark:border-[rgb(var(--b-lite-rgb)/0.2)]"
                       >
                         <span className="flex-1 text-center leading-none mt-1" dir="ltr">
                           {countryCode === '+962' ? '🇯🇴 +962' : '🇵🇸 +970'}
                         </span>
-                        <motion.svg animate={{ rotate: isCountryOpen ? 180 : 0 }} className="w-4 h-4 text-[#d6b877]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7"></path></motion.svg>
+                        <motion.svg animate={{ rotate: isCountryOpen ? 180 : 0 }} className="w-4 h-4 text-[rgb(var(--b-lite-rgb)/1)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7"></path></motion.svg>
                       </div>
                       
                       <AnimatePresence>
@@ -272,10 +275,10 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
                             initial={{ opacity: 0, y: -10 }} 
                             animate={{ opacity: 1, y: 0 }} 
                             exit={{ opacity: 0, y: -10 }} 
-                            className="absolute top-[100%] left-0 w-full mt-1 bg-white border border-[#d6b877]/60 rounded-xl shadow-xl z-50 overflow-hidden dark:bg-[#1c1915] dark:border-[#d6b877]/30"
+                            className="absolute top-[100%] left-0 w-full mt-1 bg-white border border-[rgb(var(--b-lite-rgb)/0.6)] rounded-xl shadow-xl z-50 overflow-hidden dark:bg-[#1c1915] dark:border-[rgb(var(--b-lite-rgb)/0.3)]"
                           >
-                            <div onClick={() => { setCountryCode("+962"); setIsCountryOpen(false); }} className="p-3 text-center cursor-pointer hover:bg-[#f3ede1] hover:text-[#8a5f2e] text-[#5c4a38] font-bold text-sm border-b border-[#d6b877]/20 transition-colors dark:hover:bg-white/5 dark:hover:text-[#d6b877] dark:text-[#f3ede1] dark:border-[#d6b877]/10">🇯🇴 +962</div>
-                            <div onClick={() => { setCountryCode("+970"); setIsCountryOpen(false); }} className="p-3 text-center cursor-pointer hover:bg-[#f3ede1] hover:text-[#8a5f2e] text-[#5c4a38] font-bold text-sm transition-colors dark:hover:bg-white/5 dark:hover:text-[#d6b877] dark:text-[#f3ede1]">🇵🇸 +970</div>
+                            <div onClick={() => { setCountryCode("+962"); setIsCountryOpen(false); }} className="p-3 text-center cursor-pointer hover:bg-[#f3ede1] hover:text-[rgb(var(--b-deep-rgb)/1)] text-[#5c4a38] font-bold text-sm border-b border-[rgb(var(--b-lite-rgb)/0.2)] transition-colors dark:hover:bg-white/5 dark:hover:text-[rgb(var(--b-lite-rgb)/1)] dark:text-[#f3ede1] dark:border-[rgb(var(--b-lite-rgb)/0.1)]">🇯🇴 +962</div>
+                            <div onClick={() => { setCountryCode("+970"); setIsCountryOpen(false); }} className="p-3 text-center cursor-pointer hover:bg-[#f3ede1] hover:text-[rgb(var(--b-deep-rgb)/1)] text-[#5c4a38] font-bold text-sm transition-colors dark:hover:bg-white/5 dark:hover:text-[rgb(var(--b-lite-rgb)/1)] dark:text-[#f3ede1]">🇵🇸 +970</div>
                           </motion.div>
                         )}
                       </AnimatePresence>
@@ -288,7 +291,7 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
   onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, "").slice(0, 9))}
   placeholder="791234567"
   maxLength={9}
-  className="w-full flex-1 p-3 rounded-xl border border-[#d6b877]/60..." /* بقية الكلاسات اللي عندك */
+  className="w-full flex-1 p-3 rounded-xl border border-[rgb(var(--b-lite-rgb)/0.6)]..." /* بقية الكلاسات اللي عندك */
   dir="ltr"
 />
                   </div>
@@ -298,35 +301,35 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
 
               <div className="pt-2">
                 <div className="flex justify-between items-center mb-4">
-                  <h4 className="font-bold text-[#8a5f2e] text-lg flex items-center gap-2 dark:text-[#d6b877]">
-                    <span className="bg-[#d6b877]/20 p-2 rounded-lg text-lg"></span> بيانات الأبناء
+                  <h4 className="font-bold text-[rgb(var(--b-deep-rgb)/1)] text-lg flex items-center gap-2 dark:text-[rgb(var(--b-lite-rgb)/1)]">
+                    <span className="bg-[rgb(var(--b-lite-rgb)/0.2)] p-2 rounded-lg text-lg"></span>  {t("بيانات الأبناء")}
                   </h4>
-                  <motion.button type="button" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setChildrenList([...childrenList, { name: "", birthYear: "", deathYear: "" }])} className="flex items-center gap-1 text-sm bg-gradient-to-r from-[#fffdf8] to-[#f3ede1] border border-[#d6b877] text-[#8a5f2e] px-4 py-2 rounded-xl shadow-sm font-bold">
-                    <span>+</span> إضافة ابن
+                  <motion.button type="button" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setChildrenList([...childrenList, { name: "", birthYear: "", deathYear: "" }])} className="flex items-center gap-1 text-sm bg-gradient-to-r from-[#fffdf8] to-[#f3ede1] border border-[rgb(var(--b-lite-rgb)/1)] text-[rgb(var(--b-deep-rgb)/1)] px-4 py-2 rounded-xl shadow-sm font-bold">
+                    <span>+</span>  {t("إضافة ابن")}
                   </motion.button>
                 </div>
 
                 <div className="flex flex-col gap-4">
                   <AnimatePresence>
                     {childrenList.map((child, index) => (
-                      <motion.div key={index} initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, x: -50, scale: 0.9 }} transition={{ duration: 0.2 }} className="relative bg-gradient-to-b from-[#fdfbf7] to-white border border-[#d6b877]/50 p-5 rounded-2xl shadow-sm dark:from-[#1c1915] dark:to-[#171411] dark:border-[#d6b877]/20">
-                        <div className="flex justify-between items-center mb-4 border-b border-[#d6b877]/20 pb-3 dark:border-[#d6b877]/10">
-                          <span className="font-bold text-[#7c6c53] text-sm bg-[#f3ede1] px-3 py-1 rounded-md dark:bg-[#d6b877]/10">الابن رقم {index + 1}</span>
-                          <button type="button" onClick={() => setChildrenList(childrenList.filter((_, i) => i !== index))} className="text-red-500 hover:text-white hover:bg-red-500 text-xs font-bold px-3 py-1.5 rounded-lg border border-red-200 transition-colors dark:border-red-900/30 dark:hover:bg-red-600">حذف</button>
+                      <motion.div key={index} initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, x: -50, scale: 0.9 }} transition={{ duration: 0.2 }} className="relative bg-gradient-to-b from-[#fdfbf7] to-white border border-[rgb(var(--b-lite-rgb)/0.5)] p-5 rounded-2xl shadow-sm dark:from-[#1c1915] dark:to-[#171411] dark:border-[rgb(var(--b-lite-rgb)/0.2)]">
+                        <div className="flex justify-between items-center mb-4 border-b border-[rgb(var(--b-lite-rgb)/0.2)] pb-3 dark:border-[rgb(var(--b-lite-rgb)/0.1)]">
+                          <span className="font-bold text-[#7c6c53] text-sm bg-[#f3ede1] px-3 py-1 rounded-md dark:bg-[rgb(var(--b-lite-rgb)/0.1)]">{t("الابن رقم")} {index + 1}</span>
+                          <button type="button" onClick={() => setChildrenList(childrenList.filter((_, i) => i !== index))} className="text-red-500 hover:text-white hover:bg-red-500 text-xs font-bold px-3 py-1.5 rounded-lg border border-red-200 transition-colors dark:border-red-900/30 dark:hover:bg-red-600">{t("حذف")}</button>
                         </div>
                         <div className="flex flex-col gap-4">
                           <div className="flex flex-col">
-                            <label className="font-bold text-[#7c6c53] text-xs mb-1.5 dark:text-gray-400">الاسم الخماسي للابن:</label>
-                            <input type="text" value={child.name} onChange={(e) => updateChild(index, "name", e.target.value)} placeholder="مثال: ينال سفيان ربحي عبدالعفو القواسمي" className={inputStyles} />
+                            <label className="font-bold text-[#7c6c53] text-xs mb-1.5 dark:text-gray-400">{t("الاسم الخماسي للابن:")}</label>
+                            <input type="text" value={child.name} onChange={(e) => updateChild(index, "name", e.target.value)} placeholder={t("مثال: ينال سفيان ربحي عبدالعفو القواسمي")} className={inputStyles} />
                           </div>
                           <div className="grid grid-cols-2 gap-4">
                             <div className="flex flex-col">
-                              <label className="font-bold text-[#7c6c53] text-xs mb-1.5 dark:text-gray-400">سنة الولادة:</label>
+                              <label className="font-bold text-[#7c6c53] text-xs mb-1.5 dark:text-gray-400">{t("سنة الولادة:")}</label>
                               <input type="number" value={child.birthYear} onChange={(e) => updateChild(index, "birthYear", e.target.value)} placeholder="2010" className={inputStyles} />
                             </div>
                             <div className="flex flex-col">
-                              <label className="font-bold text-[#7c6c53] text-xs mb-1.5 dark:text-gray-400">سنة الوفاة:</label>
-                              <input type="number" value={child.deathYear} onChange={(e) => updateChild(index, "deathYear", e.target.value)} placeholder="اختياري" className={inputStyles} />
+                              <label className="font-bold text-[#7c6c53] text-xs mb-1.5 dark:text-gray-400">{t("سنة الوفاة:")}</label>
+                              <input type="number" value={child.deathYear} onChange={(e) => updateChild(index, "deathYear", e.target.value)} placeholder={t("اختياري")} className={inputStyles} />
                             </div>
                           </div>
                         </div>
@@ -340,7 +343,7 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
         </div>
 
         {status !== "success" && (
-          <div className="p-4 border-t border-[#d6b877]/50 bg-[#fdfbf7] flex flex-col gap-3 dark:bg-[#1c1915] dark:border-[#d6b877]/20">
+          <div className="p-4 border-t border-[rgb(var(--b-lite-rgb)/0.5)] bg-[#fdfbf7] flex flex-col gap-3 dark:bg-[#1c1915] dark:border-[rgb(var(--b-lite-rgb)/0.2)]">
             {errorMsg && (
               <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-center dark:bg-red-900/10 dark:border-red-900/30">
                 <p className="text-red-600 text-[13px] font-bold dark:text-red-400">{errorMsg}</p>
@@ -349,9 +352,9 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
             <motion.button 
               whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
               onClick={handleSubmit} disabled={status === "submitting"}
-              className="bg-gradient-to-r from-[#4c7a3f] to-[#3a5c30] text-white font-bold py-3 px-8 rounded-xl text-sm w-full shadow-lg border border-[#2d4a25] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-gradient-to-r from-[rgb(var(--b-strong-rgb)/1)] to-[rgb(var(--b-ink-rgb)/1)] text-white font-bold py-3 px-8 rounded-xl text-sm w-full shadow-lg border border-[rgb(var(--b-ink-rgb)/1)] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {status === "submitting" ? "جاري الإرسال..." : "إرسال البيانات للتدقيق"}
+              {status === "submitting" ? t("جاري الإرسال...") : t("إرسال البيانات للتدقيق")}
             </motion.button>
           </div>
         )}
