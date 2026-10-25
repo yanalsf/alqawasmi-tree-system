@@ -15,6 +15,7 @@ interface FeaturesMenuModalProps {
   onOpenAbout?: () => void;
   onOpenComplaints?: () => void;
   onOpenPoster?: () => void;
+  onOpenSupervisors?: () => void;
 }
 
 const containerVariants: Variants = {
@@ -48,6 +49,7 @@ export default function FeaturesMenuModal({
   onOpenAbout,
   onOpenComplaints,
   onOpenPoster,
+  onOpenSupervisors,
 }: FeaturesMenuModalProps) {
   const { t } = useT();
   useEffect(() => {
@@ -203,6 +205,27 @@ export default function FeaturesMenuModal({
                 </motion.button>
               ))}
 
+              {/* بطاقة مشرفي الموقع */}
+              <motion.div variants={itemVariants} className="col-span-2">
+                <motion.button
+                  type="button"
+                  onClick={onOpenSupervisors}
+                  whileHover={{ y: -3, scale: 1.01 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="cursor-pointer group relative flex w-full items-center justify-between overflow-hidden rounded-2xl border border-[rgb(var(--b-mid-rgb)/0.3)] bg-white p-3.5 text-start shadow-[0_4px_14px_rgba(138,95,46,0.05)] transition-all duration-300 hover:border-[rgb(var(--b-mid-rgb)/0.7)] dark:border-[rgb(var(--b-lite-rgb)/0.2)] dark:bg-[#24201a]"
+                >
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-emerald-500/15 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                  <div className="relative z-10 flex items-center gap-3">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[rgb(var(--b-mid-rgb)/0.2)] bg-[#fdf8ef] text-xl shadow-inner dark:bg-[#1c1915]">🛡️</span>
+                    <div>
+                      <div className="text-[13.5px] font-extrabold text-[#5c4a38] transition-colors group-hover:text-[rgb(var(--b-deep-rgb)/1)] dark:text-[#f3ede1]">{t("مشرفو الموقع")}</div>
+                      <div className="mt-0.5 text-[10.5px] font-semibold text-gray-400 dark:text-[#9a8c78]">{t("فريق تدقيق البيانات وأرقام التواصل")}</div>
+                    </div>
+                  </div>
+                  <span className="relative z-10 text-xs font-bold text-[rgb(var(--b-mid-rgb)/1)] dark:text-[rgb(var(--b-lite-rgb)/1)]">⟵</span>
+                </motion.button>
+              </motion.div>
+
               {/* زر طباعة بوستر الفخذ المميز */}
               <motion.div variants={itemVariants} className="col-span-2 mt-1">
                 <motion.button
@@ -219,11 +242,11 @@ export default function FeaturesMenuModal({
                     <div className="flex flex-col">
                       <span className="text-[14.5px] font-extrabold text-white dark:text-[#f3ede1]">
                         
-                        {t("طباعة بوستر الفخذ (SVG)")}
+                        {t("طباعة بوستر الفخذ")}
                       </span>
                       <span className="text-[11px] font-semibold text-white/85 dark:text-[rgb(var(--b-lite-rgb)/0.9)]">
                         
-                        {t("تصميم جداري عالي الدقة قابل للطباعة والتحميل")}
+                        {t("تصميم جداري قابل للطباعة والتحميل (PDF / PNG / SVG)")}
                       </span>
                     </div>
                   </div>

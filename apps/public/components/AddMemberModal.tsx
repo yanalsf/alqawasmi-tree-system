@@ -1,13 +1,13 @@
 "use client";
-
-import React, { useState } from "react";
+ 
+import React, { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-
+ 
 import { useT } from "../lib/i18n";
 interface AddMemberModalProps {
   onClose: () => void;
 }
-
+ 
 export default function AddMemberModal({ onClose }: AddMemberModalProps) {
   const { t } = useT();
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
@@ -22,20 +22,28 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
   const [location, setLocation] = useState("");
   const [isBranchOpen, setIsBranchOpen] = useState(false);
   const [isLocationOpen, setIsLocationOpen] = useState(false);
-  const [childrenList, setChildrenList] = useState<{ name: string; birthYear: string; deathYear: string }[]>([]);
-
+  const [childrenList, setChildrenList] = useState<{ id: number; name: string; birthYear: string; deathYear: string }[]>([]);
+  // رقم ثابت لكل ابن حتى تشتغل حركة الحذف على البطاقة الصحيحة (مو على آخر بطاقة)
+  const childIdRef = useRef(0);
+  const addChild = () => {
+    const id = ++childIdRef.current;
+    setChildrenList((prev) => [...prev, { id, name: "", birthYear: "", deathYear: "" }]);
+  };
+  const removeChild = (id: number) => setChildrenList((prev) => prev.filter((c) => c.id !== id));
+ 
+  // قيم ثابتة بالعربي (هي اللي تُرسل لـ Netlify)؛ الترجمة للعرض فقط حتى يضل التقسيم حسب الفخذ سليم
   const branchList = [
-    t("فخذ داوود"), t("فخذ ابو نواره"), t("فخذ الصوص"), t("فخذ عبدالله"), 
-    t("فخذ الجدع"), t("فخذ محمد سليمان"), t("فخذ يونس"), t("فخذ البدوي"), 
-    t("فخذ محمد علي"), t("فخذ ابو بيض"), t("فخذ الخضير"), t("فخذ عبد الحق")
+    "فخذ داوود", "فخذ ابو نواره", "فخذ الصوص", "فخذ عبدالله",
+    "فخذ الجدع", "فخذ محمد سليمان", "فخذ يونس", "فخذ بدوي",
+    "فخذ محمد علي", "فخذ ابو بيض", "فخذ خضير", "فخذ عبد الحق"
   ];
-
+ 
   // 🌟 إخفاء مؤقت لبعض الأفخاذ من القائمة (بدون حذفها من branchList).
   // لإعادة إظهار فخذ معيّن: ضيف اسمه بالضبط لهاي المصفوفة.
   // لإعادة إظهار الكل: خليها VISIBLE_BRANCH_NAMES = branchList
   const VISIBLE_BRANCH_NAMES = branchList;
   const visibleBranchList = branchList.filter((item) => VISIBLE_BRANCH_NAMES.includes(item));
-
+ 
   const handleNoEnglishInput = (value: string, setter: (val: string) => void) => {
     if (/[a-zA-Z]/.test(value)) {
       setter(value.replace(/[a-zA-Z]/g, ''));
@@ -45,7 +53,7 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
       setter(value);
     }
   };
-
+ 
   const validatePersonData = (personName: string, bYear: string, dYear: string) => {
     if (!personName) return t("الاسم مطلوب (ممنوع تركه فارغاً).");
     if (!bYear) return t("سنة الولادة مطلوبة (ممنوع تركها فارغة).");
@@ -54,12 +62,12 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
     if (!arabicRegex.test(personName)) {
       return t("الاسم يجب أن يكون باللغة العربية فقط وممنوع الإنجليزي أو الرموز.");
     }
-
+ 
     const wordCount = personName.trim().split(/\s+/).length;
     if (wordCount < 5) {
       return t("يجب إدخال الاسم الخماسي (5 مقاطع على الأقل).");
     }
-
+ 
     if (bYear && dYear) {
       if (parseInt(dYear) < parseInt(bYear)) {
         return t("منطقياً، سنة الوفاة لا يمكن أن تكون قبل سنة الولادة!");
@@ -67,7 +75,7 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
     }
     return null; 
   };
-
+ 
   const updateChild = (index: number, field: string, value: string) => {
     const updated = [...childrenList];
     
@@ -81,7 +89,7 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
     
     setChildrenList(updated);
   };
-
+ 
   const handleSubmit = async () => {
     const parentError = validatePersonData(parentName, birthYear, deathYear);
     if (parentError) {
@@ -104,7 +112,7 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
       setErrorMsg(t("يجب اختيار مكان الإقامة!"));
       return;
     }
-
+ 
     for (let i = 0; i < childrenList.length; i++) {
       const child = childrenList[i];
       const childError = validatePersonData(child.name, child.birthYear, child.deathYear);
@@ -113,10 +121,10 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
         return;
       }
     }
-
+ 
     setStatus("submitting");
     setErrorMsg("");
-
+ 
     const payload = new URLSearchParams({
       "form-name": "add-member-form",
       name: `🆕 إضافة فرد | ${parentName}`,
@@ -126,9 +134,14 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
       location,
       birth_year: birthYear,
       death_year: deathYear,
-      children_data: JSON.stringify(childrenList),
+      // نص مقروء بدل JSON حتى يظهر بشكل مفهوم في Netlify وفي ملف CSV
+      children_data: childrenList.length
+        ? childrenList
+            .map((c, i) => `${i + 1}) ${c.name.trim()} (ولادة ${c.birthYear}${c.deathYear ? ` - وفاة ${c.deathYear}` : ""})`)
+            .join(" | ")
+        : "لا يوجد أبناء",
     }).toString();
-
+ 
     try {
       await fetch("/", {
         method: "POST",
@@ -142,9 +155,9 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
       setErrorMsg(t("حدث خطأ أثناء الإرسال، يرجى المحاولة لاحقاً."));
     }
   };
-
+ 
   const inputStyles = "w-full p-3 rounded-xl border border-[rgb(var(--b-lite-rgb)/0.6)] bg-white focus:outline-none focus:ring-2 focus:ring-[rgb(var(--b-deep-rgb)/0.2)] focus:border-[rgb(var(--b-deep-rgb)/1)] text-sm transition-all shadow-sm dark:bg-[#24201a] dark:border-[rgb(var(--b-lite-rgb)/0.2)] dark:text-[#f3ede1]";
-
+ 
   return (
     <motion.div 
       initial={{ opacity: 0 }}
@@ -177,7 +190,7 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
             </svg>
           </motion.button>
         </div>
-
+ 
         <div className="p-6 overflow-y-auto flex flex-col gap-6">
           {status === "success" ? (
             <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center py-10">
@@ -199,12 +212,12 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
                     className={inputStyles} 
                   />
                 </div>
-
+ 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col relative">
                     <label className="font-bold text-[#7c6c53] text-xs flex items-center gap-1 mb-1.5 dark:text-gray-400">{t("الفخذ:")} </label>
                     <div onClick={() => setIsBranchOpen(!isBranchOpen)} className={`${inputStyles} text-gray-700 text-center font-bold cursor-pointer flex justify-between items-center dark:text-gray-300`}>
-                      <span className="flex-1 truncate">{branch || t("-- اختر الفخذ --")}</span>
+                      <span className="flex-1 truncate">{branch ? t(branch) : t("-- اختر الفخذ --")}</span>
                       <motion.svg animate={{ rotate: isBranchOpen ? 180 : 0 }} className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></motion.svg>
                     </div>
                     <AnimatePresence>
@@ -212,32 +225,32 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
                         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="absolute top-[100%] left-0 w-full mt-1 bg-white border border-[rgb(var(--b-lite-rgb)/1)] rounded-xl shadow-lg z-50 max-h-60 overflow-y-auto dark:bg-[#1c1915] dark:border-[rgb(var(--b-lite-rgb)/0.3)]">
                           <div onClick={() => { setBranch(""); setIsBranchOpen(false); }} className="p-3 text-center cursor-pointer hover:bg-[#f3ede1] text-gray-500 text-sm border-b dark:hover:bg-white/5 dark:border-[rgb(var(--b-lite-rgb)/0.1)]">{t("-- اختر الفخذ --")}</div>
                           {visibleBranchList.map((item) => (
-                            <div key={item} onClick={() => { setBranch(item); setIsBranchOpen(false); }} className="p-3 text-center cursor-pointer hover:bg-[#f3ede1] hover:text-[rgb(var(--b-deep-rgb)/1)] text-gray-800 font-bold text-sm border-b last:border-none dark:hover:bg-white/5 dark:hover:text-[rgb(var(--b-lite-rgb)/1)] dark:text-gray-200 dark:border-[rgb(var(--b-lite-rgb)/0.1)]">{item}</div>
+                            <div key={item} onClick={() => { setBranch(item); setIsBranchOpen(false); }} className="p-3 text-center cursor-pointer hover:bg-[#f3ede1] hover:text-[rgb(var(--b-deep-rgb)/1)] text-gray-800 font-bold text-sm border-b last:border-none dark:hover:bg-white/5 dark:hover:text-[rgb(var(--b-lite-rgb)/1)] dark:text-gray-200 dark:border-[rgb(var(--b-lite-rgb)/0.1)]">{t(item)}</div>
                           ))}
                         </motion.div>
                       )}
                     </AnimatePresence>
                   </div>
-
+ 
                   <div className="flex flex-col relative">
                     <label className="font-bold text-[#7c6c53] text-xs flex items-center gap-1 mb-1.5 dark:text-gray-400">{t("الإقامة:")} </label>
                     <div onClick={() => setIsLocationOpen(!isLocationOpen)} className={`${inputStyles} text-gray-700 text-center font-bold cursor-pointer flex justify-between items-center dark:text-gray-300`}>
-                      <span className="flex-1 truncate">{location || t("-- اختر الإقامة --")}</span>
+                      <span className="flex-1 truncate">{location ? t(location) : t("-- اختر الإقامة --")}</span>
                       <motion.svg animate={{ rotate: isLocationOpen ? 180 : 0 }} className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></motion.svg>
                     </div>
                     <AnimatePresence>
                       {isLocationOpen && (
                         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="absolute top-[100%] left-0 w-full mt-1 bg-white border border-[rgb(var(--b-lite-rgb)/1)] rounded-xl shadow-lg z-50 dark:bg-[#1c1915] dark:border-[rgb(var(--b-lite-rgb)/0.3)]">
                           <div onClick={() => { setLocation(""); setIsLocationOpen(false); }} className="p-3 text-center cursor-pointer hover:bg-[#f3ede1] text-gray-500 text-sm border-b dark:hover:bg-white/5 dark:border-[rgb(var(--b-lite-rgb)/0.1)]">{t("-- اختر الإقامة --")}</div>
-                          {[t("الأردن"), t("فلسطين"), t("غير ذلك")].map((loc) => (
-                            <div key={loc} onClick={() => { setLocation(loc); setIsLocationOpen(false); }} className="p-3 text-center cursor-pointer hover:bg-[#f3ede1] hover:text-[rgb(var(--b-deep-rgb)/1)] text-gray-800 font-bold text-sm border-b last:border-none dark:hover:bg-white/5 dark:hover:text-[rgb(var(--b-lite-rgb)/1)] dark:text-gray-200 dark:border-[rgb(var(--b-lite-rgb)/0.1)]">{loc}</div>
+                          {["الأردن", "فلسطين", "غير ذلك"].map((loc) => (
+                            <div key={loc} onClick={() => { setLocation(loc); setIsLocationOpen(false); }} className="p-3 text-center cursor-pointer hover:bg-[#f3ede1] hover:text-[rgb(var(--b-deep-rgb)/1)] text-gray-800 font-bold text-sm border-b last:border-none dark:hover:bg-white/5 dark:hover:text-[rgb(var(--b-lite-rgb)/1)] dark:text-gray-200 dark:border-[rgb(var(--b-lite-rgb)/0.1)]">{t(loc)}</div>
                           ))}
                         </motion.div>
                       )}
                     </AnimatePresence>
                   </div>
                 </div>
-
+ 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col">
                     <label className="font-bold text-[#7c6c53] text-xs flex items-center gap-1 mb-1.5 dark:text-gray-400">{t("سنة الولادة:")}</label>
@@ -248,7 +261,7 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
                     <input type="number" value={deathYear} onChange={(e) => setDeathYear(e.target.value)} placeholder={t("اتركها فارغة للأحياء")} className={inputStyles} />
                   </div>
                 </div>
-
+ 
                 {/* 🌟 تم تمديد خانة الهاتف للخارج لتاخذ العرض كامل */}
                 <div className="flex flex-col w-full">
                   <label className="font-bold text-[#7c6c53] text-xs flex items-center gap-1 mb-1.5 dark:text-gray-400">
@@ -283,7 +296,7 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
                         )}
                       </AnimatePresence>
                     </div>
-
+ 
                     {/* خانة إدخال الرقم */}
 <input
   type="tel"
@@ -291,45 +304,73 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
   onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, "").slice(0, 9))}
   placeholder="791234567"
   maxLength={9}
-  className="w-full flex-1 p-3 rounded-xl border border-[rgb(var(--b-lite-rgb)/0.6)]..." /* بقية الكلاسات اللي عندك */
+  className={`${inputStyles} flex-1`}
   dir="ltr"
 />
                   </div>
                 </div>
-
+ 
               </div>
-
+ 
               <div className="pt-2">
                 <div className="flex justify-between items-center mb-4">
                   <h4 className="font-bold text-[rgb(var(--b-deep-rgb)/1)] text-lg flex items-center gap-2 dark:text-[rgb(var(--b-lite-rgb)/1)]">
                     <span className="bg-[rgb(var(--b-lite-rgb)/0.2)] p-2 rounded-lg text-lg"></span>  {t("بيانات الأبناء")}
                   </h4>
-                  <motion.button type="button" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setChildrenList([...childrenList, { name: "", birthYear: "", deathYear: "" }])} className="flex items-center gap-1 text-sm bg-gradient-to-r from-[#fffdf8] to-[#f3ede1] border border-[rgb(var(--b-lite-rgb)/1)] text-[rgb(var(--b-deep-rgb)/1)] px-4 py-2 rounded-xl shadow-sm font-bold">
-                    <span>+</span>  {t("إضافة ابن")}
+                  <motion.button
+                    type="button"
+                    whileHover={{ scale: 1.04, y: -1 }}
+                    whileTap={{ scale: 0.94 }}
+                    onClick={addChild}
+                    className="group flex items-center gap-2 rounded-xl border border-[rgb(var(--b-deep-rgb)/0.35)] bg-gradient-to-b from-[#fffdf8] to-[#f3ede1] px-4 py-2 text-sm font-bold text-[rgb(var(--b-deep-rgb)/1)] shadow-sm transition-all hover:border-[rgb(var(--b-deep-rgb)/0.8)] hover:shadow-md dark:from-[#24201a] dark:to-[#1c1915] dark:border-[rgb(var(--b-lite-rgb)/0.3)] dark:text-[rgb(var(--b-lite-rgb)/1)]"
+                  >
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[rgb(var(--b-deep-rgb)/1)] text-[15px] leading-none text-white transition-transform duration-300 group-hover:rotate-90 dark:bg-[rgb(var(--b-lite-rgb)/1)] dark:text-[#1c1915]">+</span>
+                    {t("إضافة ابن")}
                   </motion.button>
                 </div>
-
-                <div className="flex flex-col gap-4">
-                  <AnimatePresence>
+ 
+                <div className="flex flex-col">
+                  <AnimatePresence initial={false}>
                     {childrenList.map((child, index) => (
-                      <motion.div key={index} initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, x: -50, scale: 0.9 }} transition={{ duration: 0.2 }} className="relative bg-gradient-to-b from-[#fdfbf7] to-white border border-[rgb(var(--b-lite-rgb)/0.5)] p-5 rounded-2xl shadow-sm dark:from-[#1c1915] dark:to-[#171411] dark:border-[rgb(var(--b-lite-rgb)/0.2)]">
-                        <div className="flex justify-between items-center mb-4 border-b border-[rgb(var(--b-lite-rgb)/0.2)] pb-3 dark:border-[rgb(var(--b-lite-rgb)/0.1)]">
-                          <span className="font-bold text-[#7c6c53] text-sm bg-[#f3ede1] px-3 py-1 rounded-md dark:bg-[rgb(var(--b-lite-rgb)/0.1)]">{t("الابن رقم")} {index + 1}</span>
-                          <button type="button" onClick={() => setChildrenList(childrenList.filter((_, i) => i !== index))} className="text-red-500 hover:text-white hover:bg-red-500 text-xs font-bold px-3 py-1.5 rounded-lg border border-red-200 transition-colors dark:border-red-900/30 dark:hover:bg-red-600">{t("حذف")}</button>
-                        </div>
-                        <div className="flex flex-col gap-4">
-                          <div className="flex flex-col">
-                            <label className="font-bold text-[#7c6c53] text-xs mb-1.5 dark:text-gray-400">{t("الاسم الخماسي للابن:")}</label>
-                            <input type="text" value={child.name} onChange={(e) => updateChild(index, "name", e.target.value)} placeholder={t("مثال: ينال سفيان ربحي عبدالعفو القواسمي")} className={inputStyles} />
-                          </div>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="flex flex-col">
-                              <label className="font-bold text-[#7c6c53] text-xs mb-1.5 dark:text-gray-400">{t("سنة الولادة:")}</label>
-                              <input type="number" value={child.birthYear} onChange={(e) => updateChild(index, "birthYear", e.target.value)} placeholder="2010" className={inputStyles} />
+                      <motion.div
+                        key={child.id}
+                        layout
+                        initial={{ opacity: 0, height: 0, y: -12 }}
+                        animate={{ opacity: 1, height: "auto", y: 0 }}
+                        exit={{ opacity: 0, height: 0, x: -60 }}
+                        transition={{ duration: 0.3, ease: [0.25, 1, 0.5, 1] }}
+                        style={{ overflow: "hidden" }}
+                      >
+                        <div className="pb-4">
+                          <div className="relative bg-gradient-to-b from-[#fdfbf7] to-white border border-[rgb(var(--b-lite-rgb)/0.5)] p-5 rounded-2xl shadow-sm dark:from-[#1c1915] dark:to-[#171411] dark:border-[rgb(var(--b-lite-rgb)/0.2)]">
+                            <div className="flex justify-between items-center mb-4 border-b border-[rgb(var(--b-lite-rgb)/0.2)] pb-3 dark:border-[rgb(var(--b-lite-rgb)/0.1)]">
+                              <span className="font-bold text-[#7c6c53] text-sm bg-[#f3ede1] px-3 py-1 rounded-md dark:bg-[rgb(var(--b-lite-rgb)/0.1)]">{t("الابن رقم")} {index + 1}</span>
+                              <motion.button
+                                type="button"
+                                whileHover={{ scale: 1.06 }}
+                                whileTap={{ scale: 0.92 }}
+                                onClick={() => removeChild(child.id)}
+                                className="flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50/60 px-3 py-1.5 text-xs font-bold text-red-500 transition-colors hover:border-red-500 hover:bg-red-500 hover:text-white dark:border-red-900/30 dark:bg-red-900/10 dark:text-red-400 dark:hover:bg-red-600 dark:hover:text-white"
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m5 5v6m4-6v6" /></svg>
+                                {t("حذف")}
+                              </motion.button>
                             </div>
-                            <div className="flex flex-col">
-                              <label className="font-bold text-[#7c6c53] text-xs mb-1.5 dark:text-gray-400">{t("سنة الوفاة:")}</label>
-                              <input type="number" value={child.deathYear} onChange={(e) => updateChild(index, "deathYear", e.target.value)} placeholder={t("اختياري")} className={inputStyles} />
+                            <div className="flex flex-col gap-4">
+                              <div className="flex flex-col">
+                                <label className="font-bold text-[#7c6c53] text-xs mb-1.5 dark:text-gray-400">{t("الاسم الخماسي للابن:")}</label>
+                                <input type="text" autoFocus value={child.name} onChange={(e) => updateChild(index, "name", e.target.value)} placeholder={t("مثال: ينال سفيان ربحي عبدالعفو القواسمي")} className={inputStyles} />
+                              </div>
+                              <div className="grid grid-cols-2 gap-4">
+                                <div className="flex flex-col">
+                                  <label className="font-bold text-[#7c6c53] text-xs mb-1.5 dark:text-gray-400">{t("سنة الولادة:")}</label>
+                                  <input type="number" value={child.birthYear} onChange={(e) => updateChild(index, "birthYear", e.target.value)} placeholder="2010" className={inputStyles} />
+                                </div>
+                                <div className="flex flex-col">
+                                  <label className="font-bold text-[#7c6c53] text-xs mb-1.5 dark:text-gray-400">{t("سنة الوفاة:")}</label>
+                                  <input type="number" value={child.deathYear} onChange={(e) => updateChild(index, "deathYear", e.target.value)} placeholder={t("اختياري")} className={inputStyles} />
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -337,11 +378,25 @@ export default function AddMemberModal({ onClose }: AddMemberModalProps) {
                     ))}
                   </AnimatePresence>
                 </div>
+ 
+                {childrenList.length > 0 && (
+                  <motion.button
+                    type="button"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={addChild}
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[rgb(var(--b-deep-rgb)/0.35)] py-3 text-sm font-bold text-[rgb(var(--b-deep-rgb)/1)] transition-colors hover:border-[rgb(var(--b-deep-rgb)/0.8)] hover:bg-[rgb(var(--b-deep-rgb)/0.05)] dark:border-[rgb(var(--b-lite-rgb)/0.3)] dark:text-[rgb(var(--b-lite-rgb)/1)] dark:hover:bg-[rgb(var(--b-lite-rgb)/0.06)]"
+                  >
+                    <span className="text-base leading-none">+</span> {t("إضافة ابن آخر")}
+                  </motion.button>
+                )}
               </div>
             </>
           )}
         </div>
-
+ 
         {status !== "success" && (
           <div className="p-4 border-t border-[rgb(var(--b-lite-rgb)/0.5)] bg-[#fdfbf7] flex flex-col gap-3 dark:bg-[#1c1915] dark:border-[rgb(var(--b-lite-rgb)/0.2)]">
             {errorMsg && (

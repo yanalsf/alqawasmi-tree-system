@@ -5,6 +5,10 @@
 //   id      : مفتاح إنجليزي (يظهر في الرابط:  ?branch=dawoud)
 //   label   : الاسم الظاهر في القوائم
 //   rootId  : person_id للجد الأعلى للفخذ في قاعدة البيانات (الابن المباشر للجذر 941)
+//   founder : (اختياري) اسم الجد المؤسس الحقيقي إذا كان اسم الفخذ مختلفاً عن اسم جدّه
+//             (مثلاً فخذ بدوي جدّه "مصطفى (بدوي)" بنفس صيغة باقي الأفخاذ مثل "مصطفى (الجدع)").
+//             يظهر في كل الموقع بدل اسم الفخذ، ويُستعمل فقط إذا كان الاسم في قاعدة البيانات
+//             ما زال اسم الفخذ نفسه؛ فإذا صحّحت الاسم في قاعدة البيانات يُهمل هذا الإعداد تلقائياً.
 //   color   : اللون الأساسي للفخذ. باقي الدرجات (الداكن/الفاتح/الخلفية/الوضع الليلي)
 //             تُحسب منه تلقائياً.
 //
@@ -15,6 +19,7 @@ export interface BranchDef {
   label: string;
   rootId: number;
   color: string;
+  founder?: string;
 }
 
 export const BRANCHES: BranchDef[] = [
@@ -25,12 +30,31 @@ export const BRANCHES: BranchDef[] = [
   { id: "al_jadaa",          label: "فخذ الجدع",       rootId: 945, color: "#3187dd" }, // أزرق سماوي
   { id: "mohammed_sulaiman", label: "فخذ محمد سليمان", rootId: 946, color: "#4d6fcb" }, // أزرق
   { id: "younes",            label: "فخذ يونس",        rootId: 947, color: "#aa7f09" }, // عنبري
-  { id: "al_badawi",         label: "فخذ البدوي",      rootId: 948, color: "#269768" }, // زمردي
+  { id: "al_badawi",         label: "فخذ بدوي",        rootId: 948, color: "#269768", founder: "مصطفى (بدوي)" }, // زمردي
   { id: "mohammed_ali",      label: "فخذ محمد علي",    rootId: 949, color: "#2f4fa8" }, // كحلي
   { id: "abu_baid",          label: "فخذ ابو بيض",     rootId: 950, color: "#d6643d" }, // قرميدي
-  { id: "al_khudair",        label: "فخذ الخضير",      rootId: 951, color: "#6f8f24" }, // أخضر زيتي
+  { id: "al_khudair",        label: "فخذ خضير",        rootId: 951, color: "#6f8f24" , founder: "مصطفى (بدوي)" }, // أخضر زيتي
   { id: "abdulhaq",          label: "فخذ عبد الحق",    rootId: 952, color: "#188fbf" }, // سيان
 ];
+
+/**
+ * يبدّل اسم رأس كل فخذ له `founder` باسم الجد الحقيقي (يُطبَّق على نسخة الشجرة، لا يغيّر tree.json).
+ * الجذر الوهمي (941) أبناؤه هم رؤوس الأفخاذ.
+ */
+export function withFounderNames<T extends { id: number; name: string; children?: T[] }>(root: T): T {
+  if (!root.children) return root;
+  const norm = (x: string) => x.replace(/^فخذ\s+/, "").replace(/^ال/, "").trim();
+  const byRoot = new Map(BRANCHES.filter((b) => b.founder).map((b) => [b.rootId, b]));
+  if (byRoot.size === 0) return root;
+  return {
+    ...root,
+    children: root.children.map((c) => {
+      const b = byRoot.get(c.id);
+      // نبدّل الاسم فقط إذا كان ما زال اسم الفخذ نفسه (أي لم يُصحَّح في قاعدة البيانات)
+      return b && norm(c.name) === norm(b.label) ? { ...c, name: b.founder as string } : c;
+    }),
+  };
+}
 
 export function getBranchById(id: string | null | undefined): BranchDef | undefined {
   return BRANCHES.find((b) => b.id === id);

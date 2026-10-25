@@ -1,14 +1,14 @@
 "use client";
-
+ 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-
+ 
 import { useT } from "../lib/i18n";
 interface EditRequestModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
-
+ 
 // قيم ثابتة بالعربي (تُقارَن وتُرسَل مع النموذج)؛ نترجم فقط ما يظهر للزائر
 const editOptions = [
   "تصحيح خطأ في الاسم",
@@ -16,7 +16,14 @@ const editOptions = [
   "تعديل صلة قرابة (نقل لفرع آخر)",
   "أخرى"
 ];
-
+ 
+// نفس قائمة الأفخاذ في AddMemberModal (قيم عربية ثابتة) حتى يتطابق التقسيم حسب الفخذ
+const editBranches = [
+  "فخذ داوود", "فخذ ابو نواره", "فخذ الصوص", "فخذ عبدالله",
+  "فخذ الجدع", "فخذ محمد سليمان", "فخذ يونس", "فخذ بدوي",
+  "فخذ محمد علي", "فخذ ابو بيض", "فخذ خضير", "فخذ عبد الحق"
+];
+ 
 export default function EditRequestModal({ isOpen, onClose }: EditRequestModalProps) {
   const { t } = useT();
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
@@ -27,10 +34,10 @@ export default function EditRequestModal({ isOpen, onClose }: EditRequestModalPr
   const [phone, setPhone] = useState("");
   const [countryCode, setCountryCode] = useState("+962");
   const [isCountryOpen, setIsCountryOpen] = useState(false);
-
+ 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedEditType, setSelectedEditType] = useState("");
-
+ 
   const handleNoEnglishInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     if (/[a-zA-Z]/.test(value)) {
@@ -40,7 +47,7 @@ export default function EditRequestModal({ isOpen, onClose }: EditRequestModalPr
       setErrorMsg("");
     }
   };
-
+ 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     let value = e.target.value;
     if (/[a-zA-Z]/.test(value)) {
@@ -51,38 +58,43 @@ export default function EditRequestModal({ isOpen, onClose }: EditRequestModalPr
     }
     setInfoText(value);
   };
-
+ 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setErrorMsg("");
-
+ 
     const form = e.currentTarget;
     const formData = new FormData(form);
-
+ 
+    if (!formData.get("branch")) {
+      setErrorMsg(t("الرجاء اختيار الفخذ."));
+      return;
+    }
+ 
     if (!selectedEditType) {
       setErrorMsg(t("الرجاء اختيار نوع التعديل من القائمة."));
       return;
     }
-
+ 
     const targetPerson = formData.get("target_person") as string;
     const submitterName = formData.get("submitter_name") as string;
     const correctInfo = formData.get("correct_info") as string;
-
+ 
     if (targetPerson.trim().split(/\s+/).length < 5) {
       setErrorMsg(t("اسم الفرد المراد تعديل بياناته يجب أن يكون خماسياً كحد أدنى."));
       return;
     }
-
+ 
     if (selectedEditType === "تصحيح خطأ في الاسم" && correctInfo.trim().split(/\s+/).length < 5) {
       setErrorMsg(t("الاسم الصحيح المُراد إضافته يجب أن يكون خماسياً كحد أدنى."));
       return;
     }
-
+ 
     if (submitterName.trim().split(/\s+/).length < 5) {
       setErrorMsg(t("اسم مقدم الطلب يجب أن يكون خماسياً كحد أدنى."));
       return;
     }
-
+ 
     // 🌟 التحقق من إدخال رقم الهاتف
     if (!phone.trim()) {
       setErrorMsg(t("رقم الهاتف مطلوب للتواصل وتدقيق الطلب!"));
@@ -92,19 +104,19 @@ export default function EditRequestModal({ isOpen, onClose }: EditRequestModalPr
       setErrorMsg(t("رقم الهاتف يجب أن يتكون من 9 أرقام بالضبط (بدون الصفر الأول أو رمز الدولة)."));
       return;
     }
-
+ 
     if (infoText.length > 100 && (selectedEditType === "تعديل صلة قرابة (نقل لفرع آخر)" || selectedEditType === "أخرى")) {
       setErrorMsg(t("لا يمكن إرسال الطلب لأن المعلومة تجاوزت 100 حرف."));
       return;
     }
-
+ 
     setStatus("submitting");
-
+ 
     // 🌟 عنوان موحّد وواضح للطلب بلوحة Netlify
     formData.set("name", `✏️ تعديل بيانات | ${targetPerson}`);
-
+ 
     const data = new URLSearchParams(formData as any).toString();
-
+ 
     try {
       await fetch("/", {
         method: "POST",
@@ -123,7 +135,7 @@ export default function EditRequestModal({ isOpen, onClose }: EditRequestModalPr
       setErrorMsg(t("حدث خطأ أثناء الإرسال، يرجى المحاولة لاحقاً."));
     }
   };
-
+ 
   const renderDynamicInput = () => {
     if (selectedEditType === "تصحيح خطأ في الاسم") {
       return (
@@ -149,7 +161,7 @@ export default function EditRequestModal({ isOpen, onClose }: EditRequestModalPr
         />
       );
     }
-
+ 
     return (
       <>
         <textarea 
@@ -168,7 +180,7 @@ export default function EditRequestModal({ isOpen, onClose }: EditRequestModalPr
       </>
     );
   };
-
+ 
   return (
     <AnimatePresence>
       {isOpen && (
@@ -188,7 +200,7 @@ export default function EditRequestModal({ isOpen, onClose }: EditRequestModalPr
                 <h2 className="text-2xl font-bold text-[rgb(var(--b-deep-rgb)/1)] font-ruqaa dark:text-[rgb(var(--b-lite-rgb)/1)]">{t("طلب تعديل بيانات")}</h2>
               </div>
             </div>
-
+ 
             <div className="p-6 overflow-y-auto sidebar-scroll font-cairo">
               {status === "success" ? (
                 <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center py-8">
@@ -205,7 +217,7 @@ export default function EditRequestModal({ isOpen, onClose }: EditRequestModalPr
                   {/* 🌟 دمج وإرسال رقم الهاتف */}
                   <input type="hidden" name="edit_phone" value={`${countryCode} ${phone}`} />
                   <p className="hidden"><input name="bot-field" /></p>
-
+ 
                   <div>
                     <label className="block text-[13px] font-bold text-[rgb(var(--b-deep-rgb)/1)] dark:text-[rgb(var(--b-lite-rgb)/1)] mb-2">{t("اسم الفرد المراد تعديل بياناته *")}</label>
                     <input 
@@ -217,7 +229,22 @@ export default function EditRequestModal({ isOpen, onClose }: EditRequestModalPr
                       className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[14px] font-bold focus:border-[rgb(var(--b-mid-rgb)/1)] focus:ring-2 focus:ring-[rgb(var(--b-mid-rgb)/0.2)] outline-none transition-all dark:bg-[#24201a] dark:border-gray-700 dark:text-white dark:focus:ring-[rgb(var(--b-lite-rgb)/0.2)]" 
                     />
                   </div>
-
+ 
+                  <div>
+                    <label className="block text-[13px] font-bold text-[rgb(var(--b-deep-rgb)/1)] dark:text-[rgb(var(--b-lite-rgb)/1)] mb-2">{t("فخذ الفرد *")}</label>
+                    <select
+                      name="branch"
+                      required
+                      defaultValue=""
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[14px] font-bold focus:border-[rgb(var(--b-mid-rgb)/1)] focus:ring-2 focus:ring-[rgb(var(--b-mid-rgb)/0.2)] outline-none transition-all dark:bg-[#24201a] dark:border-gray-700 dark:text-white"
+                    >
+                      <option value="" disabled>{t("-- اختر الفخذ --")}</option>
+                      {editBranches.map((b) => (
+                        <option key={b} value={b}>{t(b)}</option>
+                      ))}
+                    </select>
+                  </div>
+ 
                   <div className="relative">
                     <label className="block text-[13px] font-bold text-[rgb(var(--b-deep-rgb)/1)] dark:text-[rgb(var(--b-lite-rgb)/1)] mb-2">{t("نوع التعديل *")}</label>
                     <input type="hidden" name="edit_type" value={selectedEditType} />
@@ -237,7 +264,7 @@ export default function EditRequestModal({ isOpen, onClose }: EditRequestModalPr
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
                       </svg>
                     </div>
-
+ 
                     <AnimatePresence>
                       {isDropdownOpen && (
                         <motion.div 
@@ -258,7 +285,7 @@ export default function EditRequestModal({ isOpen, onClose }: EditRequestModalPr
                       )}
                     </AnimatePresence>
                   </div>
-
+ 
                   {selectedEditType && (
                     <motion.div
                       initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }}
@@ -267,7 +294,7 @@ export default function EditRequestModal({ isOpen, onClose }: EditRequestModalPr
                       {renderDynamicInput()}
                     </motion.div>
                   )}
-
+ 
                   <div className="pt-2 border-t border-[rgb(var(--b-mid-rgb)/0.1)] dark:border-[rgb(var(--b-lite-rgb)/0.1)]">
                     <label className="block text-[13px] font-bold text-[rgb(var(--b-deep-rgb)/1)] dark:text-[rgb(var(--b-lite-rgb)/1)] mb-2">{t("اسم مقدم الطلب *")}</label>
                     <input 
@@ -279,7 +306,7 @@ export default function EditRequestModal({ isOpen, onClose }: EditRequestModalPr
                       className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[14px] font-bold focus:border-[rgb(var(--b-mid-rgb)/1)] focus:ring-2 focus:ring-[rgb(var(--b-mid-rgb)/0.2)] outline-none transition-all dark:bg-[#24201a] dark:border-gray-700 dark:text-white" 
                     />
                   </div>
-
+ 
                   {/* 🌟 خانة الهاتف الجديدة */}
                   <div className="pt-2">
                     <label className="block text-[13px] font-bold text-[rgb(var(--b-deep-rgb)/1)] dark:text-[rgb(var(--b-lite-rgb)/1)] mb-2">{t("رقم الهاتف (للتواصل) *")}</label>
@@ -313,18 +340,18 @@ export default function EditRequestModal({ isOpen, onClose }: EditRequestModalPr
   onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, "").slice(0, 9))}
   placeholder="791234567"
   maxLength={9}
-  className="w-full flex-1 p-3 rounded-xl border border-[rgb(var(--b-lite-rgb)/0.6)]..." /* بقية الكلاسات اللي عندك */
+  className="w-full flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[14px] font-bold focus:border-[rgb(var(--b-mid-rgb)/1)] focus:ring-2 focus:ring-[rgb(var(--b-mid-rgb)/0.2)] outline-none transition-all dark:bg-[#24201a] dark:border-gray-700 dark:text-white"
   dir="ltr"
 />
                     </div>
                   </div>
-
+ 
                   {errorMsg && (
                     <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-xl p-3 text-center">
                       <p className="text-red-600 dark:text-red-400 text-[12px] font-bold">{errorMsg}</p>
                     </div>
                   )}
-
+ 
                   <button 
                     type="submit" 
                     disabled={status === "submitting"}

@@ -68,6 +68,9 @@ const WORDS: Record<string, string> = {
   وئام: "Wiam", وائل: "Wael", وجد: "Wajd", وديع: "Wadee", وسام: "Wisam", وسيم: "Wasim", وليد: "Waleed",
   ياسر: "Yasser", ياسين: "Yasin", يامن: "Yamen", يحيى: "Yahya", يزن: "Yazan", يعقوب: "Yaqoub",
   يمان: "Yaman", ينال: "Yanal", يوسف: "Yousef", يونس: "Younes",
+  خضير: "Khudair",
+  // أسماء المشرفين
+  توفيق: "Tawfiq", عبدالمنعم: "Abdulmunim", الني: "Al-Nini", د: "Dr",
 };
 
 // توحيد الإملاء قبل البحث في القاموس (همزات، ة/ه، ى/ي، تشكيل) حتى تُحتسب الصيغ المختلفة لنفس الاسم

@@ -2,11 +2,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import type { FamilyNode } from "../lib/constants";
 
 import { useT } from "../lib/i18n";
+import { canvasToPdfBlob, deliverBlob, escapeXml, getEmbeddedFontCss, readPalette, svgToCanvas, tint } from "../lib/exportUtils";
 interface LineageCertificateModalProps {
   isOpen: boolean;
   ancestorPath: FamilyNode[] | null;
@@ -21,8 +21,7 @@ export default function LineageCertificateModal({
   onClose,
 }: LineageCertificateModalProps) {
   const { t, lang } = useT();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const [busy, setBusy] = useState(false);
 
   const [cachedPath, setCachedPath] = useState<FamilyNode[] | null>(null);
   useEffect(() => {
@@ -57,6 +56,42 @@ export default function LineageCertificateModal({
   const boxTextSize = isVeryLong ? "text-[15px]" : isLong ? "text-[18px]" : "text-[22px]";
   const minWidth = isVeryLong ? "min-w-[150px]" : isLong ? "min-w-[180px]" : "min-w-[220px]";
   const connectorSize = isVeryLong ? "w-[20px] h-[20px] text-[9px] my-0.5 border-[1.5px]" : isLong ? "w-[24px] h-[24px] text-[10px] my-1 border-[2px]" : "w-[28px] h-[28px] text-[12px] my-1.5 border-[2px]";
+
+  // =================================================================
+  // طباعة / حفظ PDF — ورقة A4 ثابتة المقاس (نفس الشكل على كل الأجهزة)
+  // =================================================================
+  const handlePrint = async () => {
+    if (!person || busy) return;
+    setBusy(true);
+    try {
+      const names = reversedPath.map((n) => n.name.replace("فخذ ", ""));
+      const fontCss = await getEmbeddedFontCss();
+      const svg = buildCertificateSvg({
+        names,
+        personName: person.name,
+        total: totalCount,
+        date: dateAr,
+        fontCss,
+        labels: {
+          title: t("شجرة عائلة القواسمي"),
+          subtitle: t("وثيقة إثبات تسلسل نسب:"),
+          bin: t("بـن"),
+          count: t("عدد أفراد الفخذ:"),
+          member: t("فرد"),
+          printed: t("تاريخ الطباعة:"),
+        },
+      });
+      const canvas = await svgToCanvas(svg, A4_W, A4_H, { targetWidthPx: A4_W * 2 });
+      const pdf = await canvasToPdfBlob(canvas, 210, 297);
+      const safe = person.name.replace(/[\\/:*?"<>|\s]+/g, "_");
+      await deliverBlob(pdf, lang === "en" ? `Lineage_${safe}.pdf` : `وثيقة_نسب_${safe}.pdf`, t("وثيقة إثبات نسب"));
+    } catch (err) {
+      console.error(err);
+      alert(t("حدث خطأ أثناء التصدير."));
+    } finally {
+      setBusy(false);
+    }
+  };
 
   // =================================================================
   // 1. النافذة المنبثقة البسيطة والفخمة على الشاشة (للمعاينة)
@@ -138,10 +173,10 @@ export default function LineageCertificateModal({
                 type="button"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.97 }}
-                onClick={() => window.print()}
+                onClick={handlePrint} disabled={busy}
                 className="flex-1 rounded-2xl bg-gradient-to-b from-[rgb(var(--b-strong-rgb)/1)] to-[rgb(var(--b-ink-rgb)/1)] px-4 py-3.5 font-bold text-white shadow-[0_6px_15px_rgba(76,122,63,0.3)] border border-[rgb(var(--b-ink-rgb)/1)] flex items-center justify-center gap-2"
               >
-                <span className="text-[18px]">🖨️</span>  {t("طباعة / حفظ PDF")}
+                <span className="text-[18px]">🖨️</span>  {busy ? t("⏳ جاري التجهيز...") : t("طباعة / حفظ PDF")}
               </motion.button>
               <motion.button
                 type="button"
@@ -160,68 +195,75 @@ export default function LineageCertificateModal({
     </AnimatePresence>
   );
 
-  // =================================================================
-  // 2. حاوية الطباعة الفخمة A4 (تظهر في الـ PDF فقط ومحمية من التقسيم)
-  // =================================================================
-  const printArea = (
-    <div className="print-exact-container hidden print:flex flex-col w-full h-full bg-white">
-      <style>{t("\n        .custom-scrollbar::-webkit-scrollbar { width: 6px; }\n        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }\n        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(201, 151, 79, 0.5); border-radius: 10px; }\n        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(138, 95, 46, 0.8); }\n\n        /* 🌟 الكود السري لحماية الطباعة على الموبايل من التقسيم */\n        @media print {\n          html, body {\n            width: 100% !important;\n            height: 100% !important;\n            margin: 0 !important;\n            padding: 0 !important;\n            overflow: hidden !important;\n            background: white !important;\n          }\n          body > *:not(.print-exact-container) { display: none !important; }\n          @page { size: A4 portrait; margin: 0 !important; }\n          .print-exact-container {\n            display: flex !important;\n            flex-direction: column !important;\n            position: fixed !important;\n            top: 0 !important;\n            left: 0 !important;\n            right: 0 !important;\n            bottom: 0 !important;\n            width: 100vw !important;\n            height: 100vh !important;\n            background: white !important;\n            box-sizing: border-box !important;\n            overflow: hidden !important;\n            page-break-after: avoid !important;\n            page-break-before: avoid !important;\n            page-break-inside: avoid !important;\n          }\n          * {\n            -webkit-print-color-adjust: exact !important;\n            print-color-adjust: exact !important;\n          }\n        }\n      ")}</style>
+  return <>{screenModal}</>;
+}
 
-      {/* الترويسة للطباعة */}
-      <div className={`flex-none text-center relative z-10 bg-white ${isVeryLong ? 'pt-4 pb-2' : isLong ? 'pt-6 pb-3' : 'pt-10 pb-4'}`}>
-        <h1 className={`font-ruqaa ${isVeryLong ? 'text-[32px]' : isLong ? 'text-[36px]' : 'text-[42px]'} text-[rgb(var(--b-deep-rgb)/1)] font-extrabold mb-1 m-0`}>{t("شجرة عائلة القواسمي")}</h1>
-        <h2 className={`text-[#7c6c53] ${isVeryLong ? 'text-[15px]' : isLong ? 'text-[16px]' : 'text-[18px]'} font-bold m-0`}>{t("وثيقة إثبات تسلسل نسب:")} {person?.name}</h2>
-        <div className={`w-[85%] h-[2.5px] bg-[rgb(var(--b-mid-rgb)/1)] mx-auto ${isVeryLong ? 'mt-2' : 'mt-5'}`}></div>
-      </div>
+// ───────────────────────── رسم وثيقة النسب كـ SVG بمقاس A4 ─────────────────────────
+const A4_W = 794; // 210mm عند 96dpi
+const A4_H = 1123; // 297mm
 
-      {/* الخط الأخضر المتصل والبطاقات للطباعة */}
-      <div className="flex-1 relative flex flex-col justify-center items-center w-full overflow-hidden min-h-0">
-        <div className="absolute top-0 bottom-0 left-1/2 w-[3px] bg-[rgb(var(--b-leaf-rgb)/1)] -translate-x-1/2 z-0"></div>
+function cornerPath(x: number, y: number, w: number, h: number, r: number, flip: boolean): string {
+  // زاويتان مستديرتان متقابلتان (بنفس شكل البطاقات القديمة)
+  const [tl, tr, br, bl] = flip ? [0, r, 0, r] : [r, 0, r, 0];
+  return `M${x + tl},${y} H${x + w - tr} ${tr ? `A${tr},${tr} 0 0 1 ${x + w},${y + tr}` : ""} V${y + h - br} ${br ? `A${br},${br} 0 0 1 ${x + w - br},${y + h}` : ""} H${x + bl} ${bl ? `A${bl},${bl} 0 0 1 ${x},${y + h - bl}` : ""} V${y + tl} ${tl ? `A${tl},${tl} 0 0 1 ${x + tl},${y}` : ""} Z`;
+}
 
-        <div className="relative z-10 flex flex-col items-center justify-center h-full py-1 w-full min-h-0">
-          {reversedPath.map((node, i) => {
-            const isFocus = i === 0;
-            const isRoot = i === reversedPath.length - 1;
-            const borderRadius = i % 2 === 0 ? '26px 0 26px 0' : '0 26px 0 26px';
-            let bg = 'rgb(var(--b-pale-rgb))'; let color = 'rgb(var(--b-ink-rgb))'; let border = isVeryLong ? '1px solid rgb(var(--b-ink-rgb))' : '2px solid rgb(var(--b-ink-rgb))';
+function buildCertificateSvg(o: {
+  names: string[];
+  personName: string;
+  total: number;
+  date: string;
+  fontCss: string;
+  labels: { title: string; subtitle: string; bin: string; count: string; member: string; printed: string };
+}): string {
+  const pal = readPalette();
+  const cx = A4_W / 2;
+  const top = 215;
+  const bottom = 1015;
+  const n = o.names.length;
+  const slot = (bottom - top) / n;
+  const boxH = Math.min(66, slot * 0.64);
+  const gap = slot - boxH;
+  const boxW = n > 11 ? 230 : n > 7 ? 270 : 310;
+  const font = Math.max(11, Math.min(26, boxH * 0.5));
+  const d = Math.max(14, Math.min(30, gap * 0.85));
+  const r = Math.min(24, boxH / 2);
 
-            if (isFocus) { bg = 'linear-gradient(160deg, var(--focus-1, #d3a765), var(--focus-2, #8a5f2e))'; color = '#fff'; border = isVeryLong ? '1px solid var(--focus-2, #8a5f2e)' : '2px solid var(--focus-2, #8a5f2e)'; } 
-            else if (isRoot) { bg = 'rgb(var(--b-soft-rgb) / 0.45)'; border = isVeryLong ? '1px solid rgb(var(--b-ink-rgb))' : '2px solid rgb(var(--b-ink-rgb))'; }
+  let boxes = "";
+  o.names.forEach((name, i) => {
+    const y = top + i * slot;
+    const x = cx - boxW / 2;
+    const focus = i === 0;
+    const root = i === n - 1;
+    const fill = focus ? "url(#focus)" : root ? tint(pal.soft, 0.55) : tint(pal.mid, 0.88);
+    const stroke = focus ? pal.deep : pal.ink;
+    const color = focus ? "#ffffff" : pal.ink;
+    boxes += `<path d="${cornerPath(x, y, boxW, boxH, r, i % 2 === 1)}" fill="${fill}" stroke="${stroke}" stroke-width="${n > 11 ? 1.4 : 2.2}"/>`;
+    boxes += `<text x="${cx}" y="${y + boxH / 2}" dy="0.35em" text-anchor="middle" font-family="Cairo, sans-serif" font-weight="900" font-size="${font}" fill="${color}">${escapeXml(name)}</text>`;
+    if (i < n - 1) {
+      const cy = y + boxH + gap / 2;
+      boxes += `<circle cx="${cx}" cy="${cy}" r="${d / 2}" fill="#fff" stroke="${pal.strong}" stroke-width="2"/>`;
+      boxes += `<text x="${cx}" y="${cy}" dy="0.35em" text-anchor="middle" font-family="Cairo, sans-serif" font-weight="900" font-size="${Math.max(8, d * 0.42)}" fill="${pal.strong}">${escapeXml(o.labels.bin)}</text>`;
+    }
+  });
 
-            return (
-              <div key={node.id} className="flex flex-col items-center shrink min-h-0" style={{ pageBreakInside: 'avoid' }}>
-                <div className={`${boxPadding} font-extrabold ${boxTextSize} ${minWidth} text-center shadow-[0_4px_10px_rgba(0,0,0,0.08)] font-cairo`} style={{ background: bg, color, border, borderRadius }}>
-                  {node.name.replace('فخذ ', '')}
-                </div>
-                
-                {i < reversedPath.length - 1 && (
-                  <div className={`${connectorSize} rounded-full border-[rgb(var(--b-leaf-rgb)/1)] bg-white text-[rgb(var(--b-leaf-rgb)/1)] flex items-center justify-center font-black z-10 font-cairo relative`}>
-                    
-                    {t("بـن")}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${A4_W} ${A4_H}" width="${A4_W}" height="${A4_H}">
+  <defs>
+    <style>${o.fontCss}</style>
+    <linearGradient id="focus" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${pal.soft}"/><stop offset="1" stop-color="${pal.deep}"/></linearGradient>
+  </defs>
+  <rect width="${A4_W}" height="${A4_H}" fill="#ffffff"/>
+  <rect x="26" y="26" width="${A4_W - 52}" height="${A4_H - 52}" fill="none" stroke="${pal.mid}" stroke-width="2"/>
+  <rect x="34" y="34" width="${A4_W - 68}" height="${A4_H - 68}" fill="none" stroke="${tint(pal.mid, 0.5)}" stroke-width="1"/>
 
-      {/* التذييل للطباعة */}
-      <div className={`flex-none w-[85%] mx-auto border-t-[2px] border-b-0 border-x-0 border-dashed border-[rgb(var(--b-mid-rgb)/1)] ${isVeryLong ? 'pt-3 pb-4' : 'pt-5 pb-8'} text-center relative z-10 bg-white`}>
-        <span className={`${isVeryLong ? 'text-[12px]' : 'text-[14.5px]'} font-bold text-[#7c6c53]`}>
-          
-          {t("عدد أفراد الفخذ:")} <span className="text-[rgb(var(--b-deep-rgb)/1)]">{totalCount}  {t("فرد")}</span>
-          <span className="mx-4 text-[rgb(var(--b-mid-rgb)/1)]">|</span>
-          <span className={`${isVeryLong ? 'text-[11px]' : 'text-[13.5px]'} font-normal opacity-90`}>{t("تاريخ الطباعة:")} {dateAr}</span>
-        </span>
-      </div>
-    </div>
-  );
+  <text x="${cx}" y="110" text-anchor="middle" font-family="'Aref Ruqaa', serif" font-weight="700" font-size="46" fill="${pal.deep}">${escapeXml(o.labels.title)}</text>
+  <text x="${cx}" y="152" text-anchor="middle" font-family="Cairo, sans-serif" font-weight="700" font-size="19" fill="#7c6c53">${escapeXml(o.labels.subtitle)} ${escapeXml(o.personName)}</text>
+  <line x1="110" y1="180" x2="${A4_W - 110}" y2="180" stroke="${pal.mid}" stroke-width="2.5"/>
 
-  return (
-    <>
-      {screenModal}
-      {mounted && person && typeof document !== 'undefined' ? createPortal(printArea, document.body) : null}
-    </>
-  );
+  <line x1="${cx}" y1="${top + boxH / 2}" x2="${cx}" y2="${top + (n - 1) * slot + boxH / 2}" stroke="${pal.strong}" stroke-width="3"/>
+  ${boxes}
+
+  <line x1="110" y1="1048" x2="${A4_W - 110}" y2="1048" stroke="${pal.mid}" stroke-width="2" stroke-dasharray="7 6"/>
+  <text x="${cx}" y="1080" text-anchor="middle" font-family="Cairo, sans-serif" font-weight="700" font-size="15" fill="#7c6c53">${escapeXml(`${o.labels.count} ${o.total} ${o.labels.member}   |   ${o.labels.printed} ${o.date}`)}</text>
+</svg>`;
 }

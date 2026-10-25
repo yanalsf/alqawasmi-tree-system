@@ -5,9 +5,10 @@ import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import treeDataRaw from "@/data/tree.json";
 import type { FamilyNode } from "../lib/constants";
+import { withFounderNames } from "../lib/branches";
 
 import { useT } from "../lib/i18n";
-const tree = treeDataRaw as unknown as FamilyNode;
+const tree = withFounderNames(treeDataRaw as unknown as FamilyNode);
 
 interface PersonObj {
   id: number;

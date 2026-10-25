@@ -1,11 +1,11 @@
 // apps/public/components/PublicTreeView.tsx
 "use client";
-
+ 
 import { useEffect, useState, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import treeDataRaw from "@/data/tree.json";
 import type { FamilyNode } from "../lib/constants";
-import { BRANCHES, applyBranchTheme, branchCardVars, getBranchById, getBranchByRootId, type BranchDef } from "../lib/branches";
+import { BRANCHES, withFounderNames, applyBranchTheme, branchCardVars, getBranchById, getBranchByRootId, type BranchDef } from "../lib/branches";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 import VisualTreeModal from "./VisualTreeModal";
@@ -16,24 +16,25 @@ import KinshipModal from './KinshipModal';
 import StatisticsModal from './StatisticsModal';
 import FamilyAboutModal from './FamilyAboutModal';
 import ComplaintsModal from './ComplaintsModal';
+import SupervisorsModal from './SupervisorsModal';
 import EditRequestModal from './EditRequestModal';
 import SequenceModal from './SequenceModal';
 import IosInstallPrompt from "./IosInstallPrompt";
 import BranchPosterModal from './BranchPosterModal';
-
+ 
 import { LangProvider, useT } from "../lib/i18n";
 const VIRTUAL_ROOT_ID = 941;
-const treeAr = treeDataRaw as unknown as FamilyNode;
-
+const treeAr = withFounderNames(treeDataRaw as unknown as FamilyNode);
+ 
 // --- تحكم مؤقت بعرض بعض العناصر ---
 // لإعادة إظهار أي عنصر: غيّر قيمته إلى true. لا يتم حذف أي كود، فقط إخفاء مؤقت.
 const SHOW_FULL_SEQUENCE_BUTTON = false; // زر "عرض التسلسل الكامل لشجرة العائلة" + نافذة SequenceModal
 const SHOW_BRANCH_CARDS = true; // بطاقات اختيار الفخوذ (الشبكة)
 // قائمة الأفخاذ وألوانها صارت في lib/branches.ts (ملف واحد تعدّل منه)
-
+ 
 // كل الفخوذ ظاهرة
 const VISIBLE_BRANCH_IDS = BRANCHES.map((b) => b.id);
-
+ 
 function findNodeById(node: FamilyNode, id: number): FamilyNode | null {
   if (node.id === id) return node;
   for (const child of node.children ?? []) {
@@ -75,14 +76,14 @@ function getPathToRoot(root: FamilyNode, id: number): FamilyNode[] | null {
   }
   return null;
 }
-
+ 
 function calculateAgeDisplay(birthStr: string | null | undefined, deathStr: string | null | undefined, t: (ar: string, vars?: Record<string, string | number>) => string) {
   if (!birthStr && !deathStr) return null;
-
+ 
   const birthYear = birthStr ? parseInt(String(birthStr).split('-')[0]) : null;
   const deathYear = deathStr ? parseInt(String(deathStr).split('-')[0]) : null;
   const currentYear = new Date().getFullYear();
-
+ 
   if (birthYear && deathYear) {
     return t("{birth} - {death} (عاش {years} عاماً)", { birth: birthYear, death: deathYear, years: deathYear - birthYear });
   } else if (birthYear && !deathYear) {
@@ -92,7 +93,7 @@ function calculateAgeDisplay(birthStr: string | null | undefined, deathStr: stri
   }
   return null;
 }
-
+ 
 const pageVariants = {
   initial: { opacity: 0, y: 16 },
   animate: { opacity: 1, y: 0 },
@@ -107,14 +108,14 @@ const gridItemVariants = {
   hidden: { opacity: 0, y: 18, scale: 0.96 },
   visible: { opacity: 1, y: 0, scale: 1 },
 };
-
+ 
 const LeafIcon = () => (
   <svg className="leaf-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <path d="M4 20 C 4 10, 12 4, 20 4 C 20 12, 14 20, 4 20 Z" fill="#fff8ec" opacity="0.85" />
     <path d="M4 20 C 8 14, 12 10, 18 6" style={{ stroke: "rgb(var(--b-strong-rgb))" }} strokeWidth="1.2" fill="none" opacity="0.7" />
   </svg>
 );
-
+ 
 // يلفّ الواجهة بمزوّد اللغة بنفسه، فتعمل اللغة حتى لو لم يُحدَّث layout.tsx
 export default function PublicTreeView() {
   return (
@@ -123,10 +124,10 @@ export default function PublicTreeView() {
     </LangProvider>
   );
 }
-
+ 
 function PublicTreeViewInner() {
   const { t, nm, lang } = useT();
-
+ 
   // الشجرة المعروضة: بالعربي كما هي، وبالإنجليزي بأسماء محوَّلة حرفياً
   const tree = useMemo(() => (lang === "en" ? mapTreeNames(treeAr, nm) : treeAr), [lang, nm]);
   // الاسم العربي لكل شخص (للبحث بالعربي حتى لو الواجهة English)
@@ -142,11 +143,11 @@ function PublicTreeViewInner() {
   const [pathIds, setPathIds] = useState<number[]>([]);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
-
+ 
   // 🌟 متغيرات الإعدادات الإضافية
   const [showDates, setShowDates] = useState(true);
   const [reduceAnimations, setReduceAnimations] = useState(false);
-
+ 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [lineagePath, setLineagePath] = useState<FamilyNode[] | null>(null);
   const [visualTreeRoot, setVisualTreeRoot] = useState<FamilyNode | null>(null);
@@ -157,15 +158,16 @@ function PublicTreeViewInner() {
   const [isStatsOpen, setIsStatsOpen] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [isComplaintsOpen, setIsComplaintsOpen] = useState(false);
+  const [isSupervisorsOpen, setIsSupervisorsOpen] = useState(false);
   const [isEditRequestOpen, setIsEditRequestOpen] = useState(false);
   const [isSequenceOpen, setIsSequenceOpen] = useState(false);
-
+ 
   const [isPosterOpen, setIsPosterOpen] = useState(false);
-
+ 
   const prevDepthRef = useRef(0);
   const suppressPopRef = useRef(false);
   const fromPopRef = useRef(false);
-
+ 
   // ───────────── فصل الفخذ الحالي ─────────────
   // كل ما يُعرض (الفهرس، العدّاد، الإحصائيات، القرابة) يُحسب من الفخذ المفتوح فقط.
   // نغلّف رأس الفخذ بجذر وهمي (941) حتى تبقى كل الدوال القديمة تعمل كما هي.
@@ -184,13 +186,13 @@ function PublicTreeViewInner() {
   );
   const totalPeopleCount = useMemo(() => countAllPeople(scopedTree), [scopedTree]); // أفراد الفخذ الحالي
   const fullPeopleCount = useMemo(() => countAllPeople(tree), [tree]); // كل العائلة (شاشة اختيار الفخذ فقط)
-
+ 
   // لون الفخذ: يُطبَّق على <body> حتى يصل للنوافذ المنبثقة (portals) أيضاً
   useEffect(() => {
     if (!activeBranch) return;
     return applyBranchTheme(activeBranch, isDarkMode);
   }, [activeBranch, isDarkMode]);
-
+ 
   // رابط مباشر لكل فخذ:  ?branch=dawoud  (يُقرأ عند فتح الموقع ويُحدَّث عند التنقل بدون إضافة سجل جديد)
   useEffect(() => {
     const id = new URLSearchParams(window.location.search).get("branch");
@@ -209,28 +211,28 @@ function PublicTreeViewInner() {
       window.history.replaceState(window.history.state, "", url.toString());
     }
   }, [viewState, activeBranch]);
-
+ 
   const navDepth = viewState === "branchSelect" ? 1 : viewState === "tree" || viewState === "placeholder" ? 2 + Math.max(0, pathIds.length - 2) : 0;
   const modalsDepth = [
-    isAddModalOpen, isKinshipOpen, isStatsOpen, isAboutOpen, isComplaintsOpen,
+    isAddModalOpen, isKinshipOpen, isStatsOpen, isAboutOpen, isComplaintsOpen, isSupervisorsOpen,
     isEditRequestOpen, isFeaturesMenuOpen, isSequenceOpen, isHelpOpen, isLegendOpen,
     visualTreeRoot !== null, lineagePath !== null, isSidebarOpen
   ].filter(Boolean).length;
   
   const currentNavDepth = navDepth + modalsDepth;
-
+ 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme === "dark") setIsDarkMode(true);
-
+ 
     // 🌟 استرجاع تفضيلات "إظهار التواريخ" و "تقليل الحركة" المحفوظة سابقاً
     const savedShowDates = localStorage.getItem("pref_showDates");
     if (savedShowDates !== null) setShowDates(savedShowDates === "true");
-
+ 
     const savedReduceAnimations = localStorage.getItem("pref_reduceAnimations");
     if (savedReduceAnimations !== null) setReduceAnimations(savedReduceAnimations === "true");
   }, []);
-
+ 
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add("dark");
@@ -241,17 +243,17 @@ function PublicTreeViewInner() {
     }
     localStorage.setItem("theme", isDarkMode ? "dark" : "light");
   }, [isDarkMode]);
-
+ 
   // 🌟 حفظ تفضيل "إظهار التواريخ" في كل مرة يتغيّر فيها
   useEffect(() => {
     localStorage.setItem("pref_showDates", String(showDates));
   }, [showDates]);
-
+ 
   // 🌟 حفظ تفضيل "تقليل الحركة" في كل مرة يتغيّر فيها
   useEffect(() => {
     localStorage.setItem("pref_reduceAnimations", String(reduceAnimations));
   }, [reduceAnimations]);
-
+ 
   useEffect(() => {
     if (fromPopRef.current) {
       fromPopRef.current = false;
@@ -269,7 +271,7 @@ function PublicTreeViewInner() {
     }
     prevDepthRef.current = currentNavDepth;
   }, [currentNavDepth]);
-
+ 
   useEffect(() => {
     const handlePopState = () => {
       if (suppressPopRef.current) {
@@ -277,12 +279,13 @@ function PublicTreeViewInner() {
         return;
       }
       fromPopRef.current = true;
-
+ 
       if (isAddModalOpen) return setIsAddModalOpen(false);
       if (isKinshipOpen) return setIsKinshipOpen(false);
       if (isStatsOpen) return setIsStatsOpen(false);
       if (isAboutOpen) return setIsAboutOpen(false);
       if (isComplaintsOpen) return setIsComplaintsOpen(false);
+      if (isSupervisorsOpen) return setIsSupervisorsOpen(false);
       if (isEditRequestOpen) return setIsEditRequestOpen(false);
       if (isFeaturesMenuOpen) return setIsFeaturesMenuOpen(false);
       if (isSequenceOpen) return setIsSequenceOpen(false);
@@ -291,7 +294,7 @@ function PublicTreeViewInner() {
       if (visualTreeRoot) return setVisualTreeRoot(null);
       if (lineagePath) return setLineagePath(null);
       if (isSidebarOpen) return setSidebarOpen(false);
-
+ 
       if (viewState === "tree" && pathIds.length > 2) {
         setPathIds((prev) => prev.slice(0, -1));
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -309,15 +312,15 @@ function PublicTreeViewInner() {
       }
       fromPopRef.current = false;
     };
-
+ 
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
   }, [
-    isAddModalOpen, isKinshipOpen, isStatsOpen, isAboutOpen, isComplaintsOpen,
+    isAddModalOpen, isKinshipOpen, isStatsOpen, isAboutOpen, isComplaintsOpen, isSupervisorsOpen,
     isEditRequestOpen, isFeaturesMenuOpen, isSequenceOpen, isHelpOpen, isLegendOpen,
     visualTreeRoot, lineagePath, isSidebarOpen, viewState, pathIds,
   ]);
-
+ 
   const flatPeople = useMemo(() => {
     const list: any[] = [];
     function walk(n: FamilyNode, depth: number, father: FamilyNode | null) {
@@ -332,12 +335,12 @@ function PublicTreeViewInner() {
     walk(scopedTree, 0, null);
     return list;
   }, [scopedTree, arNames]);
-
+ 
   function navigateIntoChild(id: number) { 
     setPathIds(prev => [...prev, id]); 
     window.scrollTo({ top: 0, behavior: 'smooth' }); 
   }
-
+ 
   function goBack() { 
     if (pathIds.length > 2) setPathIds(prev => prev.slice(0, -1)); 
   }
@@ -349,10 +352,10 @@ function PublicTreeViewInner() {
   
   function goToBranchSelect() { setViewState('branchSelect'); }
   function navigateToBreadcrumb(index: number) { setPathIds(prev => prev.slice(0, index + 1)); }
-
+ 
   function handleSelectBranch(branch: BranchDef) {
     const targetNode = tree.children?.find((c) => c.id === branch.rootId);
-
+ 
     if (targetNode && targetNode.children && targetNode.children.length > 0) {
       setPathIds([tree.id, targetNode.id]);
       setViewState('tree');
@@ -363,7 +366,7 @@ function PublicTreeViewInner() {
       setViewState('placeholder');
     }
   }
-
+ 
   function handleSidebarSelect(id: number) {
     for (const branchRoot of tree.children ?? []) {
       const path = getPathToRoot(branchRoot, id);
@@ -375,14 +378,14 @@ function PublicTreeViewInner() {
       }
     }
   }
-
+ 
   function handleShowLineage(id: number) {
     for (const branchRoot of tree.children ?? []) {
       const path = getPathToRoot(branchRoot, id);
       if (path) { setLineagePath(path); break; }
     }
   }
-
+ 
   if (viewState === 'splash') {
     return (
       <AnimatePresence mode="wait">
@@ -398,14 +401,14 @@ function PublicTreeViewInner() {
       </AnimatePresence>
     );
   }
-
+ 
   if (viewState === 'branchSelect') {
     return (
       <AnimatePresence mode="wait">
         <motion.div key="branchSelect" id="branchSelect" className="screen visible dark:bg-[#12100e] transition-colors duration-500" variants={pageVariants} initial="initial" animate="animate" exit="exit" transition={pageTransition}>
           <div className="branch-select-inner mx-auto max-w-6xl px-4">
             <h2 className="branch-title !mb-6 text-center dark:text-[rgb(var(--b-lite-rgb)/1)]">{t("اختر الفخذ")}</h2>
-
+ 
             {SHOW_FULL_SEQUENCE_BUTTON && (
               <div className="flex justify-center mb-10">
                 <motion.button onClick={() => setIsSequenceOpen(true)} whileHover={{ scale: 1.03, boxShadow: "0 12px 26px rgba(138,95,46,0.4)" }} whileTap={{ scale: 0.96 }} className="flex items-center gap-2 rounded-full border border-[rgb(var(--b-deep-rgb)/0.2)] bg-gradient-to-b from-white to-[#fdfbf7] px-6 py-3 font-cairo text-[15px] font-bold text-[rgb(var(--b-deep-rgb)/1)] shadow-[0_8px_20px_rgba(138,95,46,0.15)] transition-all dark:border-[rgb(var(--b-lite-rgb)/0.2)] dark:from-[#1c1915] dark:to-[#1a1713] dark:text-[rgb(var(--b-lite-rgb)/1)]">
@@ -413,7 +416,7 @@ function PublicTreeViewInner() {
                 </motion.button>
               </div>
             )}
-
+ 
             {SHOW_BRANCH_CARDS ? (
               <>
                 <motion.div className="flex flex-wrap justify-center gap-5" variants={gridContainerVariants} initial="hidden" animate="visible">
@@ -470,7 +473,7 @@ function PublicTreeViewInner() {
       </AnimatePresence>
     );
   }
-
+ 
   if (viewState === 'placeholder') {
     return (
       <AnimatePresence mode="wait">
@@ -484,28 +487,28 @@ function PublicTreeViewInner() {
       </AnimatePresence>
     );
   }
-
+ 
   const currentPathNodes = pathIds.map(id => findNodeById(tree, id)).filter(Boolean) as FamilyNode[];
   const focusNode = currentPathNodes[currentPathNodes.length - 1];
   if (!focusNode) return null;
-
+ 
   const isRoot = currentPathNodes.length === 1;
   const parentNode = currentPathNodes[currentPathNodes.length - 2];
   const isBranchRoot = parentNode?.id === 941;
-
+ 
   const kidsCount = focusNode.children ? focusNode.children.length : 0;
   const descCount = countDescendants(focusNode);
   const displayName = isRoot ? (isBranchRoot ? focusNode.name : t("عائلة القواسمي")) : focusNode.name.replace('فخذ ', '').trim();
-
+ 
   const sortedChildren = [...(focusNode.children || [])].sort((a, b) => {
     const yearA = a.birth_date ? parseInt(String(a.birth_date).split('-')[0]) : 9999;
     const yearB = b.birth_date ? parseInt(String(b.birth_date).split('-')[0]) : 9999;
     return yearA - yearB;
   });
-
+ 
   const premiumBtnClasses = "cursor-pointer group relative !flex !items-center !justify-center !gap-2.5 !rounded-full !border-[1.5px] !border-[rgb(var(--b-deep-rgb)/0.3)] !bg-gradient-to-b !from-[#fffdf8] !via-[#fcf8f2] !to-[rgb(var(--b-pale-rgb)/1)] !px-6 !py-2.5 !font-cairo !text-[15.5px] !font-extrabold !text-[rgb(var(--b-ink-rgb)/1)] !shadow-[0_5px_15px_rgba(138,95,46,0.1),inset_0_2px_3px_rgba(255,255,255,0.8)] !transition-all !duration-300 dark:!border-[rgb(var(--b-lite-rgb)/0.3)] dark:!from-[#221f1a] dark:!via-[#1c1915] dark:!to-[#14120f] dark:!text-[#e8dfce] dark:!shadow-[0_5px_15px_rgba(0,0,0,0.5),inset_0_1px_2px_rgba(255,255,255,0.05)]";
   const premiumHoverClasses = "hover:!border-[rgb(var(--b-deep-rgb)/0.7)] hover:!text-[rgb(var(--b-deep-rgb)/1)] hover:!shadow-[0_8px_25px_rgba(138,95,46,0.2),inset_0_2px_3px_rgba(255,255,255,0.9)] hover:-translate-y-1 dark:hover:!border-[rgb(var(--b-lite-rgb)/0.7)] dark:hover:!text-[rgb(var(--b-lite-rgb)/1)] dark:hover:!shadow-[0_8px_25px_rgba(0,0,0,0.7),inset_0_1px_2px_rgba(255,255,255,0.05)]";
-
+ 
   return (
     // 🌟 تفعيل كلاس إيقاف الحركات في حال تم طلبه من الإعدادات
     <div className={`no-print min-h-screen font-cairo dark:bg-[#12100e] transition-colors duration-500 ${reduceAnimations ? 'reduce-animations' : ''}`}>
@@ -531,7 +534,7 @@ function PublicTreeViewInner() {
           }
         `
       }} />
-
+ 
       <Header
         title={currentPathNodes.length > 1 ? currentPathNodes[1].name.replace('فخذ ', '').trim() : t("عائلة القواسمي")}
         branches={BRANCHES.filter((b) => VISIBLE_BRANCH_IDS.includes(b.id))}
@@ -551,16 +554,16 @@ function PublicTreeViewInner() {
         reduceAnimations={reduceAnimations}
         setReduceAnimations={setReduceAnimations}
       />
-
+ 
      <div className="app-shell flex w-full">
         <Sidebar people={flatPeople} isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} onSelectPerson={handleSidebarSelect} />
-
+ 
         <main className="main flex-1 w-full transition-all duration-300 min-[901px]:!mr-[320px]">
           <header className="top-header">
             <h1 className="dark:text-[rgb(var(--b-lite-rgb)/1)]">{t("شجرة العائلة")}</h1>
             <div className="subtitle dark:text-gray-400">{t("انقر على أي اسم لعرض أبنائه فقط — واستخدم زر «رجوع» للعودة للأب السابق")}</div>
           </header>
-
+ 
           <div className="toolbar !my-8 !flex !w-full !flex-wrap !items-center !justify-center !gap-3 md:!gap-4">
             <motion.button className={`${premiumBtnClasses} ${isBranchRoot ? '!cursor-not-allowed !opacity-50 !shadow-none' : premiumHoverClasses}`} disabled={isBranchRoot} whileTap={isBranchRoot ? undefined : { scale: 0.96 }} onClick={goBack}>
               <svg className="h-[18px] w-[18px] transition-transform group-hover:-translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 12H4M4 12L10 6M4 12L10 18"/></svg>
@@ -579,7 +582,7 @@ function PublicTreeViewInner() {
               <span>{t("المساعدة")}</span>
             </motion.button>
           </div>
-
+ 
           <motion.nav layout className="breadcrumb !mx-auto !mb-8 !flex !w-fit !max-w-full !flex-wrap !items-center !justify-center !gap-1 !rounded-2xl !border !border-[rgb(var(--b-deep-rgb)/0.15)] !bg-gradient-to-r !from-[#fdfbf7] !via-white !to-[#fdfbf7] !px-4 !py-2.5 !shadow-[0_8px_25px_rgba(138,95,46,0.06)] dark:!border-[rgb(var(--b-lite-rgb)/0.2)] dark:!bg-gradient-to-r dark:!from-[#1c1915] dark:!via-[#1a1713] dark:!to-[#1c1915]">
             <AnimatePresence initial={false}>
               {currentPathNodes.slice(1).map((node, i) => {
@@ -597,7 +600,7 @@ function PublicTreeViewInner() {
               })}
             </AnimatePresence>
           </motion.nav>
-
+ 
           <div className="page-wrap">
             <AnimatePresence mode="wait">
               <motion.div key={focusNode.id} className="page" initial={{ opacity: 0, y: 22 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -14 }} transition={{ duration: 0.3, ease: [0.25, 1, 0.5, 1] }}>
@@ -622,7 +625,7 @@ function PublicTreeViewInner() {
                     {!isRoot && <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }} className="btn ghost small" onClick={() => handleShowLineage(focusNode.id)}>{t("📜 عرض تسلسل النسب")}</motion.button>}
                   </div>
                 </motion.div>
-
+ 
                 {kidsCount > 0 ? (
                   <>
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="section-title dark:text-[rgb(var(--b-lite-rgb)/1)]">{t("الأبناء")} <span className="badge">{kidsCount}</span></motion.div>
@@ -631,7 +634,7 @@ function PublicTreeViewInner() {
                         const childKidsCount = child.children ? child.children.length : 0;
                         const totalDesc = countDescendants(child);
                         const deceasedClasses = child.death_date ? "deceased-card" : "";
-
+ 
                         return (
                           <motion.div
                             key={child.id}
@@ -653,7 +656,7 @@ function PublicTreeViewInner() {
                                 {calculateAgeDisplay(child.birth_date, child.death_date, t)}
                               </div>
                             )}
-
+ 
                             {!isRoot && <div className="father-tag mt-1 dark:text-gray-400">{t("ابن")} {displayName}</div>}
                             <div className="sub dark:text-gray-500">{childKidsCount ? t("{count} أبناء", { count: childKidsCount }) : ''}</div>
                             {childKidsCount > 0 && (
@@ -707,7 +710,7 @@ function PublicTreeViewInner() {
           </footer>
         </main>
       </div>
-
+ 
       <AnimatePresence>
         {isLegendOpen && (
           <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
@@ -751,7 +754,7 @@ function PublicTreeViewInner() {
           </div>
         )}
       </AnimatePresence>
-
+ 
       <AnimatePresence>
         {isHelpOpen && (
           <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
@@ -785,7 +788,7 @@ function PublicTreeViewInner() {
           </div>
         )}
       </AnimatePresence>
-
+ 
       <LineageCertificateModal isOpen={lineagePath !== null} ancestorPath={lineagePath} totalCount={totalPeopleCount} onClose={() => setLineagePath(null)} />
       <VisualTreeModal isOpen={visualTreeRoot !== null} rootNode={visualTreeRoot} onClose={() => setVisualTreeRoot(null)} />
       
@@ -797,25 +800,27 @@ function PublicTreeViewInner() {
   onOpenStats={() => { setIsFeaturesMenuOpen(false); setTimeout(() => setIsStatsOpen(true), 150); }}
   onOpenAbout={() => { setIsFeaturesMenuOpen(false); setTimeout(() => setIsAboutOpen(true), 150); }}
   onOpenComplaints={() => { setIsFeaturesMenuOpen(false); setTimeout(() => setIsComplaintsOpen(true), 150); }}
+  onOpenSupervisors={() => { setIsFeaturesMenuOpen(false); setTimeout(() => setIsSupervisorsOpen(true), 150); }}
   onOpenEditRequest={() => { setIsFeaturesMenuOpen(false); setTimeout(() => setIsEditRequestOpen(true), 150); }}
   onOpenPoster={() => { setIsFeaturesMenuOpen(false); setTimeout(() => setIsPosterOpen(true), 150); }} // 🌟 هذا السطر
 />
-
+ 
       <KinshipModal isOpen={isKinshipOpen} onClose={() => setIsKinshipOpen(false)} people={flatPeople} />
       <StatisticsModal isOpen={isStatsOpen} onClose={() => setIsStatsOpen(false)} root={scopedTree} />
       <FamilyAboutModal isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)} />
       <ComplaintsModal isOpen={isComplaintsOpen} onClose={() => setIsComplaintsOpen(false)} />
+      <SupervisorsModal isOpen={isSupervisorsOpen} onClose={() => setIsSupervisorsOpen(false)} />
       <EditRequestModal isOpen={isEditRequestOpen} onClose={() => setIsEditRequestOpen(false)} />
-
+ 
       <AnimatePresence>
         {isAddModalOpen && <AddMemberModal key="add-member" onClose={() => setIsAddModalOpen(false)} />}
-          <BranchPosterModal isOpen={isPosterOpen} onClose={() => setIsPosterOpen(false)} treeData={treeDataRaw} />
+          <BranchPosterModal isOpen={isPosterOpen} onClose={() => setIsPosterOpen(false)} treeData={treeAr} />
       </AnimatePresence>
-
+ 
       {/* 🌟 نافذة الآيفون المنبثقة 🌟 */}
       <IosInstallPrompt />
-
-
+ 
+ 
       {/* نماذج وهمية لتعريف الحقول لسيرفر Netlify وقت البناء */}
       <div style={{ display: 'none' }}>
         <form name="add-member-form" data-netlify="true">
@@ -832,6 +837,7 @@ function PublicTreeViewInner() {
         <form name="edit-requests-form" data-netlify="true" netlify-honeypot="bot-field">
           <input type="text" name="name" />
           <input type="text" name="target_person" />
+          <input type="text" name="branch" />
           <input type="text" name="edit_type" />
           <input type="text" name="correct_info" />
           <input type="text" name="submitter_name" />
@@ -848,7 +854,7 @@ function PublicTreeViewInner() {
           <input type="text" name="bot-field" />
         </form>
       </div>
-
+ 
     </div>
   );
 }

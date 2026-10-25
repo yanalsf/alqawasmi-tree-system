@@ -8,6 +8,7 @@ import * as d3 from "d3";
 import type { FamilyNode } from "../lib/constants";
 
 import { useT } from "../lib/i18n";
+import { canvasToBlob, canvasToPdfBlob, deliverBlob, getEmbeddedFontCss, svgToCanvas } from "../lib/exportUtils";
 interface VisualTreeModalProps {
   isOpen: boolean;
   rootNode: FamilyNode | null;
@@ -19,6 +20,9 @@ function branchColor(name: string, fallback: string): string {
   if (typeof window === "undefined") return fallback;
   return getComputedStyle(document.body).getPropertyValue(name).trim() || fallback;
 }
+
+// الخريطة المصغّرة معطّلة: الشجرة كبيرة فتظهر نقاطاً صغيرة فقط. غيّرها إلى true لإرجاعها.
+const SHOW_MINIMAP = false;
 
 const LEAF_PATH = "M0,20 C-25,10 -30,-20 0,-40 C30,-20 25,10 0,20 Z";
 
@@ -147,12 +151,11 @@ export default function VisualTreeModal({ isOpen, rootNode, onClose }: VisualTre
     };
   }, [isOpen, rootNode]);
 
-  const handleExportSVG = () => {
-    if (!rootNode) return;
-
-    try {
-      const btn = document.getElementById("pdf-btn");
-      if (btn) btn.innerHTML = t("⏳ جاري التجهيز...");
+  // يبني ملف SVG كاملاً للوحة (الخطوط مضمّنة داخله) ويرجع أبعاده
+  const buildPosterSvg = async (): Promise<{ svg: string; w: number; h: number } | null> => {
+    if (!rootNode) return null;
+    {
+      const fontCss = await getEmbeddedFontCss();
 
       const { root, childScale, fontChild, rootScale, fontRoot, maxNameLen, x0: tx0, x1: tx1, y0: ty0, y1: ty1 } =
         buildRadialLayout(rootNode, {
@@ -225,9 +228,7 @@ export default function VisualTreeModal({ isOpen, rootNode, onClose }: VisualTre
               <path d="M${50 * hs} 0 L${100 * hs} ${50 * hs} L${50 * hs} ${100 * hs} L0 ${50 * hs} Z" fill="none" stroke="${branchColor("--b-mid", "#d6b877")}" stroke-width="${1 * hs}" opacity="0.15"/>
             </pattern>
             <!-- 🌟 قوس خفيف لرسم الآية عليه بانحناء أنيق -->
-            <path id="ayah-curve" fill="none"
-              d="M ${dynamicWidth / 2 - 1050 * hs} ${700 * hs}
-                 Q ${dynamicWidth / 2} ${580 * hs} ${dynamicWidth / 2 + 1050 * hs} ${700 * hs}" />
+            
           </defs>
 
           <!--
@@ -241,7 +242,7 @@ export default function VisualTreeModal({ isOpen, rootNode, onClose }: VisualTre
             على توفر الخط.
           -->
           <style>
-            @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@700;900&amp;family=Amiri:wght@400;700&amp;family=Aref+Ruqaa:wght@700&amp;display=swap');
+            ${fontCss}
             .title { font-family: 'Aref Ruqaa', serif; }
             .ayah { font-family: 'Amiri', serif; } 
             .subtitle { font-family: 'Cairo', sans-serif; }
@@ -272,9 +273,9 @@ export default function VisualTreeModal({ isOpen, rootNode, onClose }: VisualTre
 
           <!-- ================= النصوص العلوية ================= -->
           <text class="title" x="${dynamicWidth / 2}" y="${460 * hs}" text-anchor="middle" font-size="${160 * hs}" fill="#2b1d12" font-weight="900">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</text>
-          <text class="ayah" text-anchor="middle" direction="rtl" font-size="${100 * hs}" fill="#5c4a38" font-weight="700">
-            <textPath href="#ayah-curve" startOffset="50%">وَهُوَ الَّذِي خَلَقَ مِنَ الْمَاءِ بَشَرًا فَجَعَلَهُ نَسَبًا وَصِهْرًا ۗ وَكَانَ رَبُّكَ قَدِيرًا</textPath>
-          </text>
+          <!-- الآية: سطران مستقيمان (بدون textPath لأنه يعكس الحروف العربية ويفصلها في كثير من الأجهزة) -->
+          <text class="ayah" x="${dynamicWidth / 2}" y="${700 * hs}" text-anchor="middle" font-size="${95 * hs}" fill="#5c4a38" font-weight="700">وَهُوَ الَّذِي خَلَقَ مِنَ الْمَاءِ بَشَرًا فَجَعَلَهُ نَسَبًا</text>
+          <text class="ayah" x="${dynamicWidth / 2}" y="${850 * hs}" text-anchor="middle" font-size="${95 * hs}" fill="#5c4a38" font-weight="700">وَصِهْرًا ۗ وَكَانَ رَبُّكَ قَدِيرًا</text>
 
           <text class="title" x="${dynamicWidth / 2}" y="${1250 * hs}" text-anchor="middle" font-size="${220 * hs}" fill="#2b1d12" font-weight="900">${t("شجرة عائلة القواسمي")}</text>
           <line x1="${dynamicWidth / 2 - 500 * hs}" y1="${1330 * hs}" x2="${dynamicWidth / 2 + 500 * hs}" y2="${1330 * hs}" stroke="${branchColor("--b-mid", "#d4af37")}" stroke-width="${4 * hs}" stroke-linecap="round" />
@@ -298,21 +299,41 @@ export default function VisualTreeModal({ isOpen, rootNode, onClose }: VisualTre
         </svg>
       `;
 
-      const blob = new Blob([svgContent], { type: "image/svg+xml;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = lang === "en" ? `Al-Qawasmi_Family_Tree_${rootNode.name.replace("فخذ ", "").replace(/\s+/g, "_")}.svg` : `شجرة_عائلة_القواسمي_فرع_${rootNode.name.replace("فخذ ", "")}.svg`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      return { svg: svgContent.trim(), w: dynamicWidth, h: dynamicHeight };
+    }
+  };
 
-      if (btn) btn.innerHTML = t("🖨️ طباعة / حفظ SVG");
+  const [exporting, setExporting] = useState<null | "pdf" | "png" | "svg">(null);
+
+  const runExport = async (kind: "pdf" | "png" | "svg") => {
+    if (!rootNode || exporting) return;
+    setExporting(kind);
+    try {
+      const built = await buildPosterSvg();
+      if (!built) return;
+      const safe = rootNode.name.replace("فخذ ", "").replace(/\s+/g, "_");
+      const base = lang === "en" ? `Al-Qawasmi_Family_Tree_${safe}` : `شجرة_عائلة_القواسمي_فرع_${safe}`;
+      const title = t("شجرة عائلة القواسمي");
+
+      if (kind === "svg") {
+        const blob = new Blob([built.svg], { type: "image/svg+xml;charset=utf-8" });
+        await deliverBlob(blob, base + ".svg", title);
+        return;
+      }
+      // نخلي عرض الصورة ~3600px (ويُصغَّر تلقائياً لو تجاوز حدّ ذاكرة الجهاز)
+      const canvas = await svgToCanvas(built.svg, built.w, built.h, { targetWidthPx: 3600 });
+      if (kind === "png") {
+        await deliverBlob(await canvasToBlob(canvas, "image/png"), base + ".png", title);
+      } else {
+        const wMm = 297;
+        const hMm = Math.round((wMm * built.h) / built.w);
+        await deliverBlob(await canvasToPdfBlob(canvas, wMm, hMm), base + ".pdf", title);
+      }
     } catch (error) {
       console.error("خطأ أثناء التصدير:", error);
       alert(t("حدث خطأ أثناء التصدير."));
-      const btn = document.getElementById("pdf-btn");
-      if (btn) btn.innerHTML = t("🖨️ طباعة / حفظ SVG");
+    } finally {
+      setExporting(null);
     }
   };
 
@@ -553,7 +574,7 @@ export default function VisualTreeModal({ isOpen, rootNode, onClose }: VisualTre
             onClick={(e) => e.stopPropagation()}
             className="flex flex-col w-[94vw] h-[90vh] bg-[#fbfaf8] rounded-3xl shadow-2xl overflow-hidden border border-[rgb(var(--b-mid-rgb)/0.2)] dark:bg-[#161411] dark:border-[rgb(var(--b-lite-rgb)/0.2)]"
           >
-            <div className="p-5 bg-gradient-to-b from-panel to-white border-b border-[rgb(var(--b-mid-rgb)/0.1)] flex items-center justify-between dark:from-[#1c1915] dark:to-[#161411] dark:border-white/10">
+            <div className="p-4 sm:p-5 bg-gradient-to-b from-panel to-white border-b border-[rgb(var(--b-mid-rgb)/0.1)] flex flex-wrap items-center justify-between gap-3 dark:from-[#1c1915] dark:to-[#161411] dark:border-white/10">
               <div>
                 <h3 className="m-0 text-[20px] font-extrabold text-[rgb(var(--b-deep-rgb)/1)] font-ruqaa dark:text-[rgb(var(--b-lite-rgb)/1)]">
                   
@@ -564,26 +585,40 @@ export default function VisualTreeModal({ isOpen, rootNode, onClose }: VisualTre
                   {t("مرر واسحب للتنقل، استخدم عجلة الفأرة للتكبير")}
                 </p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <motion.button
-                  id="pdf-btn"
                   type="button"
-                  whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.96 }}
-                  onClick={handleExportSVG}
-                  className="rounded-xl bg-gradient-to-b from-[rgb(var(--b-strong-rgb)/1)] to-[rgb(var(--b-ink-rgb)/1)] px-5 py-2 font-bold text-white text-[13.5px] shadow-md border border-[rgb(var(--b-ink-rgb)/1)]"
+                  disabled={!!exporting}
+                  onClick={() => runExport("pdf")}
+                  className="rounded-xl bg-gradient-to-b from-[rgb(var(--b-strong-rgb)/1)] to-[rgb(var(--b-ink-rgb)/1)] px-4 py-2 font-bold text-white text-[13px] shadow-md border border-[rgb(var(--b-ink-rgb)/1)] disabled:opacity-60"
                 >
-                  
-                  {t("🖨️ طباعة / حفظ SVG")}
+                  {exporting === "pdf" ? t("⏳ جاري التجهيز...") : t("🖨️ طباعة / حفظ PDF")}
                 </motion.button>
                 <motion.button
                   type="button"
-                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.96 }}
+                  disabled={!!exporting}
+                  onClick={() => runExport("png")}
+                  className="rounded-xl bg-white border border-[rgb(var(--b-deep-rgb)/0.35)] px-3.5 py-2 font-bold text-[rgb(var(--b-deep-rgb)/1)] text-[13px] disabled:opacity-60 dark:bg-[#24201a] dark:text-[rgb(var(--b-lite-rgb)/1)]"
+                >
+                  {exporting === "png" ? t("⏳ جاري التجهيز...") : t("صورة PNG")}
+                </motion.button>
+                <motion.button
+                  type="button"
+                  whileTap={{ scale: 0.96 }}
+                  disabled={!!exporting}
+                  onClick={() => runExport("svg")}
+                  className="rounded-xl bg-white border border-[rgb(var(--b-deep-rgb)/0.35)] px-3.5 py-2 font-bold text-[rgb(var(--b-deep-rgb)/1)] text-[13px] disabled:opacity-60 dark:bg-[#24201a] dark:text-[rgb(var(--b-lite-rgb)/1)]"
+                >
+                  {exporting === "svg" ? t("⏳ جاري التجهيز...") : t("SVG (للمطبعة)")}
+                </motion.button>
+                <motion.button
+                  type="button"
                   whileTap={{ scale: 0.96 }}
                   onClick={onClose}
-                  className="rounded-xl bg-[#f8f9fa] border border-[rgb(var(--b-deep-rgb)/0.3)] px-5 py-2 font-bold text-[#7c6c53] text-[13.5px] hover:bg-gray-100 transition-colors dark:bg-[#24201a] dark:border-[rgb(var(--b-lite-rgb)/0.2)] dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-[rgb(var(--b-lite-rgb)/1)]"
+                  className="rounded-xl bg-[#f8f9fa] border border-[rgb(var(--b-deep-rgb)/0.3)] px-4 py-2 font-bold text-[#7c6c53] text-[13px] hover:bg-gray-100 transition-colors dark:bg-[#24201a] dark:border-[rgb(var(--b-lite-rgb)/0.2)] dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-[rgb(var(--b-lite-rgb)/1)]"
                 >
-                  
                   {t("✕ إغلاق")}
                 </motion.button>
               </div>
@@ -599,10 +634,12 @@ export default function VisualTreeModal({ isOpen, rootNode, onClose }: VisualTre
                 <div id="tree-capture-area" className="relative h-full w-full overflow-hidden rounded-md border-[1.5px] border-[rgb(var(--b-lite-rgb)/1)] bg-[#fffdf8] dark:bg-[#161411] dark:border-[rgb(var(--b-lite-rgb)/0.3)]">
                   <div ref={hostRef} className="h-full w-full touch-none select-none outline-none" />
 
+                  {SHOW_MINIMAP && (
                   <div className="absolute bottom-4 left-4 overflow-hidden rounded-xl border-2 border-[rgb(var(--b-deep-rgb)/0.6)] bg-white shadow-lg z-10 dark:bg-[#1c1915] dark:border-[rgb(var(--b-lite-rgb)/0.4)]">
                     <div className="bg-[rgb(var(--b-deep-rgb)/1)] px-3 py-1.5 text-[12px] font-bold text-white text-center">{t("خريطة الشجرة")}</div>
                     <div ref={miniMapRef} className="cursor-pointer bg-[#fffdf8] dark:bg-[#161411]" />
                   </div>
+                  )}
                 </div>
               </div>
             </motion.div>

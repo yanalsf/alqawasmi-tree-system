@@ -1,0 +1,22 @@
+
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="g" cx="50%" cy="38%" r="80%">
+      <stop offset="0" stop-color="#3c5f32"/><stop offset="0.6" stop-color="#2d4a25"/><stop offset="1" stop-color="#1e381d"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#g)"/>
+  <circle cx="256" cy="256" r="200" fill="none" stroke="#c9974f" stroke-width="5"/>
+  <circle cx="256" cy="256" r="184" fill="none" stroke="#d6b877" stroke-opacity="0.55" stroke-width="1.6"/>
+  <g transform="translate(256 250) scale(0.92) translate(-150 -150)">
+  <g stroke="#f3ede1" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M150 248 V168"/><path d="M150 168 V62"/>
+    <path d="M150 178 C150 146 92 150 92 108"/><path d="M150 178 C150 146 208 150 208 108"/>
+    <path d="M150 198 C150 176 48 190 48 150"/><path d="M150 198 C150 176 252 190 252 150"/>
+    <path d="M100 250 H200"/>
+    <circle cx="150" cy="50" r="24" fill="#c9974f"/>
+    <circle cx="92" cy="94" r="18" fill="#2d4a25"/><circle cx="208" cy="94" r="18" fill="#2d4a25"/>
+    <circle cx="48" cy="136" r="17" fill="#2d4a25"/><circle cx="252" cy="136" r="17" fill="#2d4a25"/>
+  </g></g>
+  <rect x="248" y="388" width="16" height="16" fill="#c9974f" transform="rotate(45 256 396)"/>
+</svg>
