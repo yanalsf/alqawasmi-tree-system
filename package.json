@@ -12,8 +12,8 @@
     "d3": "^7.9.0",
     "framer-motion": "^13.1.1",
     "html-to-image": "^1.11.13",
-    "jspdf": "^4.2.1",
-    "next": "^14.2.35"
+    "jspdf": "^4.2.1"
+    
   },
   "devDependencies": {
     "@types/d3": "^7.4.3"
