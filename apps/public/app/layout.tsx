@@ -1,14 +1,20 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import "./globals.css";
 import "./legacy.css"; // the original site's stylesheet, verbatim
 import "./branch-theme.css"; // ألوان الأفخاذ (يجب أن يأتي بعد legacy.css)
 import HiddenNetlifyForms from "../components/HiddenNetlifyForms";
-
+ 
 export const metadata: Metadata = {
   title: "شجرة العائلة",
+  manifest: "/manifest.json",
+  icons: { apple: "/apple-touch-icon.png" },
 };
-
+ 
+export const viewport: Viewport = {
+  themeColor: "#8a5f2e",
+};
+ 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ar" dir="rtl">
@@ -23,7 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* نسخة ثابتة مخفية من كل الفورمات — عشان Netlify يكتشفها وقت الـ build
             حتى لو الـ modals الحقيقية مقفولة بالحالة الافتراضية */}
         <HiddenNetlifyForms />
-
+ 
         {/* Same three third-party libraries the original page loaded, loaded in the
             same order, before the legacy script runs (see LegacyTreeApp.tsx). */}
         <Script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" strategy="beforeInteractive" />
