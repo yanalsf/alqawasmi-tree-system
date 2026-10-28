@@ -5,3 +5,9 @@ out/
 .env.local
 *.log
 .DS_Store
+repomix-output.xml
+apps/public/public/sw.js
+apps/public/public/sw.js.map
+apps/public/public/swe-worker-*.js
+apps/public/public/workbox-*.js
+apps/public/public/workbox-*.js.map
